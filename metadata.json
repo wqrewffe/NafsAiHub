@@ -1,0 +1,6 @@
+
+{
+  "name": "Naf's AI Hub",
+  "description": "An AI-powered web app with over 75 specialized tools to assist students and professionals. Features essay outlining, code explanation, MCQ generation, and more, all powered by Gemini. User authentication is required to access tools, and usage history is saved to a personal profile.",
+  "requestFramePermissions": []
+}
