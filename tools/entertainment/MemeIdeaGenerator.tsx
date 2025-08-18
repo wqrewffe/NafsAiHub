@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import ToolContainer, { ToolOptionConfig } from '../common/ToolContainer';
 import { generateJson, GenAiType } from '../../services/geminiService';
 import { tools } from '../index';
@@ -6,20 +6,11 @@ import { FaceSmileIcon } from '../Icons';
 
 interface MemeIdeaOutput {
     memeFormat: string;
-    translations: {
-        en: { topText: string; bottomText: string };
-        es: { topText: string; bottomText: string };
-        fr: { topText: string; bottomText: string };
-        de: { topText: string; bottomText: string };
-        hi: { topText: string; bottomText: string };
-        bn: { topText: string; bottomText: string };
-        ja: { topText: string; bottomText: string };
-    };
+    topText: string;
+    bottomText: string;
 }
 
-export const renderMemeIdeaGeneratorOutput = (output: MemeIdeaOutput | string) => {
-    const [selectedLang, setSelectedLang] = useState<'en' | 'es' | 'fr' | 'de' | 'hi' | 'bn' | 'ja'>('en');
-
+export const renderMemeIdeaGeneratorOutput = (output: MemeIdeaOutput | string) => {F
     let data: MemeIdeaOutput;
     if (typeof output === 'string') {
         try {
@@ -31,34 +22,18 @@ export const renderMemeIdeaGeneratorOutput = (output: MemeIdeaOutput | string) =
         data = output;
     }
 
-    if (!data || !data.translations) {
+    if (!data || !data.topText) {
         return <p className="text-red-400">Could not generate a meme idea. Please try a different topic.</p>;
     }
 
-    const texts = data.translations[selectedLang];
-
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             <h3 className="text-xl font-bold text-center text-light">
                 {data.memeFormat}
             </h3>
-
-            <div className="flex justify-center space-x-2 mb-4">
-                {Object.keys(data.translations).map(lang => (
-                    <button
-                        key={lang}
-                        className={`px-3 py-1 rounded-lg text-sm font-medium ${selectedLang === lang ? 'bg-accent text-white' : 'bg-slate-700 text-light'}`}
-                        onClick={() => setSelectedLang(lang as any)}
-                    >
-                        {lang.toUpperCase()}
-                    </button>
-                ))}
-            </div>
-
-            <div className="bg-primary border border-slate-700 rounded-lg p-4 font-bold text-center text-xl tracking-wide space-y-2">
-                <p className="text-accent capitalize">{selectedLang.toUpperCase()}</p>
-                <p className="text-light">{texts.topText}</p>
-                <p className="text-light">{texts.bottomText}</p>
+            <div className="bg-primary border border-slate-700 rounded-lg p-6 font-bold text-center text-2xl uppercase tracking-wider space-y-4">
+                <p className="text-light">{data.topText}</p>
+                <p className="text-light">{data.bottomText}</p>
             </div>
         </div>
     );
@@ -87,68 +62,15 @@ const MemeIdeaGenerator: React.FC = () => {
         type: GenAiType.OBJECT,
         properties: {
             memeFormat: { type: GenAiType.STRING },
-            translations: {
-                type: GenAiType.OBJECT,
-                properties: {
-                    en: {
-                        type: GenAiType.OBJECT,
-                        properties: {
-                            topText: { type: GenAiType.STRING },
-                            bottomText: { type: GenAiType.STRING },
-                        }
-                    },
-                    es: {
-                        type: GenAiType.OBJECT,
-                        properties: {
-                            topText: { type: GenAiType.STRING },
-                            bottomText: { type: GenAiType.STRING },
-                        }
-                    },
-                    fr: {
-                        type: GenAiType.OBJECT,
-                        properties: {
-                            topText: { type: GenAiType.STRING },
-                            bottomText: { type: GenAiType.STRING },
-                        }
-                    },
-                    de: {
-                        type: GenAiType.OBJECT,
-                        properties: {
-                            topText: { type: GenAiType.STRING },
-                            bottomText: { type: GenAiType.STRING },
-                        }
-                    },
-                    hi: {
-                        type: GenAiType.OBJECT,
-                        properties: {
-                            topText: { type: GenAiType.STRING },
-                            bottomText: { type: GenAiType.STRING },
-                        }
-                    },
-                    bn: {
-                        type: GenAiType.OBJECT,
-                        properties: {
-                            topText: { type: GenAiType.STRING },
-                            bottomText: { type: GenAiType.STRING },
-                        }
-                    },
-                    ja: {
-                        type: GenAiType.OBJECT,
-                        properties: {
-                            topText: { type: GenAiType.STRING },
-                            bottomText: { type: GenAiType.STRING },
-                        }
-                    }
-                },
-                required: ["en", "es", "fr", "de", "hi", "bn", "ja"]
-            }
+            topText: { type: GenAiType.STRING, description: "The text that goes on the top of the meme." },
+            bottomText: { type: GenAiType.STRING, description: "The text that goes on the bottom of the meme." },
         },
-        required: ["memeFormat", "translations"]
+        required: ["memeFormat", "topText", "bottomText"]
     };
 
     const handleGenerate = async ({ prompt, options }: { prompt: string; options: any }) => {
         const { memeFormat } = options;
-        const fullPrompt = `Generate funny meme text for the \"${memeFormat}\" meme format in 7 languages: English (en), Spanish (es), French (fr), German (de), Hindi (hi), Bengali (bn), Japanese (ja). The meme should be about this topic: \"${prompt}\". Provide topText and bottomText for each language.`;
+        const fullPrompt = `Generate funny meme text for the "${memeFormat}" meme format. The meme should be about this topic: "${prompt}". Provide the top text and bottom text.`;
         return generateJson(fullPrompt, schema);
     };
 
