@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { getFullUserHistory } from '../../services/firebaseService';
 import { HistoryItem } from '../../types';
 import { tools } from '../../tools';
@@ -8,7 +8,7 @@ import Spinner from '../../components/Spinner';
 import { ClipboardDocumentIcon, CheckCircleIcon, ChevronDownIcon, ChevronRightIcon, ArrowLeftIcon } from '../../tools/Icons';
 
 const UserHistoryPage: React.FC = () => {
-    const { userId } = useParams<{ userId: string }>();
+    const { userId } = ReactRouterDOM.useParams<{ userId: string }>();
     const [history, setHistory] = useState<HistoryItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -57,10 +57,10 @@ const UserHistoryPage: React.FC = () => {
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
-            <Link to="/admin" className="inline-flex items-center gap-2 text-sm text-slate-300 hover:text-accent">
+            <ReactRouterDOM.Link to="/admin" className="inline-flex items-center gap-2 text-sm text-slate-300 hover:text-accent">
                 <ArrowLeftIcon className="h-5 w-5" />
                 Back to User List
-            </Link>
+            </ReactRouterDOM.Link>
 
             <div>
                 <h1 className="text-3xl font-bold">User Tool History</h1>

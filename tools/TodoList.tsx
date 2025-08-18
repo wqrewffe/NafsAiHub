@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { onTodosSnapshot, addTodo, updateTodo, deleteTodo } from '../services/firebaseService';
-import { Todo, Priority } from '../types';
-import { ClipboardDocumentCheckIcon, TrashIcon } from '../tools/Icons';
-import Spinner from '../components/Spinner';
+import { ClipboardDocumentCheckIcon, TrashIcon } from './Icons';
+
+interface Todo {
+    id: number;
+    text: string;
+    completed: boolean;
+    priority: 'low' | 'medium' | 'high';
+    dueDate: string | null;
+}
+
+type Priority = 'low' | 'medium' | 'high';
 
 const priorityMap: { [key in Priority]: { color: string, name: string, value: number } } = {
     low: { color: 'bg-green-500', name: 'Low', value: 1 },
@@ -11,85 +17,60 @@ const priorityMap: { [key in Priority]: { color: string, name: string, value: nu
     high: { color: 'bg-red-500', name: 'High', value: 3 },
 };
 
-const TodoListPage: React.FC = () => {
-    const { currentUser } = useAuth();
+const TodoListManager: React.FC = () => {
     const [todos, setTodos] = useState<Todo[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
     const [inputValue, setInputValue] = useState('');
     const [priority, setPriority] = useState<Priority>('medium');
     const [dueDate, setDueDate] = useState('');
-    const [filter, setFilter] = useState('all');
-    const [sortBy, setSortBy] = useState('default');
+    const [filter, setFilter] = useState('all'); // 'all', 'active', 'completed'
+    const [sortBy, setSortBy] = useState('default'); // 'default', 'dueDate', 'priority'
 
     useEffect(() => {
-        if (!currentUser) {
-            setLoading(false);
+        try {
+            const storedTodos = localStorage.getItem('todo-list-app-v2');
+            if (storedTodos) {
+                setTodos(JSON.parse(storedTodos));
+            }
+        } catch (error) {
+            console.error("Failed to load todos from localStorage", error);
             setTodos([]);
-            return;
         }
-        setLoading(true);
-        setError('');
-        const unsubscribe = onTodosSnapshot(
-            currentUser.uid, 
-            (fetchedTodos) => {
-                setTodos(fetchedTodos);
-                setLoading(false);
-            },
-            (err) => {
-                setError('Could not fetch your to-do list. This might be due to a database permissions issue or a missing index. Please check your Firestore configuration.');
-                console.error(err);
-                setLoading(false);
-            }
-        );
+    }, []);
 
-        return () => unsubscribe();
-    }, [currentUser?.uid]);
+    useEffect(() => {
+        try {
+            localStorage.setItem('todo-list-app-v2', JSON.stringify(todos));
+        } catch (error) {
+            console.error("Failed to save todos to localStorage", error);
+        }
+    }, [todos]);
 
-    const handleAddTodo = async (e: React.FormEvent) => {
+    const handleAddTodo = (e: React.FormEvent) => {
         e.preventDefault();
-        if (inputValue.trim() === '' || !currentUser) return;
-        setError('');
-        try {
-            const newTodoData: Omit<Todo, 'id' | 'createdAt'> = {
-                text: inputValue,
-                completed: false,
-                priority,
-                dueDate: dueDate || null,
-            };
-            await addTodo(currentUser.uid, newTodoData);
-            setInputValue('');
-            setDueDate('');
-            setPriority('medium');
-        } catch (err) {
-            console.error("Failed to add todo:", err);
-            setError("Failed to add task. Please check your connection or database rules and try again.");
-        }
+        if (inputValue.trim() === '') return;
+        const newTodo: Todo = {
+            id: Date.now(),
+            text: inputValue,
+            completed: false,
+            priority,
+            dueDate: dueDate || null,
+        };
+        setTodos([newTodo, ...todos]);
+        setInputValue('');
+        setDueDate('');
+        setPriority('medium');
     };
 
-    const handleToggleTodo = async (id: string) => {
-        if (!currentUser) return;
-        setError('');
-        const todo = todos.find(t => t.id === id);
-        if (todo) {
-            try {
-                await updateTodo(currentUser.uid, id, { completed: !todo.completed });
-            } catch (err) {
-                console.error("Failed to update todo:", err);
-                setError("Failed to update task. Please try again.");
-            }
-        }
+    const handleToggleTodo = (id: number) => {
+        setTodos(
+            todos.map(todo =>
+                todo.id === id ? { ...todo, completed: !todo.completed } : todo
+            )
+        );
     };
 
-    const handleDeleteTodo = async (id: string) => {
-        if (!currentUser) return;
-        setError('');
-        try {
-            await deleteTodo(currentUser.uid, id);
-        } catch (err) {
-            console.error("Failed to delete todo:", err);
-            setError("Failed to delete task. Please try again.");
-        }
+    const handleDeleteTodo = (id: number) => {
+        setTodos(todos.filter(todo => todo.id !== id));
     };
 
     const displayedTodos = useMemo(() => {
@@ -108,10 +89,7 @@ const TodoListPage: React.FC = () => {
             if (sortBy === 'priority') {
                 return priorityMap[b.priority].value - priorityMap[a.priority].value;
             }
-            // Fallback for items that might not have a proper date from Firestore yet
-            const timeA = a.createdAt?.getTime ? a.createdAt.getTime() : 0;
-            const timeB = b.createdAt?.getTime ? b.createdAt.getTime() : 0;
-            return timeB - timeA;
+            return b.id - a.id; // Default sort by creation time (newest first)
         });
     }, [todos, filter, sortBy]);
 
@@ -125,22 +103,15 @@ const TodoListPage: React.FC = () => {
         return new Date(dueDate) < today;
     }
 
-    if (loading) {
-        return <div className="flex justify-center items-center h-64"><Spinner /></div>;
-    }
-
     return (
-        <div className="max-w-4xl mx-auto">
-            <div className="flex items-center gap-4 mb-6">
-                <ClipboardDocumentCheckIcon className="h-10 w-10 text-accent" />
-                <div>
-                    <h1 className="text-3xl font-bold">Todo List</h1>
-                    <p className="text-slate-400">Organize your tasks to stay productive.</p>
+        <div className="w-full">
+            <div className="bg-primary p-4 rounded-lg border border-slate-700">
+                <div className="flex items-center gap-4 mb-4">
+                    <ClipboardDocumentCheckIcon className="h-8 w-8 text-accent" />
+                    <h2 className="text-2xl font-bold text-light">My Todo List</h2>
                 </div>
-            </div>
-            {error && <p className="bg-red-500/20 text-red-400 p-3 rounded-md mb-4 text-center">{error}</p>}
-            <div className="bg-secondary p-4 rounded-lg border border-slate-700">
-                <form onSubmit={handleAddTodo} className="space-y-3 bg-primary p-3 rounded-md">
+                
+                <form onSubmit={handleAddTodo} className="space-y-3 bg-secondary p-3 rounded-md">
                     <input
                         type="text"
                         value={inputValue}
@@ -169,12 +140,12 @@ const TodoListPage: React.FC = () => {
 
                 <div className="my-4 flex flex-col sm:flex-row justify-between items-center gap-2">
                     <div className="flex gap-2">
-                        <button onClick={() => setFilter('all')} className={`px-3 py-1 text-xs rounded-full ${filter === 'all' ? 'bg-accent text-primary font-bold' : 'bg-primary'}`}>All</button>
-                        <button onClick={() => setFilter('active')} className={`px-3 py-1 text-xs rounded-full ${filter === 'active' ? 'bg-accent text-primary font-bold' : 'bg-primary'}`}>Active</button>
-                        <button onClick={() => setFilter('completed')} className={`px-3 py-1 text-xs rounded-full ${filter === 'completed' ? 'bg-accent text-primary font-bold' : 'bg-primary'}`}>Completed</button>
+                        <button onClick={() => setFilter('all')} className={`px-3 py-1 text-xs rounded-full ${filter === 'all' ? 'bg-accent text-primary font-bold' : 'bg-secondary'}`}>All</button>
+                        <button onClick={() => setFilter('active')} className={`px-3 py-1 text-xs rounded-full ${filter === 'active' ? 'bg-accent text-primary font-bold' : 'bg-secondary'}`}>Active</button>
+                        <button onClick={() => setFilter('completed')} className={`px-3 py-1 text-xs rounded-full ${filter === 'completed' ? 'bg-accent text-primary font-bold' : 'bg-secondary'}`}>Completed</button>
                     </div>
                     <div>
-                        <select onChange={(e) => setSortBy(e.target.value)} value={sortBy} className="text-xs bg-primary border border-slate-600 rounded-full px-3 py-1">
+                        <select onChange={(e) => setSortBy(e.target.value)} value={sortBy} className="text-xs bg-secondary border border-slate-600 rounded-full px-3 py-1">
                              <option value="default">Sort by: Default</option>
                              <option value="dueDate">Sort by: Due Date</option>
                              <option value="priority">Sort by: Priority</option>
@@ -182,9 +153,9 @@ const TodoListPage: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-2">
                     {displayedTodos.length > 0 ? displayedTodos.map(todo => (
-                        <div key={todo.id} className="flex items-center justify-between bg-primary p-2 rounded-md group">
+                        <div key={todo.id} className="flex items-center justify-between bg-secondary p-2 rounded-md group">
                             <div className="flex items-center gap-3 cursor-pointer flex-grow" onClick={() => handleToggleTodo(todo.id)}>
                                 <span title={priorityMap[todo.priority].name} className={`h-4 w-4 rounded-full ${priorityMap[todo.priority].color} flex-shrink-0`}></span>
                                 <div className="flex-grow">
@@ -197,9 +168,7 @@ const TodoListPage: React.FC = () => {
                             </button>
                         </div>
                     )) : (
-                        <p className="text-center text-slate-500 py-8">
-                            {filter === 'all' ? 'Your to-do list is empty!' : 'No tasks found. Try a different filter!'}
-                        </p>
+                        <p className="text-center text-slate-500 py-8">No tasks found. Try a different filter!</p>
                     )}
                 </div>
                 
@@ -209,7 +178,7 @@ const TodoListPage: React.FC = () => {
                             <span>Progress</span>
                              <span>{completedCount} of {todos.length} completed</span>
                         </div>
-                        <div className="w-full bg-primary rounded-full h-2.5">
+                        <div className="w-full bg-secondary rounded-full h-2.5">
                             <div className="bg-accent h-2.5 rounded-full" style={{ width: `${progress}%` }}></div>
                         </div>
                     </div>
@@ -219,4 +188,4 @@ const TodoListPage: React.FC = () => {
     );
 };
 
-export default TodoListPage;
+export default TodoListManager;

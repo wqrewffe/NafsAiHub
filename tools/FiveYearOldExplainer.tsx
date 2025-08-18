@@ -20,12 +20,6 @@ const languageOptions: ToolOptionConfig = {
         { value: 'French', label: 'French' },
         { value: 'German', label: 'German' },
         { value: 'Japanese', label: 'Japanese' },
-        { value: 'Mandarin Chinese', label: 'Mandarin Chinese' },
-        { value: 'Hindi', label: 'Hindi' },
-        { value: 'Arabic', label: 'Arabic' },
-        { value: 'Portuguese', label: 'Portuguese' },
-        { value: 'Bengali', label: 'Bengali (Bangla)' },
-        { value: 'Russian', label: 'Russian' },
     ]
 };
 

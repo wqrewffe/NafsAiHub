@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import ToolContainer, { ToolOptionConfig } from './common/ToolContainer';
+import ToolContainer from './common/ToolContainer';
+import type { ToolOptionConfig } from '../../types';
 import { generateJson, GenAiType } from '../services/geminiService';
 import { tools } from './index';
 import { MapPinIcon, ChevronDownIcon, ChevronRightIcon } from './Icons';
+import { languageOptions } from './common/options';
 
 interface Activity {
     time: string;
@@ -20,25 +22,6 @@ interface ItineraryOutput {
     duration: string;
     itinerary: ItineraryDay[];
 }
-
-const languageOptions: ToolOptionConfig = {
-    name: 'language',
-    label: 'Output Language',
-    type: 'select',
-    defaultValue: 'English',
-    options: [
-        { value: 'English', label: 'English' },
-        { value: 'Spanish', label: 'Spanish' },
-        { value: 'French', label: 'French' },
-        { value: 'Japanese', label: 'Japanese' },
-        { value: 'Mandarin Chinese', label: 'Mandarin Chinese' },
-        { value: 'Hindi', label: 'Hindi' },
-        { value: 'Arabic', label: 'Arabic' },
-        { value: 'Portuguese', label: 'Portuguese' },
-        { value: 'Bengali', label: 'Bengali (Bangla)' },
-        { value: 'Russian', label: 'Russian' },
-    ]
-};
 
 export const renderTravelItineraryPlannerOutput = (output: ItineraryOutput | string) => {
     const [openDay, setOpenDay] = useState<number | null>(1);
@@ -91,7 +74,7 @@ export const renderTravelItineraryPlannerOutput = (output: ItineraryOutput | str
                                 {day.activities.map((activity, index) => (
                                     <div key={index} className="flex items-start">
                                         <p className="w-24 text-right pr-4 font-semibold text-accent flex-shrink-0">{activity.time}</p>
-                                        <div className="border-l border-slate-600 pl-4">
+                                        <div className="border-l border-slate-600 pl-4 flex-1">
                                             <p className="text-slate-300">{activity.description}</p>
                                         </div>
                                     </div>
@@ -111,24 +94,13 @@ const TravelItineraryPlanner: React.FC = () => {
     const optionsConfig: ToolOptionConfig[] = [
         {
             name: 'pace',
-            label: 'Pace',
+            label: 'Travel Pace',
             type: 'select',
-            defaultValue: 'Balanced',
+            defaultValue: 'Moderate',
             options: [
                 { value: 'Relaxed', label: 'Relaxed' },
-                { value: 'Balanced', label: 'Balanced' },
-                { value: 'Action-Packed', label: 'Action-Packed' },
-            ]
-        },
-         {
-            name: 'budget',
-            label: 'Budget',
-            type: 'select',
-            defaultValue: 'Mid-Range',
-            options: [
-                { value: 'Budget-Friendly', label: 'Budget-Friendly' },
-                { value: 'Mid-Range', label: 'Mid-Range' },
-                { value: 'Luxury', label: 'Luxury' },
+                { value: 'Moderate', label: 'Moderate' },
+                { value: 'Packed', label: 'Packed' },
             ]
         },
         languageOptions
@@ -145,29 +117,31 @@ const TravelItineraryPlanner: React.FC = () => {
                     type: GenAiType.OBJECT,
                     properties: {
                         day: { type: GenAiType.NUMBER },
-                        title: { type: GenAiType.STRING, description: "A brief title for the day's theme (e.g., 'Historical Center & Museums')." },
+                        title: { type: GenAiType.STRING, description: "A title for the day's theme (e.g., 'Historical Center & Museums')." },
                         activities: {
                             type: GenAiType.ARRAY,
                             items: {
                                 type: GenAiType.OBJECT,
                                 properties: {
-                                    time: { type: GenAiType.STRING, description: "Suggested time for the activity (e.g., '9:00 AM', 'Afternoon')." },
-                                    description: { type: GenAiType.STRING, description: "Description of the activity." },
+                                    time: { type: GenAiType.STRING, description: "e.g., 'Morning', 'Afternoon', '9:00 AM'" },
+                                    description: { type: GenAiType.STRING }
                                 },
-                                required: ['time', 'description'],
-                            },
-                        },
+                                required: ["time", "description"]
+                            }
+                        }
                     },
-                    required: ['day', 'title', 'activities'],
-                },
-            },
+                    required: ["day", "title", "activities"]
+                }
+            }
         },
-        required: ['location', 'duration', 'itinerary'],
+        required: ["location", "duration", "itinerary"]
     };
 
-    const handleGenerate = async ({ prompt, options }: { prompt: string; options: any }) => {
-        const { pace, language, budget } = options;
-        const fullPrompt = `Create a travel itinerary based on this request: "${prompt}". The itinerary should have a ${pace} pace and suggest activities appropriate for a '${budget}' budget. Provide the location, trip duration, and a detailed day-by-day plan. For each day, give it a title and a list of activities with suggested times. The entire response must be in ${language}.`;
+    const handleGenerate = async ({ prompt, options }: { prompt: string; options: any; image?: { mimeType: string; data: string } }) => {
+        const { language, pace } = options;
+        const fullPrompt = `Create a day-by-day travel itinerary based on the user's request. The pace should be '${pace}'. Identify the location and duration. For each day, provide a title/theme and a list of activities with suggested times (e.g., Morning, Afternoon, Evening). The entire response must be in ${language}.
+
+        User Request: "${prompt}"`;
         return generateJson(fullPrompt, schema);
     };
 

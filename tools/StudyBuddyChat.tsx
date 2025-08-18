@@ -1,9 +1,11 @@
 
 import React from 'react';
-import ToolContainer, { ToolOptionConfig } from './common/ToolContainer';
+import ToolContainer from './common/ToolContainer';
+import type { ToolOptionConfig } from '../../types';
 import { generateText } from '../services/geminiService';
 import { tools } from './index';
 import { ChatBubbleLeftRightIcon } from './Icons';
+import { languageOptions } from './common/options';
 
 // A simple component to render basic markdown
 const MarkdownRenderer: React.FC<{ text: string }> = ({ text }) => {
@@ -55,26 +57,6 @@ const MarkdownRenderer: React.FC<{ text: string }> = ({ text }) => {
     return <div className="space-y-3">{elements}</div>;
 }
 
-const languageOptions: ToolOptionConfig = {
-    name: 'language',
-    label: 'Output Language',
-    type: 'select',
-    defaultValue: 'English',
-    options: [
-        { value: 'English', label: 'English' },
-        { value: 'Spanish', label: 'Spanish' },
-        { value: 'French', label: 'French' },
-        { value: 'German', label: 'German' },
-        { value: 'Japanese', label: 'Japanese' },
-        { value: 'Mandarin Chinese', label: 'Mandarin Chinese' },
-        { value: 'Hindi', label: 'Hindi' },
-        { value: 'Arabic', label: 'Arabic' },
-        { value: 'Portuguese', label: 'Portuguese' },
-        { value: 'Bengali', label: 'Bengali (Bangla)' },
-        { value: 'Russian', label: 'Russian' },
-    ]
-};
-
 export const renderStudyBuddyChatOutput = (output: string) => {
     return (
         <div className="flex items-start space-x-4">
@@ -121,7 +103,7 @@ const StudyBuddyChat: React.FC = () => {
         languageOptions
     ];
 
-    const handleGenerate = async ({ prompt: question, options }: { prompt: string; options: any }) => {
+    const handleGenerate = async ({ prompt: question, options }: { prompt: string; options: any; image?: { mimeType: string; data: string } }) => {
         const { persona, language, responseFormat } = options;
         const prompt = `You are a helpful AI with the persona of a "${persona}". Answer the following question clearly and concisely, as if explaining it to a fellow student. Format the response as a '${responseFormat}'. Use markdown for formatting (like **bolding** key terms or using lists with - or *) to make the explanation clear. The entire response must be in ${language}.\n\nQuestion: "${question}"`;
         return generateText(prompt);

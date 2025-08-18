@@ -1,8 +1,11 @@
+
 import React from 'react';
-import ToolContainer, { ToolOptionConfig } from './common/ToolContainer';
+import ToolContainer from './common/ToolContainer';
+import type { ToolOptionConfig } from '../../types';
 import { generateJson, GenAiType } from '../services/geminiService';
 import { tools } from './index';
 import { MoonIcon } from './Icons';
+import { languageOptions } from './common/options';
 
 interface Interpretation {
     theme: string;
@@ -13,26 +16,6 @@ interface DreamOutput {
     dreamSummary: string;
     interpretations: Interpretation[];
 }
-
-const languageOptions: ToolOptionConfig = {
-    name: 'language',
-    label: 'Output Language',
-    type: 'select',
-    defaultValue: 'English',
-    options: [
-        { value: 'English', label: 'English' },
-        { value: 'Spanish', label: 'Spanish' },
-        { value: 'French', label: 'French' },
-        { value: 'German', label: 'German' },
-        { value: 'Japanese', label: 'Japanese' },
-        { value: 'Mandarin Chinese', label: 'Mandarin Chinese' },
-        { value: 'Hindi', label: 'Hindi' },
-        { value: 'Arabic', label: 'Arabic' },
-        { value: 'Portuguese', label: 'Portuguese' },
-        { value: 'Bengali', label: 'Bengali (Bangla)' },
-        { value: 'Russian', label: 'Russian' },
-    ]
-};
 
 export const renderDreamInterpreterOutput = (output: DreamOutput | string) => {
     let data: DreamOutput;
@@ -126,7 +109,7 @@ const DreamInterpreter: React.FC = () => {
         required: ['dreamSummary', 'interpretations'],
     };
 
-    const handleGenerate = async ({ prompt, options }: { prompt: string; options: any }) => {
+    const handleGenerate = async ({ prompt, options }: { prompt: string; options: any; image?: { mimeType: string; data: string } }) => {
         const { style, language, focus } = options;
         const fullPrompt = `Provide a ${style} interpretation for the following dream, with a focus on '${focus}'. Summarize the dream, then identify 3-4 key themes or symbols and explain their possible meanings from that perspective. Present this in a thoughtful, non-definitive way. The entire response must be in ${language}.
 

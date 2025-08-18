@@ -12,6 +12,9 @@ import { useAuth } from '../hooks/useAuth';
 import { getTopUsedToolsGlobal, getTopUsedToolsForUser } from '../services/firebaseService';
 import ToolRow from '../components/ToolRow';
 
+
+const HERO_ANIMATION_URL = 'https://lottie.host/80b18f76-b48e-4a6f-a859-9941a1a5b88f/aWvNoz32pP.json';
+
 const HomePage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<ToolCategory | null>(null);
@@ -150,11 +153,15 @@ const HomePage: React.FC = () => {
   return (
     <div className="space-y-16">
       {/* Hero Section */}
-      <div className="text-center py-12 md:py-16">
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-light">Welcome to Naf's AI Hub</h1>
-        <p className="mt-6 text-lg max-w-3xl mx-auto leading-8 text-slate-300">
-          Unlock your potential with over 75 specialized AI tools designed for students, professionals, and curious minds. Your all-in-one platform for learning, creating, and innovating.
-        </p>
+      <div className="flex flex-col md:flex-row items-center gap-8 py-12 md:py-16">
+        <div className="md:w-1/2 text-center md:text-left">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-light">Welcome to Naf's AI Hub</h1>
+          <p className="mt-6 text-lg max-w-3xl mx-auto md:mx-0 leading-8 text-slate-300">
+            Unlock your potential with over 75 specialized AI tools designed for students, professionals, and curious minds. Your all-in-one platform for learning, creating, and innovating.
+          </p>
+        </div>
+        <div className="md:w-1/2">
+        </div>
       </div>
 
       {/* New Tool Rows Section */}

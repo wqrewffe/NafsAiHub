@@ -1,8 +1,11 @@
+
 import React from 'react';
-import ToolContainer, { ToolOptionConfig } from './common/ToolContainer';
+import ToolContainer from './common/ToolContainer';
+import type { ToolOptionConfig } from '../../types';
 import { generateJson, GenAiType } from '../services/geminiService';
 import { tools } from './index';
 import { GiftIcon } from './Icons';
+import { languageOptions } from './common/options';
 
 interface GiftIdea {
     name: string;
@@ -14,26 +17,6 @@ interface GiftIdea {
 interface GiftOutput {
     ideas: GiftIdea[];
 }
-
-const languageOptions: ToolOptionConfig = {
-    name: 'language',
-    label: 'Output Language',
-    type: 'select',
-    defaultValue: 'English',
-    options: [
-        { value: 'English', label: 'English' },
-        { value: 'Spanish', label: 'Spanish' },
-        { value: 'French', label: 'French' },
-        { value: 'German', label: 'German' },
-        { value: 'Japanese', label: 'Japanese' },
-        { value: 'Mandarin Chinese', label: 'Mandarin Chinese' },
-        { value: 'Hindi', label: 'Hindi' },
-        { value: 'Arabic', label: 'Arabic' },
-        { value: 'Portuguese', label: 'Portuguese' },
-        { value: 'Bengali', label: 'Bengali (Bangla)' },
-        { value: 'Russian', label: 'Russian' },
-    ]
-};
 
 export const renderGiftIdeaGeneratorOutput = (output: GiftOutput | string) => {
     let data: GiftOutput;
@@ -121,7 +104,7 @@ const GiftIdeaGenerator: React.FC = () => {
         required: ['ideas'],
     };
 
-    const handleGenerate = async ({ prompt, options }: { prompt: string; options: any }) => {
+    const handleGenerate = async ({ prompt, options }: { prompt: string; options: any; image?: { mimeType: string; data: string } }) => {
         const { numIdeas, language, occasion } = options;
         const fullPrompt = `Generate a list of ${numIdeas} thoughtful gift ideas for a '${occasion}', based on the following information: "${prompt}". For each idea, provide a name, a brief description, an estimated price range, and a reason why it's a suitable gift. The entire response must be in ${language}.`;
         return generateJson(fullPrompt, schema);

@@ -1,7 +1,10 @@
+
 import React from 'react';
-import ToolContainer, { ToolOptionConfig } from './common/ToolContainer';
+import ToolContainer from './common/ToolContainer';
+import type { ToolOptionConfig } from '../../types';
 import { generateJson, GenAiType } from '../services/geminiService';
 import { tools } from './index';
+import { languageOptions } from './common/options';
 
 interface Exercise {
     name: string;
@@ -18,26 +21,6 @@ interface DayPlan {
 interface WorkoutOutput {
     plan: DayPlan[];
 }
-
-const languageOptions: ToolOptionConfig = {
-    name: 'language',
-    label: 'Output Language',
-    type: 'select',
-    defaultValue: 'English',
-    options: [
-        { value: 'English', label: 'English' },
-        { value: 'Spanish', label: 'Spanish' },
-        { value: 'French', label: 'French' },
-        { value: 'German', label: 'German' },
-        { value: 'Japanese', label: 'Japanese' },
-        { value: 'Mandarin Chinese', label: 'Mandarin Chinese' },
-        { value: 'Hindi', label: 'Hindi' },
-        { value: 'Arabic', label: 'Arabic' },
-        { value: 'Portuguese', label: 'Portuguese' },
-        { value: 'Bengali', label: 'Bengali (Bangla)' },
-        { value: 'Russian', label: 'Russian' },
-    ]
-};
 
 export const renderWorkoutPlannerOutput = (output: WorkoutOutput | string) => {
     let data: WorkoutOutput;
@@ -147,7 +130,7 @@ const WorkoutPlanner: React.FC = () => {
         required: ['plan'],
     };
 
-    const handleGenerate = async ({ prompt, options }: { prompt: string; options: any }) => {
+    const handleGenerate = async ({ prompt, options }: { prompt: string; options: any; image?: { mimeType: string; data: string } }) => {
         const { planFocus, equipment, language } = options;
         const fullPrompt = `Create a comprehensive 7-day workout plan based on these user goals: "${prompt}". The overall focus of the plan should be on ${planFocus}. The exercises should be suitable for someone with access to '${equipment}'. For each day of the week, specify the workout focus (or if it's a rest day) and list specific exercises with their sets and reps. Ensure the plan is balanced and logical. The response must be in ${language}.`;
         return generateJson(fullPrompt, schema);

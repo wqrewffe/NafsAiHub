@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ToolContainer, { ToolOptionConfig } from './common/ToolContainer';
 import { generateJson, GenAiType } from '../services/geminiService';
@@ -61,27 +62,29 @@ export const renderEthicalDilemmaExplorerOutput = (output: DilemmaOutput | strin
                 <h2 className="text-2xl font-bold text-light">Ethical Analysis: <span className="text-accent">{data.dilemma}</span></h2>
             </div>
             <div className="border border-slate-700 rounded-lg overflow-hidden">
-                <table className="w-full divide-y divide-slate-700">
-                    <thead className="bg-secondary">
-                        <tr>
-                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider w-1/5">Framework</th>
-                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Analysis & Conclusion</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-primary divide-y divide-slate-700">
-                        {data.viewpoints.map((view, index) => (
-                            <tr key={index}>
-                                <td className="px-4 py-4 align-top">
-                                    <span className="font-bold text-accent">{view.framework}</span>
-                                </td>
-                                <td className="px-4 py-4 align-top text-slate-300 space-y-2">
-                                    <p>{view.analysis}</p>
-                                    <p className="text-sm text-sky-400/80"><strong className="font-semibold">Conclusion:</strong> {view.conclusion}</p>
-                                </td>
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-slate-700">
+                        <thead className="bg-secondary">
+                            <tr>
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider w-1/5">Framework</th>
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Analysis & Conclusion</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="bg-primary divide-y divide-slate-700">
+                            {data.viewpoints.map((view, index) => (
+                                <tr key={index}>
+                                    <td className="px-4 py-4 align-top">
+                                        <span className="font-bold text-accent">{view.framework}</span>
+                                    </td>
+                                    <td className="px-4 py-4 align-top text-slate-300 space-y-2">
+                                        <p>{view.analysis}</p>
+                                        <p className="text-sm text-sky-400/80"><strong className="font-semibold">Conclusion:</strong> {view.conclusion}</p>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
             {data.additionalAnalysis && (
                  <div className="bg-secondary p-4 rounded-lg">

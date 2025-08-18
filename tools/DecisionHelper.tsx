@@ -1,8 +1,11 @@
+
 import React from 'react';
-import ToolContainer, { ToolOptionConfig } from './common/ToolContainer';
+import ToolContainer from './common/ToolContainer';
+import type { ToolOptionConfig } from '../../types';
 import { generateJson, GenAiType } from '../services/geminiService';
 import { tools } from './index';
 import { CheckCircleIcon, XCircleIcon, LightBulbIcon } from './Icons';
+import { languageOptions } from './common/options';
 
 interface DecisionOutput {
     decision: string;
@@ -10,26 +13,6 @@ interface DecisionOutput {
     cons: string[];
     recommendation: string;
 }
-
-const languageOptions: ToolOptionConfig = {
-    name: 'language',
-    label: 'Output Language',
-    type: 'select',
-    defaultValue: 'English',
-    options: [
-        { value: 'English', label: 'English' },
-        { value: 'Spanish', label: 'Spanish' },
-        { value: 'French', label: 'French' },
-        { value: 'German', label: 'German' },
-        { value: 'Japanese', label: 'Japanese' },
-        { value: 'Mandarin Chinese', label: 'Mandarin Chinese' },
-        { value: 'Hindi', label: 'Hindi' },
-        { value: 'Arabic', label: 'Arabic' },
-        { value: 'Portuguese', label: 'Portuguese' },
-        { value: 'Bengali', label: 'Bengali (Bangla)' },
-        { value: 'Russian', label: 'Russian' },
-    ]
-};
 
 export const renderDecisionHelperOutput = (output: DecisionOutput | string) => {
     let data: DecisionOutput;
@@ -132,7 +115,7 @@ const DecisionHelper: React.FC = () => {
         required: ['decision', 'pros', 'cons', 'recommendation'],
     };
 
-    const handleGenerate = async ({ prompt, options }: { prompt: string; options: any }) => {
+    const handleGenerate = async ({ prompt, options }: { prompt: string; options: any; image?: { mimeType: string; data: string } }) => {
         const { numPoints, language, perspective } = options;
         const fullPrompt = `Analyze the following decision to help me make a choice: "${prompt}". Provide a concise summary of the decision, a balanced list of ${numPoints} pros and ${numPoints} cons, and a final, thoughtful recommendation, all from a '${perspective}' perspective. The entire response must be in ${language}.`;
         return generateJson(fullPrompt, schema);

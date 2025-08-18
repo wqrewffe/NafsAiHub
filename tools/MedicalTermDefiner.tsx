@@ -1,9 +1,11 @@
 
 import React from 'react';
-import ToolContainer, { ToolOptionConfig } from './common/ToolContainer';
+import ToolContainer from './common/ToolContainer';
+import type { ToolOptionConfig } from '../../types';
 import { generateJson, GenAiType } from '../services/geminiService';
 import { tools } from './index';
 import { BeakerIcon, BookOpenIcon, LightBulbIcon } from './Icons';
+import { languageOptions } from './common/options';
 
 interface MedicalTermOutput {
     term: string;
@@ -11,26 +13,6 @@ interface MedicalTermOutput {
     analogy: string;
     etymology?: string;
 }
-
-const languageOptions: ToolOptionConfig = {
-    name: 'language',
-    label: 'Output Language',
-    type: 'select',
-    defaultValue: 'English',
-    options: [
-        { value: 'English', label: 'English' },
-        { value: 'Spanish', label: 'Spanish' },
-        { value: 'French', label: 'French' },
-        { value: 'German', label: 'German' },
-        { value: 'Japanese', label: 'Japanese' },
-        { value: 'Mandarin Chinese', label: 'Mandarin Chinese' },
-        { value: 'Hindi', label: 'Hindi' },
-        { value: 'Arabic', label: 'Arabic' },
-        { value: 'Portuguese', label: 'Portuguese' },
-        { value: 'Bengali', label: 'Bengali (Bangla)' },
-        { value: 'Russian', label: 'Russian' },
-    ]
-};
 
 export const renderMedicalTermDefinerOutput = (output: MedicalTermOutput | string) => {
     let data: MedicalTermOutput;
@@ -122,7 +104,7 @@ const MedicalTermDefiner: React.FC = () => {
         required: ['term', 'simpleDefinition', 'analogy'],
     };
 
-    const handleGenerate = async ({ prompt: term, options }: { prompt: string; options: any }) => {
+    const handleGenerate = async ({ prompt: term, options }: { prompt: string; options: any; image?: { mimeType: string; data: string } }) => {
         const { audience, language, includeEtymology } = options;
         const etymologyInstruction = includeEtymology === 'Yes' ? "Also include the word's etymology." : "Do not include the word's etymology.";
         const prompt = `Provide a definition for the medical term: "${term}".

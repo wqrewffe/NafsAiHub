@@ -1,35 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
-import ToolContainer, { ToolOptionConfig } from './common/ToolContainer';
+import ToolContainer from './common/ToolContainer';
+import type { ToolOptionConfig } from '../types';
 import { generateText } from '../services/geminiService';
 import { tools } from './index';
 import { ChevronDownIcon, ChevronRightIcon } from './Icons';
+import { languageOptions } from './common/options';
 
 interface OutlineNode {
     content: string;
     level: number;
     children: OutlineNode[];
 }
-
-const languageOptions: ToolOptionConfig = {
-    name: 'language',
-    label: 'Output Language',
-    type: 'select',
-    defaultValue: 'English',
-    options: [
-        { value: 'English', label: 'English' },
-        { value: 'Spanish', label: 'Spanish' },
-        { value: 'French', label: 'French' },
-        { value: 'German', label: 'German' },
-        { value: 'Japanese', label: 'Japanese' },
-        { value: 'Mandarin Chinese', label: 'Mandarin Chinese' },
-        { value: 'Hindi', label: 'Hindi' },
-        { value: 'Arabic', label: 'Arabic' },
-        { value: 'Portuguese', label: 'Portuguese' },
-        { value: 'Bengali', label: 'Bengali (Bangla)' },
-        { value: 'Russian', label: 'Russian' },
-    ]
-};
 
 const parseOutline = (text: string): OutlineNode[] => {
     const lines = text.split('\n').filter(line => line.trim() !== '');
@@ -77,29 +59,31 @@ const OutlineNodeComponent: React.FC<{ node: OutlineNode, isInitiallyOpen: boole
 
     const getTextStyle = (level: number) => {
         switch (level) {
-            case 0: return "text-2xl font-bold text-accent mb-2 pb-2";
-            case 1: return "text-xl font-bold text-light mt-4";
-            case 2: return "text-lg font-semibold text-sky-300 mt-2";
-            default: return "text-slate-300";
+            case 0: return "text-xl sm:text-2xl font-bold text-accent mb-2 pb-2";
+            case 1: return "text-lg sm:text-xl font-bold text-light mt-4";
+            case 2: return "text-base sm:text-lg font-semibold text-sky-300 mt-2";
+            default: return "text-sm sm:text-base text-slate-300";
         }
     };
     
     const renderContent = (content: string) => {
-        return content.split('\n').map((line, i) => <p key={i}>{line}</p>);
+        return content.split('\n').map((line, i) => <p key={i} className="break-words">{line}</p>);
     }
 
     return (
-        <div className={node.level > 0 ? 'ml-6 border-l border-slate-700 pl-4' : ''}>
-            <div className={`flex items-center ${hasChildren ? 'cursor-pointer' : ''}`} onClick={hasChildren ? toggleOpen : undefined}>
-                {hasChildren && (
-                    isOpen 
-                        ? <ChevronDownIcon className="h-5 w-5 text-slate-500 mr-2 flex-shrink-0" /> 
-                        : <ChevronRightIcon className="h-5 w-5 text-slate-500 mr-2 flex-shrink-0" />
-                )}
-                {!hasChildren && node.level >=3 && (
-                     <span className="text-accent mr-3 mt-1 flex-shrink-0">●</span>
-                )}
-                <div className={`${getTextStyle(node.level)} ${!hasChildren && 'ml-7'}`}>{renderContent(node.content)}</div>
+        <div className={node.level > 0 ? 'ml-2 sm:ml-4 border-l border-slate-700 pl-2 sm:pl-4' : ''}>
+            <div className={`flex items-start ${hasChildren ? 'cursor-pointer' : ''}`} onClick={hasChildren ? toggleOpen : undefined}>
+                <div className="w-6 flex-shrink-0 pt-1"> {/* Spacer and icon holder */}
+                    {hasChildren && (
+                        isOpen 
+                            ? <ChevronDownIcon className="h-5 w-5 text-slate-500" /> 
+                            : <ChevronRightIcon className="h-5 w-5 text-slate-500" />
+                    )}
+                    {!hasChildren && node.level >=3 && (
+                         <span className="text-accent text-sm ml-1">●</span>
+                    )}
+                </div>
+                <div className={`flex-grow ${getTextStyle(node.level)}`}>{renderContent(node.content)}</div>
             </div>
             {isOpen && hasChildren && (
                 <div className="mt-2">
@@ -185,7 +169,7 @@ const EssayOutliner: React.FC = () => {
         languageOptions
     ];
 
-    const handleGenerate = async ({ prompt: topic, options }: { prompt: string, options: any }) => {
+    const handleGenerate = async ({ prompt: topic, options }: { prompt: string; options: any; image?: { mimeType: string; data: string } }) => {
         const { style, numPoints, language, detailLevel, tone } = options;
         const prompt = `Create a detailed, well-structured essay outline for the topic: "${topic}".
         The outline should contain an introduction, ${numPoints} main body sections, and a conclusion.

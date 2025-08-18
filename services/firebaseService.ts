@@ -1,4 +1,5 @@
 
+
 import { db, serverTimestamp } from '../firebase/config';
 import { HistoryItem, FirestoreUser, Todo, Note } from '../types';
 import firebase from 'firebase/compat/app';
@@ -267,8 +268,15 @@ export const onTodosSnapshot = (
       const data = doc.data();
       todos.push({
         id: doc.id,
-        ...data,
-        createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
+        text: data.text || '',
+        completed: data.completed || false,
+        priority: data.priority || 'medium',
+        dueDate: data.dueDate || null,
+        createdAt: data.createdAt, 
+        completedAt: data.completedAt || null,
+        subtasks: data.subtasks || [],
+        tags: data.tags || [],
+        recurring: data.recurring || 'none',
       } as Todo);
     });
     onUpdate(todos);
@@ -279,17 +287,47 @@ export const onTodosSnapshot = (
   return unsubscribe;
 };
 
-export const addTodo = async (userId: string, todoData: Omit<Todo, 'id' | 'createdAt'>) => {
+export const addTodo = async (userId: string, todoData: Omit<Todo, 'id' | 'createdAt' | 'completedAt'>) => {
   const todosRef = db.collection('users').doc(userId).collection('todos');
   await todosRef.add({
     ...todoData,
     createdAt: serverTimestamp(),
+    completedAt: null,
   });
 };
 
 export const updateTodo = async (userId: string, todoId: string, updates: Partial<Omit<Todo, 'id' | 'createdAt'>>) => {
   const todoRef = db.collection('users').doc(userId).collection('todos').doc(todoId);
-  await todoRef.update(updates);
+  const updatePayload: { [key: string]: any } = { ...updates };
+  if (updates.completed !== undefined) {
+      updatePayload.completedAt = updates.completed ? serverTimestamp() : null;
+  }
+  await todoRef.update(updatePayload);
+};
+
+export const updateSubtask = async (userId: string, todoId: string, subtaskId: string, completed: boolean) => {
+    const todoRef = db.collection('users').doc(userId).collection('todos').doc(todoId);
+    const todoDoc = await todoRef.get();
+    if (!todoDoc.exists) throw new Error("Todo not found");
+
+    const todoData = todoDoc.data() as Todo;
+    const updatedSubtasks = todoData.subtasks.map(sub => 
+        sub.id === subtaskId ? { ...sub, completed } : sub
+    );
+    
+    // Check if all subtasks are completed to mark the parent task as completed
+    const allSubtasksCompleted = updatedSubtasks.every(s => s.completed);
+    const updates: { subtasks: any, completed?: boolean, completedAt?: any } = { subtasks: updatedSubtasks };
+    
+    if (allSubtasksCompleted && !todoData.completed) {
+        updates.completed = true;
+        updates.completedAt = serverTimestamp();
+    } else if (!allSubtasksCompleted && todoData.completed) {
+        updates.completed = false;
+        updates.completedAt = null;
+    }
+
+    await todoRef.update(updates);
 };
 
 export const deleteTodo = async (userId: string, todoId: string) => {

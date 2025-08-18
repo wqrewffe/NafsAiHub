@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useAuth } from '../hooks/useAuth';
+import { onNotesSnapshot, addNote, updateNote, deleteNote } from '../services/firebaseService';
+import { Note } from '../types';
 import { PencilIcon, TrashIcon, DocumentPlusIcon, CodeBracketIcon } from '../tools/Icons';
+import Spinner from '../components/Spinner';
 
-interface Note {
-    id: string;
-    title: string;
-    content: string;
-    lastModified: number;
-}
 
 const MarkdownPreview: React.FC<{ content: string }> = ({ content }) => {
     const previewText = content.split('\n')[0] || 'No content';
@@ -20,69 +18,102 @@ const MarkdownPreview: React.FC<{ content: string }> = ({ content }) => {
 };
 
 const NoteTakingPage: React.FC = () => {
+    const { currentUser } = useAuth();
     const [notes, setNotes] = useState<Note[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
     const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
     const editorRef = useRef<HTMLTextAreaElement>(null);
+    const updateTimeoutRef = useRef<number | null>(null);
 
     useEffect(() => {
-        try {
-            const storedNotes = localStorage.getItem('note-taking-app-v2');
-            if (storedNotes) {
-                const parsedNotes: Note[] = JSON.parse(storedNotes);
-                setNotes(parsedNotes);
-                if (parsedNotes.length > 0) {
-                    const sorted = [...parsedNotes].sort((a, b) => b.lastModified - a.lastModified);
-                    setActiveNoteId(sorted[0].id);
-                }
+        if (!currentUser) {
+            setLoading(false);
+            setNotes([]);
+            setActiveNoteId(null);
+            return;
+        }
+        setLoading(true);
+        setError('');
+        const unsubscribe = onNotesSnapshot(
+            currentUser.uid, 
+            (fetchedNotes) => {
+                setNotes(fetchedNotes);
+                setActiveNoteId(prevActiveId => {
+                    if (!prevActiveId && fetchedNotes.length > 0) return fetchedNotes[0].id;
+                    if (prevActiveId && !fetchedNotes.some(n => n.id === prevActiveId)) {
+                        return fetchedNotes.length > 0 ? fetchedNotes[0].id : null;
+                    }
+                    return prevActiveId;
+                });
+                setLoading(false);
+            },
+            (err) => {
+                setError('Could not fetch your notes. This might be due to a database permissions issue or a missing index. Please check your Firestore configuration.');
+                console.error(err);
+                setLoading(false);
             }
-        } catch (error) {
-            console.error("Failed to load notes from localStorage", error);
-        }
-    }, []);
+        );
 
-    useEffect(() => {
-        try {
-            localStorage.setItem('note-taking-app-v2', JSON.stringify(notes));
-        } catch (error) {
-            console.error("Failed to save notes to localStorage", error);
-        }
-    }, [notes]);
-    
-    const sortedNotes = useMemo(() => {
-        return [...notes].sort((a, b) => b.lastModified - a.lastModified);
-    }, [notes]);
+        return () => unsubscribe();
+    }, [currentUser?.uid]);
 
     const activeNote = useMemo(() => {
         return notes.find(note => note.id === activeNoteId);
     }, [notes, activeNoteId]);
 
-    const handleAddNote = () => {
-        const newNote: Note = {
-            id: Date.now().toString(),
-            title: 'Untitled Note',
-            content: '',
-            lastModified: Date.now(),
-        };
-        setNotes([newNote, ...notes]);
-        setActiveNoteId(newNote.id);
+    const handleAddNote = async () => {
+        if (!currentUser) return;
+        setError('');
+        try {
+            const newNoteData: Omit<Note, 'id'> = {
+                title: 'Untitled Note',
+                content: '',
+                lastModified: Date.now(),
+            };
+            const newId = await addNote(currentUser.uid, newNoteData);
+            setActiveNoteId(newId);
+        } catch (err) {
+            console.error("Failed to add note:", err);
+            setError("Failed to create a new note. Please try again.");
+        }
     };
 
-    const handleDeleteNote = (id: string) => {
-        const newNotes = notes.filter(note => note.id !== id);
-        setNotes(newNotes);
-        if (activeNoteId === id) {
-             const newSortedNotes = [...newNotes].sort((a, b) => b.lastModified - a.lastModified);
-             setActiveNoteId(newSortedNotes.length > 0 ? newSortedNotes[0].id : null);
+    const handleDeleteNote = async (id: string) => {
+        if (!currentUser) return;
+        setError('');
+        try {
+            await deleteNote(currentUser.uid, id);
+        } catch (err) {
+            console.error("Failed to delete note:", err);
+            setError("Failed to delete the note. Please try again.");
         }
     };
 
     const handleUpdateNote = (field: 'title' | 'content', value: string) => {
-        if (!activeNoteId) return;
+        if (!activeNoteId || !currentUser) return;
+
+        // Optimistic UI update
         setNotes(notes.map(note =>
             note.id === activeNoteId
                 ? { ...note, [field]: value, lastModified: Date.now() }
                 : note
         ));
+        
+        setError('');
+
+        if (updateTimeoutRef.current) {
+            clearTimeout(updateTimeoutRef.current);
+        }
+        
+        updateTimeoutRef.current = window.setTimeout(async () => {
+            try {
+                await updateNote(currentUser.uid, activeNoteId, { [field]: value });
+            } catch (err) {
+                console.error("Failed to save note:", err);
+                setError("Failed to save changes. Please check your connection.");
+            }
+        }, 500);
     };
 
     const handleFormat = (formatType: 'bold' | 'italic' | 'code') => {
@@ -109,6 +140,10 @@ const NoteTakingPage: React.FC = () => {
         handleUpdateNote('content', newValue);
     };
 
+    if (loading) {
+        return <div className="flex justify-center items-center h-64"><Spinner /></div>;
+    }
+
     return (
         <div>
             <div className="flex items-center gap-4 mb-6">
@@ -118,6 +153,7 @@ const NoteTakingPage: React.FC = () => {
                     <p className="text-slate-400">Capture your thoughts, ideas, and reminders.</p>
                 </div>
             </div>
+            {error && <p className="bg-red-500/20 text-red-400 p-3 rounded-md mb-4 text-center">{error}</p>}
             <div className="flex flex-col md:flex-row gap-4 md:h-[70vh]">
                 {/* Sidebar */}
                 <div className="w-full md:w-1/3 bg-secondary p-3 rounded-lg flex flex-col border border-slate-700 h-64 md:h-full">
@@ -128,7 +164,7 @@ const NoteTakingPage: React.FC = () => {
                         </button>
                     </div>
                     <div className="flex-grow overflow-y-auto pr-1">
-                        {sortedNotes.length > 0 ? sortedNotes.map(note => (
+                        {notes.length > 0 ? notes.map(note => (
                             <div
                                 key={note.id}
                                 onClick={() => setActiveNoteId(note.id)}

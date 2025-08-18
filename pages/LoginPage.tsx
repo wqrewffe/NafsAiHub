@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import firebase from 'firebase/compat/app';
 import { auth, googleProvider } from '../firebase/config';
 import { createUserProfileDocument } from '../services/firebaseService';
@@ -13,7 +13,7 @@ const LoginPage: React.FC = () => {
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const navigate = ReactRouterDOM.useNavigate();
   const { authSettings, loading: settingsLoading } = useSettings();
 
   const setAuthPersistence = async () => {
@@ -102,9 +102,9 @@ const LoginPage: React.FC = () => {
               </label>
             </div>
             <div className="text-sm">
-              <Link to="/forgot-password" className="font-medium text-accent hover:text-sky-400">
+              <ReactRouterDOM.Link to="/forgot-password" className="font-medium text-accent hover:text-sky-400">
                 Forgot Password?
-              </Link>
+              </ReactRouterDOM.Link>
             </div>
           </div>
           <button
@@ -137,9 +137,9 @@ const LoginPage: React.FC = () => {
 
         <p className="mt-6 text-center text-sm text-slate-400">
           Don't have an account?{' '}
-          <Link to="/signup" className="font-medium text-accent hover:text-sky-400">
+          <ReactRouterDOM.Link to="/signup" className="font-medium text-accent hover:text-sky-400">
             Sign up
-          </Link>
+          </ReactRouterDOM.Link>
         </p>
       </div>
     </div>

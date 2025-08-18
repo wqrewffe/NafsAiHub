@@ -1,9 +1,11 @@
 
 import React, { useState } from 'react';
-import ToolContainer, { ToolOptionConfig } from './common/ToolContainer';
+import ToolContainer from './common/ToolContainer';
+import type { ToolOptionConfig } from '../../types';
 import { generateJson, GenAiType } from '../services/geminiService';
 import { tools } from './index';
 import { ClipboardDocumentIcon, CheckCircleIcon } from './Icons';
+import { languageOptions } from './common/options';
 
 interface CodeExplanation {
     code: string;
@@ -13,26 +15,6 @@ interface CodeExplanation {
         detail: string;
     }>;
 }
-
-const languageOptions: ToolOptionConfig = {
-    name: 'explanationLanguage',
-    label: 'Explanation Language',
-    type: 'select',
-    defaultValue: 'English',
-    options: [
-        { value: 'English', label: 'English' },
-        { value: 'Spanish', label: 'Spanish' },
-        { value: 'French', label: 'French' },
-        { value: 'German', label: 'German' },
-        { value: 'Japanese', label: 'Japanese' },
-        { value: 'Mandarin Chinese', label: 'Mandarin Chinese' },
-        { value: 'Hindi', label: 'Hindi' },
-        { value: 'Arabic', label: 'Arabic' },
-        { value: 'Portuguese', label: 'Portuguese' },
-        { value: 'Bengali', label: 'Bengali (Bangla)' },
-        { value: 'Russian', label: 'Russian' },
-    ]
-};
 
 const CodeExplanationRenderer = ({ content }: { content: CodeExplanation }) => {
     const [copied, setCopied] = useState(false);
@@ -64,22 +46,24 @@ const CodeExplanationRenderer = ({ content }: { content: CodeExplanation }) => {
             <div>
                 <h4 className="text-lg font-semibold text-light mb-2">Line-by-Line Explanation</h4>
                 <div className="border border-slate-700 rounded-md overflow-hidden">
-                    <table className="w-full divide-y divide-slate-700">
-                        <thead className="bg-slate-800">
-                            <tr>
-                                <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-slate-300 uppercase tracking-wider w-1/4">Lines</th>
-                                <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Explanation</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-primary divide-y divide-slate-700">
-                            {content.explanation.map((item, index) => (
-                                <tr key={index}>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm font-mono text-slate-400 text-center">{item.lines}</td>
-                                    <td className="px-4 py-3 text-sm text-slate-300 leading-relaxed">{item.detail}</td>
+                    <div className="overflow-x-auto">
+                        <table className="w-full divide-y divide-slate-700">
+                            <thead className="bg-slate-800">
+                                <tr>
+                                    <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-slate-300 uppercase tracking-wider w-1/4">Lines</th>
+                                    <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Explanation</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="bg-primary divide-y divide-slate-700">
+                                {content.explanation.map((item, index) => (
+                                    <tr key={index}>
+                                        <td className="px-4 py-3 whitespace-nowrap text-sm font-mono text-slate-400 text-center">{item.lines}</td>
+                                        <td className="px-4 py-3 text-sm text-slate-300 leading-relaxed">{item.detail}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -127,7 +111,7 @@ const CodeExplainer: React.FC = () => {
                 { value: 'Student', label: 'Student' },
             ]
         },
-        languageOptions
+        {...languageOptions, name: 'explanationLanguage' }
     ];
 
     const schema = {
@@ -151,10 +135,11 @@ const CodeExplainer: React.FC = () => {
         required: ['code', 'language', 'explanation'],
     };
 
-    const handleGenerate = async ({ prompt: codeSnippet, options }: { prompt: string; options: any }) => {
+    const handleGenerate = async ({ prompt: codeSnippet, options, image }: { prompt: string; options: any; image?: { mimeType: string, data: string } }) => {
         const { verbosity, explanationLanguage, targetAudience } = options;
-        const prompt = `Analyze the following code snippet. Provide the original code, identify the programming language, and give a ${verbosity}, line-by-line explanation of its functionality. The explanation should be tailored for a '${targetAudience}'. The explanation text should be in ${explanationLanguage}.\n\nCode:\n${codeSnippet}`;
-        return generateJson(prompt, schema);
+        const imageInstruction = image ? "The code to be explained is in the provided image. If there is also text in the prompt, it is a question or context about the code in the image." : "The code to be explained is in the text prompt.";
+        const prompt = `Analyze the following code snippet. ${imageInstruction} Provide the original code, identify the programming language, and give a ${verbosity}, line-by-line explanation of its functionality. The explanation should be tailored for a '${targetAudience}'. The explanation text should be in ${explanationLanguage}.\n\nCode:\n${codeSnippet}`;
+        return generateJson(prompt, schema, image);
     };
 
     return (

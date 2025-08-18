@@ -93,7 +93,23 @@ import {
 } from './Icons';
 
 export const tools: Tool[] = [
-  // Productivity (These are now in the navbar, so this category can be removed or kept for future tools)
+  // Productivity
+  {
+    id: 'todo-list',
+    name: 'Todo List',
+    description: 'Organize your tasks with a simple and effective todo list manager.',
+    category: 'Productivity',
+    icon: ClipboardDocumentCheckIcon,
+    path: '/todo'
+  },
+  {
+    id: 'note-taking',
+    name: 'Note Taking',
+    description: 'Jot down your thoughts and ideas with a markdown-enabled notes app.',
+    category: 'Productivity',
+    icon: PencilIcon,
+    path: '/notes'
+  },
   // Robotics & AI
   {
     id: 'ai-ethics-advisor',

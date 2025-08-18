@@ -5,9 +5,7 @@ import React,
     useEffect,
     useMemo
 } from 'react';
-import {
-    Link
-} from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import {
     getAllUsers,
     getDashboardStats,
@@ -283,9 +281,9 @@ const AdminDashboardPage: React.FC = () => {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-4">
-                                        <Link to={`/admin/user/${user.id}`} className="text-accent hover:text-sky-400">
+                                        <ReactRouterDOM.Link to={`/admin/user/${user.id}`} className="text-accent hover:text-sky-400">
                                             View History
-                                        </Link>
+                                        </ReactRouterDOM.Link>
                                         <button className="text-slate-400 hover:text-white" onClick={() => alert('Role management feature coming soon!')}>
                                             Edit Role
                                         </button>

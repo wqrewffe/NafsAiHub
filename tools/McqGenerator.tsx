@@ -1,9 +1,11 @@
 
 import React, { useState } from 'react';
-import ToolContainer, { ToolOptionConfig } from './common/ToolContainer';
+import ToolContainer from './common/ToolContainer';
+import type { ToolOptionConfig } from '../../types';
 import { generateJson, GenAiType } from '../services/geminiService';
 import { tools } from './index';
 import { CheckCircleIcon, XCircleIcon } from './Icons';
+import { languageOptions } from './common/options';
 
 interface Mcq {
     question: string;
@@ -11,26 +13,6 @@ interface Mcq {
     correctAnswer: string;
     explanation: string;
 }
-
-const languageOptions: ToolOptionConfig = {
-    name: 'language',
-    label: 'Output Language',
-    type: 'select',
-    defaultValue: 'English',
-    options: [
-        { value: 'English', label: 'English' },
-        { value: 'Spanish', label: 'Spanish' },
-        { value: 'French', label: 'French' },
-        { value: 'German', label: 'German' },
-        { value: 'Japanese', label: 'Japanese' },
-        { value: 'Mandarin Chinese', label: 'Mandarin Chinese' },
-        { value: 'Hindi', label: 'Hindi' },
-        { value: 'Arabic', label: 'Arabic' },
-        { value: 'Portuguese', label: 'Portuguese' },
-        { value: 'Bengali', label: 'Bengali (Bangla)' },
-        { value: 'Russian', label: 'Russian' },
-    ]
-};
 
 const QuizComponent: React.FC<{ mcqs: Mcq[] }> = ({ mcqs }) => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -247,7 +229,7 @@ const McqGenerator: React.FC = () => {
         },
     };
 
-    const handleGenerate = async ({ prompt: text, options }: { prompt: string; options: any }) => {
+    const handleGenerate = async ({ prompt: text, options }: { prompt: string; options: any; image?: { mimeType: string; data: string } }) => {
         const { numQuestions, difficulty, language, focus } = options;
         const prompt = `Based on the following text, generate ${numQuestions} multiple-choice questions of ${difficulty} difficulty. The questions should focus on testing '${focus}'. For each question, provide 4 options, indicate the correct answer, and provide a detailed explanation for why the correct answer is correct and why the other options are incorrect. The correct answer MUST be one of the provided options. The entire response, including the questions, answers, and explanation, should be in ${language}. Text: "${text}"`;
         return generateJson(prompt, schema);

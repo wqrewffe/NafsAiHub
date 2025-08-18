@@ -1,34 +1,16 @@
 
 import React from 'react';
-import ToolContainer, { ToolOptionConfig } from './common/ToolContainer';
+import ToolContainer from './common/ToolContainer';
+import type { ToolOptionConfig } from '../../types';
 import { generateJson, GenAiType } from '../services/geminiService';
 import { tools } from './index';
+import { languageOptions } from './common/options';
 
 interface MathSolution {
     problem: string;
     steps: string[];
     finalAnswer: string;
 }
-
-const languageOptions: ToolOptionConfig = {
-    name: 'language',
-    label: 'Output Language',
-    type: 'select',
-    defaultValue: 'English',
-    options: [
-        { value: 'English', label: 'English' },
-        { value: 'Spanish', label: 'Spanish' },
-        { value: 'French', label: 'French' },
-        { value: 'German', label: 'German' },
-        { value: 'Japanese', label: 'Japanese' },
-        { value: 'Mandarin Chinese', label: 'Mandarin Chinese' },
-        { value: 'Hindi', label: 'Hindi' },
-        { value: 'Arabic', label: 'Arabic' },
-        { value: 'Portuguese', label: 'Portuguese' },
-        { value: 'Bengali', label: 'Bengali (Bangla)' },
-        { value: 'Russian', label: 'Russian' },
-    ]
-};
 
 export const renderMathProblemSolverOutput = (output: MathSolution | string) => {
     let data: MathSolution;
@@ -120,10 +102,11 @@ const MathProblemSolver: React.FC = () => {
         required: ['problem', 'steps', 'finalAnswer']
     };
 
-    const handleGenerate = async ({ prompt: problem, options }: { prompt: string; options: any }) => {
+    const handleGenerate = async ({ prompt: problem, options, image }: { prompt: string; options: any; image?: { mimeType: string; data: string } }) => {
         const { explanationStyle, language, mathLevel } = options;
-        const prompt = `Provide a step-by-step solution for the following math problem. Re-state the original problem, then list the steps, and finally provide the final answer clearly. The explanation for each step should be in a "${explanationStyle}" style, appropriate for a '${mathLevel}' level of understanding. The entire response must be in ${language}.\n\nProblem: ${problem}`;
-        return generateJson(prompt, schema);
+        const imageInstruction = image ? "The math problem to solve is in the provided image. The text prompt contains any additional context or instructions." : "The math problem to solve is in the text prompt."
+        const prompt = `Provide a step-by-step solution for the following math problem. ${imageInstruction} Re-state the original problem, then list the steps, and finally provide the final answer clearly. The explanation for each step should be in a "${explanationStyle}" style, appropriate for a '${mathLevel}' level of understanding. The entire response must be in ${language}.\n\nProblem: ${problem}`;
+        return generateJson(prompt, schema, image);
     };
 
     return (

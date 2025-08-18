@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { auth, googleProvider } from '../firebase/config';
 import { createUserProfileDocument } from '../services/firebaseService';
 import { GoogleIcon } from '../tools/Icons';
@@ -14,7 +14,7 @@ const SignUpPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const navigate = ReactRouterDOM.useNavigate();
   const { authSettings, loading: settingsLoading } = useSettings();
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
@@ -158,9 +158,9 @@ const SignUpPage: React.FC = () => {
         
         <p className="mt-6 text-center text-sm text-slate-400">
           Already have an account?{' '}
-          <Link to="/login" className="font-medium text-accent hover:text-sky-400">
+          <ReactRouterDOM.Link to="/login" className="font-medium text-accent hover:text-sky-400">
             Login
-          </Link>
+          </ReactRouterDOM.Link>
         </p>
       </div>
     </div>

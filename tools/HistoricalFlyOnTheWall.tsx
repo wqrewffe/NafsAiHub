@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ToolContainer, { ToolOptionConfig } from './common/ToolContainer';
 import { generateJson, GenAiType } from '../services/geminiService';
@@ -22,12 +23,6 @@ const languageOptions: ToolOptionConfig = {
         { value: 'French', label: 'French' },
         { value: 'German', label: 'German' },
         { value: 'Japanese', label: 'Japanese' },
-        { value: 'Mandarin Chinese', label: 'Mandarin Chinese' },
-        { value: 'Hindi', label: 'Hindi' },
-        { value: 'Arabic', label: 'Arabic' },
-        { value: 'Portuguese', label: 'Portuguese' },
-        { value: 'Bengali', label: 'Bengali (Bangla)' },
-        { value: 'Russian', label: 'Russian' },
     ]
 };
 
@@ -47,7 +42,7 @@ export const renderHistoricalFlyOnTheWallOutput = (output: NarrativeOutput | str
         return <p className="text-red-400">Could not generate a narrative for this event. Please try another.</p>;
     }
     return (
-        <div className="bg-yellow-50/80 p-6 sm:p-8 rounded-md border border-amber-800/20 shadow-xl font-serif text-slate-800">
+        <div className="bg-yellow-50/80 p-4 sm:p-6 rounded-md border border-amber-800/20 shadow-xl font-serif text-slate-800">
             <div className="text-center border-b-2 border-dashed border-amber-800/30 pb-4 mb-6">
                 <PencilIcon className="h-8 w-8 mx-auto text-amber-900 mb-2" />
                 <h2 className="text-2xl font-bold text-amber-900">{data.event}</h2>

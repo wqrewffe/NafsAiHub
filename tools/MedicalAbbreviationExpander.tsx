@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ToolContainer, { ToolOptionConfig } from './common/ToolContainer';
 import { generateJson, GenAiType } from '../services/geminiService';
@@ -24,13 +25,6 @@ const languageOptions: ToolOptionConfig = {
         { value: 'Spanish', label: 'Spanish' },
         { value: 'French', label: 'French' },
         { value: 'German', label: 'German' },
-        { value: 'Japanese', label: 'Japanese' },
-        { value: 'Mandarin Chinese', label: 'Mandarin Chinese' },
-        { value: 'Hindi', label: 'Hindi' },
-        { value: 'Arabic', label: 'Arabic' },
-        { value: 'Portuguese', label: 'Portuguese' },
-        { value: 'Bengali', label: 'Bengali (Bangla)' },
-        { value: 'Russian', label: 'Russian' },
     ]
 };
 
@@ -56,24 +50,26 @@ export const renderMedicalAbbreviationExpanderOutput = (output: AbbrOutput | str
                 <h2 className="text-2xl font-bold text-light">Abbreviation Expander</h2>
             </div>
              <div className="border border-slate-700 rounded-lg overflow-hidden">
-                <table className="w-full divide-y divide-slate-700">
-                    <thead className="bg-secondary">
-                        <tr>
-                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider w-1/6">Abbr.</th>
-                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Full Name</th>
-                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Context</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-primary divide-y divide-slate-700">
-                        {data.abbreviations.map((item, index) => (
-                            <tr key={index}>
-                                <td className="px-4 py-4 font-bold text-accent whitespace-nowrap">{item.abbr}</td>
-                                <td className="px-4 py-4 text-slate-300">{item.fullName}</td>
-                                <td className="px-4 py-4 text-slate-400 text-sm">{item.context}</td>
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-slate-700">
+                        <thead className="bg-secondary">
+                            <tr>
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider w-1/6">Abbr.</th>
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Full Name</th>
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Context</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="bg-primary divide-y divide-slate-700">
+                            {data.abbreviations.map((item, index) => (
+                                <tr key={index}>
+                                    <td className="px-4 py-4 font-bold text-accent whitespace-nowrap">{item.abbr}</td>
+                                    <td className="px-4 py-4 text-slate-300">{item.fullName}</td>
+                                    <td className="px-4 py-4 text-slate-400 text-sm">{item.context}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );

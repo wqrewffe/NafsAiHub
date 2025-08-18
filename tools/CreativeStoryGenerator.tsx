@@ -1,8 +1,11 @@
+
 import React from 'react';
-import ToolContainer, { ToolOptionConfig } from './common/ToolContainer';
+import ToolContainer from './common/ToolContainer';
+import type { ToolOptionConfig } from '../../types';
 import { generateJson, GenAiType } from '../services/geminiService';
 import { tools } from './index';
 import { PencilSquareIcon } from './Icons';
+import { languageOptions } from './common/options';
 
 interface StoryOutput {
     title: string;
@@ -10,26 +13,6 @@ interface StoryOutput {
     characters: string[];
     story: string;
 }
-
-const languageOptions: ToolOptionConfig = {
-    name: 'language',
-    label: 'Output Language',
-    type: 'select',
-    defaultValue: 'English',
-    options: [
-        { value: 'English', label: 'English' },
-        { value: 'Spanish', label: 'Spanish' },
-        { value: 'French', label: 'French' },
-        { value: 'German', label: 'German' },
-        { value: 'Japanese', label: 'Japanese' },
-        { value: 'Mandarin Chinese', label: 'Mandarin Chinese' },
-        { value: 'Hindi', label: 'Hindi' },
-        { value: 'Arabic', label: 'Arabic' },
-        { value: 'Portuguese', label: 'Portuguese' },
-        { value: 'Bengali', label: 'Bengali (Bangla)' },
-        { value: 'Russian', label: 'Russian' },
-    ]
-};
 
 export const renderCreativeStoryGeneratorOutput = (output: StoryOutput | string) => {
     let data: StoryOutput;
@@ -119,7 +102,7 @@ const CreativeStoryGenerator: React.FC = () => {
         required: ['title', 'genre', 'characters', 'story'],
     };
 
-    const handleGenerate = async ({ prompt, options }: { prompt: string; options: any }) => {
+    const handleGenerate = async ({ prompt, options }: { prompt: string; options: any; image?: { mimeType: string; data: string } }) => {
         const { length, tone, language, pov } = options;
         const fullPrompt = `Write a creative short story based on the following prompt: "${prompt}". 
         The story should be of ${length}, have a ${tone} tone, and be told from a '${pov}' point of view. 

@@ -1,8 +1,11 @@
+
 import React from 'react';
-import ToolContainer, { ToolOptionConfig } from './common/ToolContainer';
+import ToolContainer from './common/ToolContainer';
+import type { ToolOptionConfig } from '../../types';
 import { generateJson, GenAiType } from '../services/geminiService';
 import { tools } from './index';
 import { FireIcon } from './Icons';
+import { languageOptions } from './common/options';
 
 interface RecipeOutput {
     recipeName: string;
@@ -13,26 +16,6 @@ interface RecipeOutput {
     ingredients: string[];
     instructions: string[];
 }
-
-const languageOptions: ToolOptionConfig = {
-    name: 'language',
-    label: 'Output Language',
-    type: 'select',
-    defaultValue: 'English',
-    options: [
-        { value: 'English', label: 'English' },
-        { value: 'Spanish', label: 'Spanish' },
-        { value: 'French', label: 'French' },
-        { value: 'German', label: 'German' },
-        { value: 'Japanese', label: 'Japanese' },
-        { value: 'Mandarin Chinese', label: 'Mandarin Chinese' },
-        { value: 'Hindi', label: 'Hindi' },
-        { value: 'Arabic', label: 'Arabic' },
-        { value: 'Portuguese', label: 'Portuguese' },
-        { value: 'Bengali', label: 'Bengali (Bangla)' },
-        { value: 'Russian', label: 'Russian' },
-    ]
-};
 
 export const renderRecipeCreatorOutput = (output: RecipeOutput | string) => {
     let data: RecipeOutput;
@@ -158,7 +141,7 @@ const RecipeCreator: React.FC = () => {
         required: ['recipeName', 'description', 'prepTime', 'cookTime', 'servings', 'ingredients', 'instructions'],
     };
 
-    const handleGenerate = async ({ prompt, options }: { prompt: string; options: any }) => {
+    const handleGenerate = async ({ prompt, options }: { prompt: string; options: any; image?: { mimeType: string; data: string } }) => {
         const { cuisine, diet, language, skillLevel } = options;
         const cuisineInstruction = cuisine === 'Any' ? '' : ` The recipe should have a ${cuisine} style.`;
         const dietInstruction = diet === 'None' ? '' : ` It must adhere to a ${diet} diet.`;

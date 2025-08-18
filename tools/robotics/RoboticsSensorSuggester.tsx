@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ToolContainer from '../common/ToolContainer';
 import { generateJson, GenAiType } from '../../services/geminiService';
@@ -39,24 +40,26 @@ export const renderRoboticsSensorSuggesterOutput = (output: SensorOutput | strin
                 <p className="text-slate-400">For Task: <span className="italic">"{data.task}"</span></p>
             </div>
             <div className="border border-slate-700 rounded-lg overflow-hidden">
-                <table className="w-full divide-y divide-slate-700">
-                    <thead className="bg-secondary">
-                        <tr>
-                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider w-1/4">Sensor Type</th>
-                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Primary Use</th>
-                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Justification</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-primary divide-y divide-slate-700">
-                        {data.sensors.map((sensor, index) => (
-                            <tr key={index}>
-                                <td className="px-4 py-4 font-bold text-accent align-top">{sensor.type}</td>
-                                <td className="px-4 py-4 text-light align-top">{sensor.use}</td>
-                                <td className="px-4 py-4 text-slate-400 text-sm align-top">{sensor.justification}</td>
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-slate-700">
+                        <thead className="bg-secondary">
+                            <tr>
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider w-1/4">Sensor Type</th>
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Primary Use</th>
+                                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Justification</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="bg-primary divide-y divide-slate-700">
+                            {data.sensors.map((sensor, index) => (
+                                <tr key={index}>
+                                    <td className="px-4 py-4 font-bold text-accent align-top">{sensor.type}</td>
+                                    <td className="px-4 py-4 text-light align-top">{sensor.use}</td>
+                                    <td className="px-4 py-4 text-slate-400 text-sm align-top">{sensor.justification}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
