@@ -1,6 +1,6 @@
 
 import React, { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 interface PrivateRouteProps {
@@ -11,12 +11,12 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   const { currentUser } = useAuth();
 
   if (!currentUser) {
-    return <Navigate to="/login" />;
+    return <ReactRouterDOM.Navigate to="/login" />;
   }
 
   // Add check for email verification
   if (!currentUser.emailVerified) {
-    return <Navigate to="/verify-email" />;
+    return <ReactRouterDOM.Navigate to="/verify-email" />;
   }
 
   return <>{children}</>;

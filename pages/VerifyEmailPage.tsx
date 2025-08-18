@@ -1,15 +1,17 @@
+
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { auth } from '../firebase/config';
 import Spinner from '../components/Spinner';
+
 
 const VerifyEmailPage: React.FC = () => {
     const { currentUser } = useAuth();
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
+    const navigate = ReactRouterDOM.useNavigate();
 
     const handleResend = async () => {
         if (!currentUser) {
@@ -37,7 +39,9 @@ const VerifyEmailPage: React.FC = () => {
     return (
         <div className="flex items-center justify-center">
             <div className="max-w-lg w-full bg-secondary p-8 rounded-lg shadow-lg text-center">
-                <h2 className="text-3xl font-bold text-light mb-4">Verify Your Email</h2>
+                <div className="w-40 h-40 mx-auto">
+                </div>
+                <h2 className="text-3xl font-bold text-light mb-4 mt-4">Verify Your Email</h2>
                 <p className="text-slate-300 mb-6">
                     A verification link has been sent to <strong className="text-accent">{currentUser?.email}</strong>. Please click the link to activate your account.
                 </p>

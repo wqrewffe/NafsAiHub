@@ -1,6 +1,6 @@
 
 import React, { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 const ADMIN_EMAIL = 'nafisabdullah424@gmail.com';
@@ -13,15 +13,15 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
   const { currentUser } = useAuth();
 
   if (!currentUser) {
-    return <Navigate to="/login" />;
+    return <ReactRouterDOM.Navigate to="/login" />;
   }
 
   if (!currentUser.emailVerified) {
-    return <Navigate to="/verify-email" />;
+    return <ReactRouterDOM.Navigate to="/verify-email" />;
   }
   
   if (currentUser.email !== ADMIN_EMAIL) {
-      return <Navigate to="/" />;
+      return <ReactRouterDOM.Navigate to="/" />;
   }
 
   return <>{children}</>;

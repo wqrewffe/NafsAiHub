@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { tools } from '../tools';
 import { useAuth } from '../hooks/useAuth';
 import { onToolHistorySnapshot } from '../services/firebaseService';
@@ -8,7 +9,7 @@ import Spinner from '../components/Spinner';
 import { ClipboardDocumentIcon, CheckCircleIcon, ChevronDownIcon, ChevronRightIcon } from '../tools/Icons';
 
 const ToolPage: React.FC = () => {
-  const { toolId } = useParams<{ toolId: string }>();
+  const { toolId } = ReactRouterDOM.useParams<{ toolId: string }>();
   const tool = tools.find(t => t.id === toolId);
 
   const { currentUser } = useAuth();
@@ -42,9 +43,9 @@ const ToolPage: React.FC = () => {
       <div className="text-center">
         <h2 className="text-2xl font-bold text-red-400">Tool not found</h2>
         <p className="mt-4 text-slate-300">The tool you are looking for does not exist or has a dedicated page.</p>
-        <Link to="/" className="mt-6 inline-block bg-accent text-white font-bold py-2 px-4 rounded hover:bg-sky-400 btn-animated">
+        <ReactRouterDOM.Link to="/" className="mt-6 inline-block bg-accent text-white font-bold py-2 px-4 rounded hover:bg-sky-400 btn-animated">
           Back to Home
-        </Link>
+        </ReactRouterDOM.Link>
       </div>
     );
   }
@@ -79,8 +80,8 @@ const ToolPage: React.FC = () => {
   return (
     <div>
       <div className="mb-8 p-6 bg-secondary rounded-lg">
-        <div className="flex flex-col text-center sm:text-left sm:flex-row sm:items-center">
-          <tool.icon className="h-10 w-10 text-accent mx-auto mb-4 sm:mb-0 sm:mr-4 flex-shrink-0"/>
+        <div className="flex flex-col sm:flex-row sm:items-center">
+          <tool.icon className="h-10 w-10 text-accent mb-4 sm:mb-0 sm:mr-4 flex-shrink-0"/>
           <div>
             <h1 className="text-3xl font-bold text-light">{tool.name}</h1>
             <p className="text-slate-400">{tool.description}</p>

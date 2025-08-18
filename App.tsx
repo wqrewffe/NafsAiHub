@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
 import { SettingsProvider } from './hooks/useSettings';
@@ -25,50 +25,50 @@ function App() {
     <AuthProvider>
       <ThemeProvider>
         <SettingsProvider>
-          <HashRouter>
+          <ReactRouterDOM.HashRouter>
             <Layout>
-              <Routes>
+              <ReactRouterDOM.Routes>
                 {/* Public Routes */}
-                <Route path="/" element={<HomePage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/signup" element={<SignUpPage />} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                <Route path="/verify-email" element={<VerifyEmailPage />} />
+                <ReactRouterDOM.Route path="/" element={<HomePage />} />
+                <ReactRouterDOM.Route path="/login" element={<LoginPage />} />
+                <ReactRouterDOM.Route path="/signup" element={<SignUpPage />} />
+                <ReactRouterDOM.Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <ReactRouterDOM.Route path="/verify-email" element={<VerifyEmailPage />} />
 
                 {/* Private User Routes */}
-                <Route 
+                <ReactRouterDOM.Route 
                   path="/tool/:toolId" 
                   element={<PrivateRoute><ToolPage /></PrivateRoute>} 
                 />
-                <Route 
+                <ReactRouterDOM.Route 
                   path="/profile" 
                   element={<PrivateRoute><ProfilePage /></PrivateRoute>} 
                 />
-                <Route 
+                <ReactRouterDOM.Route 
                   path="/settings" 
                   element={<PrivateRoute><SettingsPage /></PrivateRoute>} 
                 />
-                <Route 
+                <ReactRouterDOM.Route 
                   path="/todo" 
                   element={<PrivateRoute><TodoListPage /></PrivateRoute>} 
                 />
-                <Route 
+                <ReactRouterDOM.Route 
                   path="/notes" 
                   element={<PrivateRoute><NoteTakingPage /></PrivateRoute>} 
                 />
                 
                 {/* Admin Routes */}
-                <Route 
+                <ReactRouterDOM.Route 
                   path="/admin" 
                   element={<AdminRoute><AdminDashboardPage /></AdminRoute>}
                 />
-                <Route 
+                <ReactRouterDOM.Route 
                   path="/admin/user/:userId" 
                   element={<AdminRoute><UserHistoryPage /></AdminRoute>}
                 />
-              </Routes>
+              </ReactRouterDOM.Routes>
             </Layout>
-          </HashRouter>
+          </ReactRouterDOM.HashRouter>
         </SettingsProvider>
       </ThemeProvider>
     </AuthProvider>
