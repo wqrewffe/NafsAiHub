@@ -47,9 +47,9 @@ const MemeIdeaGenerator: React.FC = () => {
             name: 'memeFormat',
             label: 'Meme Format',
             type: 'select',
-            defaultValue: 'Distracted Boyfriend',
+            defaultValue: 'Distracted ',
             options: [
-                { value: 'Distracted Boyfriend', label: 'Distracted Boyfriend' },
+                { value: 'Distracted ', label: 'Distracted ' },
                 { value: 'Drakeposting', label: 'Drakeposting' },
                 { value: 'Woman Yelling at a Cat', label: 'Woman Yelling at a Cat' },
                 { value: 'Expanding Brain', label: 'Expanding Brain' },
