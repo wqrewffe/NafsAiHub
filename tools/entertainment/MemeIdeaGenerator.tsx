@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ToolContainer, { ToolOptionConfig } from '../common/ToolContainer';
 import { generateJson, GenAiType } from '../../services/geminiService';
 import { tools } from '../index';
@@ -18,6 +18,8 @@ interface MemeIdeaOutput {
 }
 
 export const renderMemeIdeaGeneratorOutput = (output: MemeIdeaOutput | string) => {
+    const [selectedLang, setSelectedLang] = useState<'en' | 'es' | 'fr' | 'de' | 'hi' | 'bn' | 'ja'>('en');
+
     let data: MemeIdeaOutput;
     if (typeof output === 'string') {
         try {
@@ -33,19 +35,31 @@ export const renderMemeIdeaGeneratorOutput = (output: MemeIdeaOutput | string) =
         return <p className="text-red-400">Could not generate a meme idea. Please try a different topic.</p>;
     }
 
+    const texts = data.translations[selectedLang];
+
     return (
         <div className="space-y-6">
             <h3 className="text-xl font-bold text-center text-light">
                 {data.memeFormat}
             </h3>
 
-            {Object.entries(data.translations).map(([lang, texts]) => (
-                <div key={lang} className="bg-primary border border-slate-700 rounded-lg p-4 font-bold text-center text-xl tracking-wide space-y-2">
-                    <p className="text-accent capitalize">{lang.toUpperCase()}</p>
-                    <p className="text-light">{texts.topText}</p>
-                    <p className="text-light">{texts.bottomText}</p>
-                </div>
-            ))}
+            <div className="flex justify-center space-x-2 mb-4">
+                {Object.keys(data.translations).map(lang => (
+                    <button
+                        key={lang}
+                        className={`px-3 py-1 rounded-lg text-sm font-medium ${selectedLang === lang ? 'bg-accent text-white' : 'bg-slate-700 text-light'}`}
+                        onClick={() => setSelectedLang(lang as any)}
+                    >
+                        {lang.toUpperCase()}
+                    </button>
+                ))}
+            </div>
+
+            <div className="bg-primary border border-slate-700 rounded-lg p-4 font-bold text-center text-xl tracking-wide space-y-2">
+                <p className="text-accent capitalize">{selectedLang.toUpperCase()}</p>
+                <p className="text-light">{texts.topText}</p>
+                <p className="text-light">{texts.bottomText}</p>
+            </div>
         </div>
     );
 };
