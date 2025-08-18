@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ToolContainer from './common/ToolContainer';
-import type { ToolOptionConfig } from '../../types';
+import type { ToolOptionConfig } from '../types';
 import { generateJson, GenAiType } from '../services/geminiService';
 import { tools } from './index';
 import { MapPinIcon, ChevronDownIcon, ChevronRightIcon } from './Icons';

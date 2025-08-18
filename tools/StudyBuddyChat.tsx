@@ -1,7 +1,7 @@
 
 import React from 'react';
 import ToolContainer from './common/ToolContainer';
-import type { ToolOptionConfig } from '../../types';
+import type { ToolOptionConfig } from '../types';
 import { generateText } from '../services/geminiService';
 import { tools } from './index';
 import { ChatBubbleLeftRightIcon } from './Icons';
