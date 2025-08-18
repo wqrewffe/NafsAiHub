@@ -6,11 +6,18 @@ import { FaceSmileIcon } from '../Icons';
 
 interface MemeIdeaOutput {
     memeFormat: string;
-    topText: string;
-    bottomText: string;
+    translations: {
+        en: { topText: string; bottomText: string };
+        es: { topText: string; bottomText: string };
+        fr: { topText: string; bottomText: string };
+        de: { topText: string; bottomText: string };
+        hi: { topText: string; bottomText: string };
+        bn: { topText: string; bottomText: string };
+        ja: { topText: string; bottomText: string };
+    };
 }
 
-export const renderMemeIdeaGeneratorOutput = (output: MemeIdeaOutput | string) => {F
+export const renderMemeIdeaGeneratorOutput = (output: MemeIdeaOutput | string) => {
     let data: MemeIdeaOutput;
     if (typeof output === 'string') {
         try {
@@ -22,19 +29,23 @@ export const renderMemeIdeaGeneratorOutput = (output: MemeIdeaOutput | string) =
         data = output;
     }
 
-    if (!data || !data.topText) {
+    if (!data || !data.translations) {
         return <p className="text-red-400">Could not generate a meme idea. Please try a different topic.</p>;
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-6">
             <h3 className="text-xl font-bold text-center text-light">
                 {data.memeFormat}
             </h3>
-            <div className="bg-primary border border-slate-700 rounded-lg p-6 font-bold text-center text-2xl uppercase tracking-wider space-y-4">
-                <p className="text-light">{data.topText}</p>
-                <p className="text-light">{data.bottomText}</p>
-            </div>
+
+            {Object.entries(data.translations).map(([lang, texts]) => (
+                <div key={lang} className="bg-primary border border-slate-700 rounded-lg p-4 font-bold text-center text-xl tracking-wide space-y-2">
+                    <p className="text-accent capitalize">{lang.toUpperCase()}</p>
+                    <p className="text-light">{texts.topText}</p>
+                    <p className="text-light">{texts.bottomText}</p>
+                </div>
+            ))}
         </div>
     );
 };
@@ -62,15 +73,68 @@ const MemeIdeaGenerator: React.FC = () => {
         type: GenAiType.OBJECT,
         properties: {
             memeFormat: { type: GenAiType.STRING },
-            topText: { type: GenAiType.STRING, description: "The text that goes on the top of the meme." },
-            bottomText: { type: GenAiType.STRING, description: "The text that goes on the bottom of the meme." },
+            translations: {
+                type: GenAiType.OBJECT,
+                properties: {
+                    en: {
+                        type: GenAiType.OBJECT,
+                        properties: {
+                            topText: { type: GenAiType.STRING },
+                            bottomText: { type: GenAiType.STRING },
+                        }
+                    },
+                    es: {
+                        type: GenAiType.OBJECT,
+                        properties: {
+                            topText: { type: GenAiType.STRING },
+                            bottomText: { type: GenAiType.STRING },
+                        }
+                    },
+                    fr: {
+                        type: GenAiType.OBJECT,
+                        properties: {
+                            topText: { type: GenAiType.STRING },
+                            bottomText: { type: GenAiType.STRING },
+                        }
+                    },
+                    de: {
+                        type: GenAiType.OBJECT,
+                        properties: {
+                            topText: { type: GenAiType.STRING },
+                            bottomText: { type: GenAiType.STRING },
+                        }
+                    },
+                    hi: {
+                        type: GenAiType.OBJECT,
+                        properties: {
+                            topText: { type: GenAiType.STRING },
+                            bottomText: { type: GenAiType.STRING },
+                        }
+                    },
+                    bn: {
+                        type: GenAiType.OBJECT,
+                        properties: {
+                            topText: { type: GenAiType.STRING },
+                            bottomText: { type: GenAiType.STRING },
+                        }
+                    },
+                    ja: {
+                        type: GenAiType.OBJECT,
+                        properties: {
+                            topText: { type: GenAiType.STRING },
+                            bottomText: { type: GenAiType.STRING },
+                        }
+                    }
+                },
+                required: ["en", "es", "fr", "de", "hi", "bn", "ja"]
+            }
         },
-        required: ["memeFormat", "topText", "bottomText"]
+        required: ["memeFormat", "translations"]
     };
 
     const handleGenerate = async ({ prompt, options }: { prompt: string; options: any }) => {
         const { memeFormat } = options;
-        const fullPrompt = `Generate funny meme text for the "${memeFormat}" meme format. The meme should be about this topic: "${prompt}". Provide the top text and bottom text.`;
+        const fullPrompt = `Generate funny meme text for the \"${memeFormat}\" meme format in 7 languages: English (en), Spanish (es), French (fr), German (de), Hindi (hi), Bengali (bn), Japanese (ja). The meme should be about this topic: \"${prompt}\". Provide topText and bottomText for each language.`;
         return generateJson(fullPrompt, schema);
     };
 
