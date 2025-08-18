@@ -10,7 +10,7 @@ interface MemeIdeaOutput {
     bottomText: string;
 }
 
-export const renderMemeIdeaGeneratorOutput = (output: MemeIdeaOutput | string) => {F
+export const renderMemeIdeaGeneratorOutput = (output: MemeIdeaOutput | string) => {
     let data: MemeIdeaOutput;
     if (typeof output === 'string') {
         try {
@@ -47,9 +47,9 @@ const MemeIdeaGenerator: React.FC = () => {
             name: 'memeFormat',
             label: 'Meme Format',
             type: 'select',
-            defaultValue: 'Distracted ',
+            defaultValue: 'Distracted Boyfriend',
             options: [
-                { value: 'Distracted ', label: 'Distracted ' },
+                { value: 'Distracted Boyfriend', label: 'Distracted Boyfriend' },
                 { value: 'Drakeposting', label: 'Drakeposting' },
                 { value: 'Woman Yelling at a Cat', label: 'Woman Yelling at a Cat' },
                 { value: 'Expanding Brain', label: 'Expanding Brain' },
