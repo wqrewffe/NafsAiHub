@@ -634,7 +634,7 @@ export const tools: Tool[] = [
   icon: BookOpenIcon,
   component: McqGenerator,
   promptSuggestion: 'Photosynthesis is a process used by plants, algae, and certain bacteria to convert light energy into chemical energy.',
-  renderOutput: renderMcqOutput
+  renderOutput: (output) => renderMcqOutput(output, () => {}, () => {}),
 },
   {
     id: 'study-buddy-chat',
