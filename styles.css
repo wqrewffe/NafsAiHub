@@ -1,189 +1,272 @@
-/* ===========================
-   General Animations
-   =========================== */
+/* ==========================================================================
+   1. Setup & Configuration
+   ========================================================================== */
+
+/* Define a modern, cool-toned color palette */
+:root {
+  --color-background: #0d1117; /* Dark background */
+  --color-surface: #161b22;   /* Slightly lighter surface for cards */
+  --color-primary: #3b82f6;   /* A pleasing blue for primary actions */
+  --color-secondary: #8b5cf6; /* A complementary violet/purple */
+  --color-text-primary: #e6edf3;    /* Main text color, easy on the eyes */
+  --color-text-secondary: #8d96a0; /* Secondary text, for hints or subtitles */
+  --color-border: rgba(255, 255, 255, 0.1); /* Subtle border color */
+  
+  --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* Basic Reset & Body Styles */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px; /* Base font size */
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family-sans);
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease;
+}
+
+
+/* ==========================================================================
+   2. General Animations
+   ========================================================================== */
+
+/* A more subtle fade-in effect */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.98);
-    filter: blur(5px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
+    transform: translateY(0);
   }
 }
 
 .fade-in {
-  animation: fadeIn 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  animation: fadeIn 0.5s ease-out forwards;
 }
 
+/* A refined pulse for drawing attention */
 @keyframes pulse {
-  0% {
+  0%, 100% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.6);
-  }
-  70% {
-    transform: scale(1.05);
-    box-shadow: 0 0 20px 15px rgba(56, 189, 248, 0);
-  }
-  100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
-  }
-}
-
-.btn-pulse {
-  animation: pulse 2s infinite;
-}
-
-@keyframes pop {
-  0% {
-    transform: scale(0.95);
-    opacity: 0.7;
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
   }
   50% {
-    transform: scale(1.1);
-    opacity: 1;
+    transform: scale(1.03);
+    box-shadow: 0 0 0 12px rgba(59, 130, 246, 0.3);
   }
-  100% {
+}
+
+.animate-pulse {
+  animation: pulse 2.5s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+/* A quick pop for interactive elements */
+@keyframes pop {
+  0%, 100% {
     transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
   }
 }
 
 .animate-pop {
-  animation: pop 0.35s ease-out;
+  animation: pop 0.3s ease-out;
 }
 
-/* ===========================
-   Animated Button Style
-   =========================== */
-.btn-animated {
+
+/* ==========================================================================
+   3. Professional Button Style (REIMAGINED)
+   ========================================================================== */
+.btn {
+  display: inline-block;
   position: relative;
-  overflow: hidden;
-  border-radius: 12px;
-  background: linear-gradient(135deg, var(--color-accent), var(--color-secondary));
-  color: white;
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem 1.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--border-radius-lg);
   font-weight: 600;
+  font-size: 0.95rem;
   letter-spacing: 0.5px;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
-  will-change: transform, filter;
-  z-index: 1;
+  text-decoration: none;
+  cursor: pointer;
+  overflow: hidden;
+  color: white;
+  background-color: var(--color-primary);
+  transition: all 0.3s ease;
+  will-change: transform, box-shadow, background-color;
+  user-select: none; /* Prevents text selection on click */
 }
 
-.btn-animated::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -120%;
-  width: 120%;
-  height: 100%;
-  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.35), transparent);
-  transition: left 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-  z-index: 2;
-}
-
-.btn-animated:hover::before {
-  left: 120%;
-}
-
-.btn-animated:hover {
-  transform: scale(1.05) translateY(-3px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.25), 0 0 20px var(--color-accent);
-  filter: brightness(1.15);
-}
-
-.btn-animated:active {
-  transform: scale(0.97) translateY(0);
-  box-shadow: 0 3px 8px rgba(0,0,0,0.25);
-}
-
-/* ===========================
-   Base Body Styles
-   =========================== */
-body {
+.btn:hover {
+  transform: translateY(-3px);
   background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-  color: var(--color-light);
-  transition: background 0.5s ease, color 0.3s ease;
-  font-family: 'Inter', sans-serif;
-  backdrop-filter: blur(5px);
+  box-shadow: 0 0 25px -5px var(--color-primary), var(--shadow-lg);
 }
 
-/* ===========================
-   Form Elements
-   =========================== */
+.btn:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+
+/* ==========================================================================
+   4. Reusable Components
+   ========================================================================== */
+
+/* Glassmorphism Card Style */
+.card {
+  background: rgba(22, 27, 34, 0.6); /* --color-surface with alpha */
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Form Elements */
 input, textarea, select {
-  background: rgba(255, 255, 255, 0.07);
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.15);
-  backdrop-filter: blur(6px);
-  color: var(--color-light);
-  padding: 0.5rem 0.75rem;
+  width: 100%;
+  background: rgba(13, 17, 23, 0.5); /* --color-background with alpha */
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-border);
+  backdrop-filter: blur(5px);
+  color: var(--color-text-primary);
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  font-family: inherit;
   transition: all 0.3s ease;
 }
 
 input:focus, textarea:focus, select:focus {
-  border-color: var(--color-accent);
-  box-shadow: 0 0 12px var(--color-accent);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
   outline: none;
 }
 
-/* ===========================
-   Accordion Animation
-   =========================== */
+/* Snappier Accordion Animation */
 .accordion-content {
   overflow: hidden;
-  transition: max-height 0.6s cubic-bezier(0.4,0,0.2,1), opacity 0.4s ease-in-out, margin-top 0.4s ease-in-out;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              padding 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   max-height: 0;
-  opacity: 0;
-  margin-top: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .accordion-content.open {
-  max-height: 2000px;
-  opacity: 1;
-  margin-top: 1rem;
-  transition: max-height 1s ease, opacity 0.6s ease, margin-top 0.5s ease;
+  max-height: 1000px; /* A safe, large value */
+  padding-top: 0.5rem;
+  padding-bottom: 1rem;
 }
 
-/* ===========================
-   Custom Scrollbar
-   =========================== */
+/* Complete Toggle Switch Component */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 3.5rem;
+  height: 2rem;
+}
+.toggle-switch input { display: none; } /* Hide the default checkbox */
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 34px;
+  transition: background-color 0.4s;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 1.5rem;
+  width: 1.5rem;
+  left: 0.25rem;
+  bottom: 0.25rem;
+  background-color: var(--color-text-secondary);
+  border-radius: 50%;
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.4s;
+}
+
+input:checked + .toggle-slider {
+  background-color: var(--color-primary);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(1.5rem);
+  background-color: white;
+}
+
+
+/* ==========================================================================
+   5. Utility Classes
+   ========================================================================== */
+
+/* Custom Scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
-  height: 8px;
-  width: 8px;
+  width: 10px;
+  height: 10px;
 }
-
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(255,255,255,0.05);
+  background: var(--color-surface);
   border-radius: 10px;
 }
-
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, var(--color-accent), var(--color-secondary));
+  background: var(--color-primary);
   border-radius: 10px;
+  border: 2px solid var(--color-surface);
 }
-
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, var(--color-secondary), var(--color-accent));
+  background: var(--color-secondary);
 }
-
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-accent) var(--color-secondary);
+  scrollbar-color: var(--color-primary) var(--color-surface);
 }
 
-/* ===========================
-   Toggle Switch
-   =========================== */
-input:checked ~ .dot {
-  transform: translateX(1.5rem);
-  background: rgb(11, 103, 224);
-  box-shadow: 0 0 10px var(--color-accent);
-}
 
-input:checked ~ .block {
-  background: linear-gradient(135deg, var(--color-accent), var(--color-secondary));
-  box-shadow: inset 0 0 8px rgba(255,255,255,0.2);
+/* ==========================================================================
+   6. Mobile Responsiveness
+   ========================================================================== */
+
+/* Styles are mobile-first by default. This media query enhances for larger screens. */
+@media (min-width: 768px) {
+  html {
+    font-size: 17px; /* Slightly larger base font on desktops */
+  }
+
+  .card {
+    padding: 2rem;
+  }
 }
