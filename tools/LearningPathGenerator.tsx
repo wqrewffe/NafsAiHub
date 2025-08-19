@@ -30,7 +30,7 @@ const languageOptions: ToolOptionConfig = {
     ]
 };
 
-export const renderLearningPathGeneratorOutput = (output: LearningPathOutput | string) => {
+const LearningPathOutputView: React.FC<{ output: LearningPathOutput | string }> = ({ output }) => {
     const [openModule, setOpenModule] = useState<number | null>(1);
 
     const toggleModule = (module: number) => {
@@ -51,6 +51,7 @@ export const renderLearningPathGeneratorOutput = (output: LearningPathOutput | s
     if (!data || !Array.isArray(data.path) || data.path.length === 0) {
         return <p className="text-red-400">Could not generate a learning path. Please specify your learning goal clearly.</p>;
     }
+
     return (
         <div className="space-y-4">
             <div className="text-center mb-6">
@@ -68,7 +69,9 @@ export const renderLearningPathGeneratorOutput = (output: LearningPathOutput | s
                             <div className="text-left">
                                 <p className="font-semibold text-light">Module {mod.module}: {mod.title}</p>
                             </div>
-                            {openModule === mod.module ? <ChevronDownIcon className="h-6 w-6 text-slate-400" /> : <ChevronRightIcon className="h-6 w-6 text-slate-400" />}
+                            {openModule === mod.module
+                                ? <ChevronDownIcon className="h-6 w-6 text-slate-400" />
+                                : <ChevronRightIcon className="h-6 w-6 text-slate-400" />}
                         </button>
                         {openModule === mod.module && (
                             <div className="p-4 bg-primary space-y-3">
@@ -143,7 +146,7 @@ const LearningPathGenerator: React.FC = () => {
             promptSuggestion={toolInfo.promptSuggestion}
             optionsConfig={optionsConfig}
             onGenerate={handleGenerate}
-            renderOutput={renderLearningPathGeneratorOutput}
+            renderOutput={(output) => <LearningPathOutputView output={output} />}
         />
     );
 };
