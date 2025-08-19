@@ -12,7 +12,7 @@ import WorkoutPlanner, { renderWorkoutPlannerOutput } from './WorkoutPlanner';
 import RecipeCreator, { renderRecipeCreatorOutput } from './RecipeCreator';
 import DreamInterpreter, { renderDreamInterpreterOutput } from './DreamInterpreter';
 import GiftIdeaGenerator, { renderGiftIdeaGeneratorOutput } from './GiftIdeaGenerator';
-import TravelItineraryPlanner, { renderTravelItineraryPlannerOutput } from './TravelItineraryPlanner';
+import TravelItineraryPlanner, { TravelItineraryOutputView } from './TravelItineraryPlanner';
 import TextSummarizer, { renderTextSummarizerOutput } from './TextSummarizer';
 import AnalogiesGenerator, { renderAnalogiesGeneratorOutput } from './AnalogiesGenerator';
 import BookRecommender, { renderBookRecommenderOutput } from './BookRecommender';
@@ -37,7 +37,8 @@ import MedicalEthicsConsultant, { renderMedicalEthicsConsultantOutput } from './
 import BiochemistryPathwayVisualizer, { renderBiochemistryPathwayVisualizerOutput } from './BiochemistryPathwayVisualizer';
 import MedicalAbbreviationExpander, { renderMedicalAbbreviationExpanderOutput } from './MedicalAbbreviationExpander';
 import ConceptWeaver, { renderConceptWeaverOutput } from './ConceptWeaver';
-import LearningPathGenerator, { renderLearningPathGeneratorOutput } from './LearningPathGenerator';
+import LearningPathGenerator from './LearningPathGenerator';
+
 import MetaphorMixer, { renderMetaphorMixerOutput } from './MetaphorMixer';
 import ArgumentWeaknessSpotter, { renderArgumentWeaknessSpotterOutput } from './ArgumentWeaknessSpotter';
 import HistoricalFlyOnTheWall, { renderHistoricalFlyOnTheWallOutput } from './HistoricalFlyOnTheWall';
@@ -625,16 +626,16 @@ export const tools: Tool[] = [
     promptSuggestion: 'The main components of a cell.',
     renderOutput: renderFlashcardGeneratorOutput
   },
-  {
-    id: 'mcq-generator',
-    name: 'MCQ Generator',
-    description: 'Paste a block of text and generate multiple-choice questions to test your knowledge.',
-    category: 'General',
-    icon: BookOpenIcon,
-    component: McqGenerator,
-    promptSuggestion: 'Photosynthesis is a process used by plants, algae, and certain bacteria to convert light energy into chemical energy.',
-    renderOutput: renderMcqOutput
-  },
+{
+  id: 'mcq-generator',
+  name: 'MCQ Generator',
+  description: 'Paste a block of text and generate multiple-choice questions to test your knowledge.',
+  category: 'General',
+  icon: BookOpenIcon,
+  component: McqGenerator,
+  promptSuggestion: 'Photosynthesis is a process used by plants, algae, and certain bacteria to convert light energy into chemical energy.',
+  renderOutput: renderMcqOutput
+},
   {
     id: 'study-buddy-chat',
     name: 'Study Buddy Chat',
@@ -706,15 +707,15 @@ export const tools: Tool[] = [
     renderOutput: renderGiftIdeaGeneratorOutput
   },
   {
-    id: 'travel-itinerary-planner',
-    name: 'Travel Itinerary Planner',
-    description: 'Creates a day-by-day travel plan for any destination and trip duration.',
-    category: 'General',
-    icon: MapPinIcon,
-    component: TravelItineraryPlanner,
-    promptSuggestion: 'Location: Kyoto, Japan, Duration: 5 days, Interests: Temples, food, nature',
-    renderOutput: renderTravelItineraryPlannerOutput
-  },
+  id: 'travel-itinerary-planner',
+  name: 'Travel Itinerary Planner',
+  description: 'Creates a day-by-day travel plan for any destination and trip duration.',
+  category: 'General',
+  icon: MapPinIcon,
+  component: TravelItineraryPlanner,
+  promptSuggestion: 'Location: Kyoto, Japan, Duration: 5 days, Interests: Temples, food, nature',
+  renderOutput: (output) => <TravelItineraryOutputView output={output} />
+},
   {
     id: 'text-summarizer',
     name: 'Text Summarizer',
@@ -756,15 +757,16 @@ export const tools: Tool[] = [
     renderOutput: renderConceptWeaverOutput
   },
   {
-    id: 'learning-path-generator',
-    name: 'Learning Path Generator',
-    description: 'Generates a structured, week-by-week syllabus for learning any new skill.',
-    category: 'General',
-    icon: MapIcon,
-    component: LearningPathGenerator,
-    promptSuggestion: 'I want to learn oil painting, starting as a complete beginner.',
-    renderOutput: renderLearningPathGeneratorOutput
-  },
+  id: 'learning-path-generator',
+  name: 'Learning Path Generator',
+  description: 'Generates a structured, week-by-week syllabus for learning any new skill.',
+  category: 'General',
+  icon: MapIcon,
+  component: LearningPathGenerator,
+  promptSuggestion: 'I want to learn oil painting, starting as a complete beginner.',
+  renderOutput: (output) => <LearningPathGenerator output={output} />
+},
+
   {
     id: 'metaphor-mixer',
     name: 'Metaphor Mixer',
