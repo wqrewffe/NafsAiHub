@@ -71,6 +71,9 @@ const QuizFinishedScreen: React.FC<{
         [answersHistory]
     );
     
+    // FIX #1 (Root Cause): Explicitly type the accumulator for the reducer.
+    // This tells TypeScript that the values in this object will be arrays (AnswerRecord[]),
+    // which prevents the 'items' variable from being inferred as 'unknown'.
     const answersByTopic = useMemo(() => {
         return answersHistory.reduce((acc, item) => {
             const topic = item.question.topic || 'General';
@@ -138,7 +141,8 @@ const QuizFinishedScreen: React.FC<{
             {Object.entries(answersByTopic).map(([topic, items], topicIndex) => (
                 <div key={topicIndex} className="mt-4">
                     <h4 className="text-xl font-bold text-sky-400 p-2 bg-slate-900/50 rounded-t-lg">{topic}</h4>
-                    {items.map((item, itemIndex) => (
+                    {/* FIX #2 (Safety Check): Ensure 'items' is an array before mapping. */}
+                    {Array.isArray(items) && items.map((item, itemIndex) => (
                         <div key={itemIndex} className="p-4 bg-slate-700/80 space-y-3 border-b border-slate-600 last:border-b-0 last:rounded-b-lg">
                             <p className="font-bold text-lg"><span className="text-accent">{answersHistory.indexOf(item) + 1}.</span> {item.question.question}</p>
                             {/* FIX: Ensure item.options is an array before mapping */}
@@ -441,7 +445,7 @@ export const renderMcqOutput = (
     onFullRestart: () => void,
     onSaveResult: (result: QuizResult) => void
 ) => {
-    let sessionData: Mcq[] | QuizResult;
+    let sessionData: any;
     
     if (typeof output === 'string') {
         try { 
@@ -455,7 +459,7 @@ export const renderMcqOutput = (
     }
 
     // FIX: Strengthened validation to ensure 'options' is an array for every question.
-    const isValidMcqArray = Array.isArray(sessionData) && sessionData.length > 0 && sessionData.every(item => item.question && Array.isArray(item.options));
+    const isValidMcqArray = Array.isArray(sessionData) && sessionData.length > 0 && sessionData.every(item => item && item.question && Array.isArray(item.options));
 
     if (!isQuizResult(sessionData) && !isValidMcqArray) {
         return <p className="text-red-400">Could not generate a valid quiz. Please try a different prompt.</p>;
