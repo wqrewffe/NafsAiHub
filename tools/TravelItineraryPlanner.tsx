@@ -23,7 +23,8 @@ interface ItineraryOutput {
     itinerary: ItineraryDay[];
 }
 
-export const renderTravelItineraryPlannerOutput = (output: ItineraryOutput | string) => {
+// ✅ Fixed: Proper React component, not just a function with hooks
+export const TravelItineraryOutputView: React.FC<{ output: ItineraryOutput | string }> = ({ output }) => {
     const [openDay, setOpenDay] = useState<number | null>(1);
 
     const toggleDay = (day: number) => {
@@ -35,7 +36,7 @@ export const renderTravelItineraryPlannerOutput = (output: ItineraryOutput | str
         try {
             data = JSON.parse(output);
         } catch (e) {
-            return <p className="text-red-400">Failed to parse history data.</p>;
+            return <p className="text-red-400">Failed to parse itinerary data.</p>;
         }
     } else {
         data = output;
@@ -44,6 +45,7 @@ export const renderTravelItineraryPlannerOutput = (output: ItineraryOutput | str
     if (!data || !Array.isArray(data.itinerary) || data.itinerary.length === 0) {
         return <p className="text-red-400">Could not generate an itinerary. Please be more specific about your destination and duration.</p>;
     }
+
     return (
         <div className="space-y-4">
             <div className="text-center mb-6">
@@ -67,13 +69,19 @@ export const renderTravelItineraryPlannerOutput = (output: ItineraryOutput | str
                                     <p className="font-semibold text-light text-left">Day {day.day}: {day.title}</p>
                                 </div>
                             </div>
-                            {openDay === day.day ? <ChevronDownIcon className="h-6 w-6 text-slate-400" /> : <ChevronRightIcon className="h-6 w-6 text-slate-400" />}
+                            {openDay === day.day ? (
+                                <ChevronDownIcon className="h-6 w-6 text-slate-400" />
+                            ) : (
+                                <ChevronRightIcon className="h-6 w-6 text-slate-400" />
+                            )}
                         </button>
                         {openDay === day.day && (
                             <div className="p-4 bg-primary space-y-3">
                                 {day.activities.map((activity, index) => (
                                     <div key={index} className="flex items-start">
-                                        <p className="w-24 text-right pr-4 font-semibold text-accent flex-shrink-0">{activity.time}</p>
+                                        <p className="w-24 text-right pr-4 font-semibold text-accent flex-shrink-0">
+                                            {activity.time}
+                                        </p>
                                         <div className="border-l border-slate-600 pl-4 flex-1">
                                             <p className="text-slate-300">{activity.description}</p>
                                         </div>
@@ -153,7 +161,7 @@ const TravelItineraryPlanner: React.FC = () => {
             promptSuggestion={toolInfo.promptSuggestion}
             optionsConfig={optionsConfig}
             onGenerate={handleGenerate}
-            renderOutput={renderTravelItineraryPlannerOutput}
+            renderOutput={(output) => <TravelItineraryOutputView output={output} />}
         />
     );
 };
