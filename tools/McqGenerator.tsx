@@ -43,7 +43,7 @@ interface AnswerRecord {
 interface QuizResult {
     score: number;
     answersHistory: AnswerRecord[];
-    mcqs: Mcq[]; 
+    mcqs: Mcq[];
 }
 
 function isQuizResult(item: any): item is QuizResult {
@@ -70,6 +70,17 @@ const QuizFinishedScreen: React.FC<{
             .map(item => item.question),
         [answersHistory]
     );
+    
+    const answersByTopic = useMemo(() => {
+        return answersHistory.reduce((acc, item) => {
+            const topic = item.question.topic || 'General';
+            if (!acc[topic]) {
+                acc[topic] = [];
+            }
+            acc[topic].push(item);
+            return acc;
+        }, {} as Record<string, AnswerRecord[]>);
+    }, [answersHistory]);
 
     const getFinalMessage = () => {
         const percentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 0;
@@ -118,26 +129,31 @@ const QuizFinishedScreen: React.FC<{
                         </button>
                     )}
                 </div>
-                 {/* Corrected: Explicitly pass the full set of MCQs to restart the same quiz */}
                 <button onClick={() => onRestart(mcqs)} className="w-full py-3 px-6 bg-slate-600 hover:bg-slate-500 text-white rounded-md transition-transform hover:scale-105">
                     Restart Same Quiz
                 </button>
             </div>
             
             <h3 className="text-2xl font-bold text-slate-100 pt-4 border-t border-slate-700">Detailed Review</h3>
-            {answersHistory.map((item, idx) => (
-                <div key={idx} className="p-4 bg-slate-700/80 rounded-lg space-y-3">
-                    <p className="font-bold text-lg"><span className="text-accent">{idx + 1}.</span> {item.question.question}</p>
-                    {item.options.map((opt, i) => (
-                        <div key={i} className={`p-3 rounded-md flex justify-between items-center ${getOptionClass(opt, item.question, item.selected)}`}>
-                            <span>{opt}</span>
-                            {getResultIcon(opt, item.question, item.selected)}
+            {Object.entries(answersByTopic).map(([topic, items], topicIndex) => (
+                <div key={topicIndex} className="mt-4">
+                    <h4 className="text-xl font-bold text-sky-400 p-2 bg-slate-900/50 rounded-t-lg">{topic}</h4>
+                    {items.map((item, itemIndex) => (
+                        <div key={itemIndex} className="p-4 bg-slate-700/80 space-y-3 border-b border-slate-600 last:border-b-0 last:rounded-b-lg">
+                            <p className="font-bold text-lg"><span className="text-accent">{answersHistory.indexOf(item) + 1}.</span> {item.question.question}</p>
+                            {/* FIX: Ensure item.options is an array before mapping */}
+                            {Array.isArray(item.options) && item.options.map((opt, i) => (
+                                <div key={i} className={`p-3 rounded-md flex justify-between items-center ${getOptionClass(opt, item.question, item.selected)}`}>
+                                    <span>{opt}</span>
+                                    {getResultIcon(opt, item.question, item.selected)}
+                                </div>
+                            ))}
+                            <div className="mt-3 p-3 bg-slate-900/50 rounded-md border-l-4 border-sky-400">
+                                <h4 className="font-bold text-sky-300">Explanation</h4>
+                                <p className="text-slate-300 text-sm">{item.question.explanation}</p>
+                            </div>
                         </div>
                     ))}
-                    <div className="mt-3 p-3 bg-slate-900/50 rounded-md border-l-4 border-sky-400">
-                        <h4 className="font-bold text-sky-300">Explanation</h4>
-                        <p className="text-slate-300 text-sm">{item.question.explanation}</p>
-                    </div>
                 </div>
             ))}
         </div>
@@ -151,7 +167,6 @@ const QuizComponent: React.FC<{
     timePerQuestion?: number;
     onComplete: (score: number, answersHistory: AnswerRecord[]) => void;
 }> = ({ mcqs, timePerQuestion = 30, onComplete }) => {
-    // State and logic remains the same...
     const [shuffledMcqs, setShuffledMcqs] = useState<Mcq[]>([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -174,8 +189,11 @@ const QuizComponent: React.FC<{
     const isAnswered = selectedOption !== null;
 
     useEffect(() => {
-        if (currentQuestion) {
+        // FIX: Ensure options exist and is an array before shuffling
+        if (currentQuestion && Array.isArray(currentQuestion.options)) {
             setShuffledOptions([...currentQuestion.options].sort(() => Math.random() - 0.5));
+        } else if (currentQuestion) {
+            setShuffledOptions([]); // Set to empty array if options are invalid
         }
     }, [currentQuestion]);
 
@@ -187,7 +205,6 @@ const QuizComponent: React.FC<{
         setTimeLeft(timePerQuestion);
         setSelectedOption(null);
         setIsHintVisible(false);
-        setLifelines(prev => ({ ...prev, fiftyFifty: 1 }));
 
         if (currentQuestionIndex < shuffledMcqs.length - 1) {
             setCurrentQuestionIndex(prev => prev + 1);
@@ -201,6 +218,7 @@ const QuizComponent: React.FC<{
         const timer = setInterval(() => {
             setTimeLeft(prev => {
                 if (prev <= 1) {
+                    clearInterval(timer);
                     handleNextQuestion(true);
                     return timePerQuestion;
                 }
@@ -209,21 +227,6 @@ const QuizComponent: React.FC<{
         }, 1000);
         return () => clearInterval(timer);
     }, [isAnswered, timePerQuestion, handleNextQuestion]);
-
-    useEffect(() => {
-        const handleKeyPress = (e: KeyboardEvent) => {
-            if (isAnswered) {
-                if (e.key === 'Enter') handleNextQuestion();
-                return;
-            }
-            const keyNum = parseInt(e.key);
-            if (!isNaN(keyNum) && keyNum >= 1 && keyNum <= shuffledOptions.length) {
-                handleOptionClick(shuffledOptions[keyNum - 1]);
-            }
-        };
-        window.addEventListener('keydown', handleKeyPress);
-        return () => window.removeEventListener('keydown', handleKeyPress);
-    }, [shuffledOptions, isAnswered, handleNextQuestion]);
 
     const handleOptionClick = (option: string) => {
         if (isAnswered) return;
@@ -236,26 +239,47 @@ const QuizComponent: React.FC<{
         }
     };
 
-    const handleFiftyFifty = () => {
+    const handleFiftyFifty = useCallback(() => {
         if (lifelines.fiftyFifty <= 0 || isAnswered) return;
         const incorrectOptions = shuffledOptions.filter(opt => opt !== currentQuestion.correctAnswer);
         const removeCount = Math.min(2, incorrectOptions.length - 1);
         const toRemove = incorrectOptions.sort(() => Math.random() - 0.5).slice(0, removeCount);
         setShuffledOptions(shuffledOptions.filter(opt => !toRemove.includes(opt)));
         setLifelines(prev => ({ ...prev, fiftyFifty: 0 }));
-    };
+    }, [isAnswered, lifelines.fiftyFifty, shuffledOptions, currentQuestion]);
 
-    const handleExtraTime = () => {
+    const handleExtraTime = useCallback(() => {
         if (lifelines.extraTime <= 0 || isAnswered) return;
         setTimeLeft(prev => prev + 15);
         setLifelines(prev => ({ ...prev, extraTime: 0 }));
-    };
+    }, [isAnswered, lifelines.extraTime]);
 
-    const handleHint = () => {
+    const handleHint = useCallback(() => {
         if (lifelines.hint <= 0 || isAnswered) return;
         setIsHintVisible(true);
         setLifelines(prev => ({ ...prev, hint: 0 }));
-    };
+    }, [isAnswered, lifelines.hint]);
+    
+    useEffect(() => {
+        const handleKeyPress = (e: KeyboardEvent) => {
+            if (isAnswered) {
+                if (e.key === 'Enter') handleNextQuestion();
+                return;
+            }
+
+            const key = e.key.toLowerCase();
+            if (key === 'f') { e.preventDefault(); handleFiftyFifty(); }
+            if (key === 't') { e.preventDefault(); handleExtraTime(); }
+            if (key === 'h') { e.preventDefault(); handleHint(); }
+            
+            const keyNum = parseInt(e.key);
+            if (!isNaN(keyNum) && keyNum >= 1 && keyNum <= shuffledOptions.length) {
+                handleOptionClick(shuffledOptions[keyNum - 1]);
+            }
+        };
+        window.addEventListener('keydown', handleKeyPress);
+        return () => window.removeEventListener('keydown', handleKeyPress);
+    }, [shuffledOptions, isAnswered, handleNextQuestion, handleFiftyFifty, handleExtraTime, handleHint]);
 
     const getOptionClass = (option: string) => {
         if (!isAnswered) return 'bg-slate-800 hover:bg-slate-700 hover:scale-102 cursor-pointer';
@@ -275,16 +299,20 @@ const QuizComponent: React.FC<{
         return <div className="text-center p-8">Preparing your quiz...</div>;
     }
 
-    const progressPercentage = ((currentQuestionIndex + 1) / shuffledMcqs.length) * 100;
-    const timerColorClass = timeLeft <= 10 ? 'bg-red-500' : timeLeft <= timePerQuestion / 2 ? 'bg-yellow-500' : 'bg-accent';
+    const progressPercentage = ((currentQuestionIndex) / shuffledMcqs.length) * 100;
 
     return (
         <div className="space-y-4 md:space-y-6">
             <div className="w-full bg-slate-700 rounded-full h-3.5 relative">
-                <div className={`h-3.5 rounded-full transition-all duration-500 ${timerColorClass}`} style={{ width: `${progressPercentage}%` }}></div>
+                <div className={`h-3.5 rounded-full transition-all duration-500 bg-sky-500`} style={{ width: `${progressPercentage}%` }}></div>
                 <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white mix-blend-difference">
-                    {currentQuestion.topic || `Question ${currentQuestionIndex + 1} of ${shuffledMcqs.length}`}
+                    {`Question ${currentQuestionIndex + 1} of ${shuffledMcqs.length}`}
                 </div>
+            </div>
+            
+            <div className="flex justify-between items-center text-xs text-slate-400 -mt-2 px-2">
+                <span>Topic: <span className="font-semibold text-slate-300">{currentQuestion.topic || 'General'}</span></span>
+                <span>Difficulty: <span className="font-semibold text-slate-300">{currentQuestion.difficulty || 'Medium'}</span></span>
             </div>
 
             <div className="flex justify-between items-center text-sm text-slate-400 px-1">
@@ -296,15 +324,16 @@ const QuizComponent: React.FC<{
                         <FireIcon className="h-5 w-5" /> {currentStreak} Streak!
                     </div>
                 )}
-                <div className="flex items-center gap-2 font-semibold">
-                    <ClockIcon className="h-5 w-5 text-slate-400" />
+                <div className={`flex items-center gap-2 font-semibold transition-colors ${timeLeft <= 10 ? 'text-red-400' : 'text-slate-400'}`}>
+                    <ClockIcon className="h-5 w-5" />
                     <span className="text-white text-base">{timeLeft}s</span>
                 </div>
             </div>
 
             <div className="p-4 bg-slate-800 rounded-lg space-y-3 shadow-lg">
                 <p className="font-bold mb-4 text-lg md:text-xl text-slate-100">{currentQuestion.question}</p>
-                {shuffledOptions.map((option, i) => (
+                {/* FIX: Ensure shuffledOptions is an array before mapping */}
+                {Array.isArray(shuffledOptions) && shuffledOptions.map((option, i) => (
                     <div key={i} onClick={() => handleOptionClick(option)}
                         className={`p-3 rounded-md transition-all duration-200 border border-transparent flex items-center justify-between transform ${getOptionClass(option)}`}
                         role="button" aria-pressed={selectedOption === option} tabIndex={isAnswered ? -1 : 0}>
@@ -318,9 +347,9 @@ const QuizComponent: React.FC<{
 
                 {!isAnswered && (
                      <div className="flex flex-wrap justify-center sm:justify-end gap-2 pt-3">
-                        <button onClick={handleFiftyFifty} disabled={lifelines.fiftyFifty <= 0} className="py-1 px-3 text-sm rounded-md flex items-center gap-1 bg-yellow-600 hover:bg-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed">50-50</button>
-                        <button onClick={handleExtraTime} disabled={lifelines.extraTime <= 0} className="py-1 px-3 text-sm rounded-md flex items-center gap-1 bg-sky-600 hover:bg-sky-500 disabled:opacity-50 disabled:cursor-not-allowed"><ClockIcon className="h-4 w-4" />+15s</button>
-                        <button onClick={handleHint} disabled={lifelines.hint <= 0} className="py-1 px-3 text-sm rounded-md flex items-center gap-1 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"><LightBulbIcon className="h-4 w-4" />Hint</button>
+                        <button onClick={handleFiftyFifty} disabled={lifelines.fiftyFifty <= 0} title="50-50 (F)" className="py-1 px-3 text-sm rounded-md flex items-center gap-1 bg-yellow-600 hover:bg-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed">50-50</button>
+                        <button onClick={handleExtraTime} disabled={lifelines.extraTime <= 0} title="Extra Time (T)" className="py-1 px-3 text-sm rounded-md flex items-center gap-1 bg-sky-600 hover:bg-sky-500 disabled:opacity-50 disabled:cursor-not-allowed"><ClockIcon className="h-4 w-4" />+15s</button>
+                        <button onClick={handleHint} disabled={lifelines.hint <= 0} title="Hint (H)" className="py-1 px-3 text-sm rounded-md flex items-center gap-1 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"><LightBulbIcon className="h-4 w-4" />Hint</button>
                      </div>
                 )}
                 
@@ -354,7 +383,6 @@ const QuizSessionManager: React.FC<{
     onFullRestart: () => void;
     onSaveResult: (result: QuizResult) => void;
 }> = ({ sessionData, onFullRestart, onSaveResult }) => {
-    // State is now initialized based on the initial prop value
     const [quizState, setQuizState] = useState<'playing' | 'finished'>(
         isQuizResult(sessionData) ? 'finished' : 'playing'
     );
@@ -365,9 +393,6 @@ const QuizSessionManager: React.FC<{
         isQuizResult(sessionData) ? sessionData.mcqs : sessionData
     );
 
-    // --- KEY FIX ---
-    // This effect synchronizes the component's state with the sessionData prop.
-    // This is crucial for when a user clicks a history item, causing the prop to change.
     useEffect(() => {
         if (isQuizResult(sessionData)) {
             setQuizState('finished');
@@ -379,7 +404,6 @@ const QuizSessionManager: React.FC<{
             setMcqsForQuiz(sessionData);
         }
     }, [sessionData]);
-    // --- END FIX ---
 
     const handleQuizComplete = (score: number, answersHistory: AnswerRecord[]) => {
         const result: QuizResult = {
@@ -393,8 +417,6 @@ const QuizSessionManager: React.FC<{
     };
 
     const handleRestartQuiz = (subset?: Mcq[]) => {
-        // When restarting, we need to provide a new set of questions
-        // to the quiz component. This triggers its useEffect and resets the quiz.
         const originalMcqs = isQuizResult(sessionData) ? sessionData.mcqs : sessionData;
         setMcqsForQuiz(subset || originalMcqs);
         setCurrentResult(null);
@@ -432,7 +454,8 @@ export const renderMcqOutput = (
         sessionData = output;
     }
 
-    const isValidMcqArray = Array.isArray(sessionData) && sessionData.length > 0 && sessionData.every(item => item.question && item.options);
+    // FIX: Strengthened validation to ensure 'options' is an array for every question.
+    const isValidMcqArray = Array.isArray(sessionData) && sessionData.length > 0 && sessionData.every(item => item.question && Array.isArray(item.options));
 
     if (!isQuizResult(sessionData) && !isValidMcqArray) {
         return <p className="text-red-400">Could not generate a valid quiz. Please try a different prompt.</p>;
@@ -450,6 +473,7 @@ export const renderMcqOutput = (
 const McqGenerator: React.FC = () => {
     const toolInfo = tools.find(t => t.id === 'mcq-generator')!;
     const [componentKey, setComponentKey] = useState(1);
+    const [currentPromptSuggestion, setCurrentPromptSuggestion] = useState(toolInfo.promptSuggestion);
 
     const optionsConfig: ToolOptionConfig[] = [
         { name: 'numQuestions', label: 'Number of Questions', type: 'number', defaultValue: 5, min: 1, max: 20 },
@@ -462,7 +486,7 @@ const McqGenerator: React.FC = () => {
         { name: 'timePerQuestion', label: 'Time per Question (sec)', type: 'number', defaultValue: 30, min: 10, max: 120 },
         languageOptions
     ];
-
+    
     const schema = {
         type: GenAiType.ARRAY,
         items: {
@@ -472,19 +496,21 @@ const McqGenerator: React.FC = () => {
                 options: { type: GenAiType.ARRAY, items: { type: GenAiType.STRING }, description: "Array of 4 potential answers." },
                 correctAnswer: { type: GenAiType.STRING, description: "Correct answer, must be one of the strings in the options array." },
                 explanation: { type: GenAiType.STRING, description: "A clear and detailed explanation for why the correct answer is right." },
-                topic: { type: GenAiType.STRING, description: "A brief topic/category for this specific question (e.g., 'React Hooks', 'JavaScript Promises')." }
+                topic: { type: GenAiType.STRING, description: "A brief topic/category for this specific question (e.g., 'React Hooks', 'JavaScript Promises')." },
+                difficulty: { type: GenAiType.STRING, description: "The difficulty of the question (e.g., 'Easy', 'Medium', 'Hard')." }
             },
-            required: ['question', 'options', 'correctAnswer', 'explanation'],
+            required: ['question', 'options', 'correctAnswer', 'explanation', 'topic', 'difficulty'],
         },
     };
 
     const handleGenerate = async ({ prompt: text, options }: { prompt: string; options: any }) => {
         const { numQuestions, difficulty, language, focus } = options;
-        const promptText = `Generate ${numQuestions} multiple-choice questions about the following text. The questions should be of ${difficulty} difficulty and focus on '${focus}'. Each question MUST have exactly 4 options, a 'correctAnswer' that is an exact match to one of the options, a detailed 'explanation', and a specific 'topic'. All text, including questions, options, and explanations, must be in ${language}. Text: "${text}"`;
+        const promptText = `Generate ${numQuestions} multiple-choice questions about the following text. The overall quiz difficulty is ${difficulty}, so tailor the questions accordingly. Focus on '${focus}'. Each question MUST have exactly 4 options, a 'correctAnswer' that is an exact match to one of the options, a detailed 'explanation', a specific 'topic', and its 'difficulty' level. All text, including questions, options, and explanations, must be in ${language}. Text: "${text}"`;
         return generateJson(promptText, schema);
     };
 
     const handleFullRestart = () => {
+        setCurrentPromptSuggestion('');
         setComponentKey(prevKey => prevKey + 1);
     };
 
@@ -494,7 +520,7 @@ const McqGenerator: React.FC = () => {
             toolId={toolInfo.id}
             toolName={toolInfo.name}
             toolCategory={toolInfo.category}
-            promptSuggestion={toolInfo.promptSuggestion}
+            promptSuggestion={currentPromptSuggestion}
             optionsConfig={optionsConfig}
             onGenerate={handleGenerate}
             renderOutput={(output, onUpdateOutput) => 
