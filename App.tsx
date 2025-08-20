@@ -19,6 +19,8 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import UserHistoryPage from './pages/admin/UserHistoryPage';
 import TodoListPage from './pages/TodoListPage';
 import NoteTakingPage from './pages/NoteTakingPage';
+import ReferralPage from './pages/ReferralPage';
+import LeaderboardPage from './pages/LeaderboardPage';
 
 function App() {
   return (
@@ -49,12 +51,20 @@ function App() {
                   element={<PrivateRoute><SettingsPage /></PrivateRoute>} 
                 />
                 <ReactRouterDOM.Route 
+                  path="/referral" 
+                  element={<PrivateRoute><ReferralPage /></PrivateRoute>} 
+                />
+                <ReactRouterDOM.Route 
                   path="/todo" 
                   element={<PrivateRoute><TodoListPage /></PrivateRoute>} 
                 />
                 <ReactRouterDOM.Route 
                   path="/notes" 
                   element={<PrivateRoute><NoteTakingPage /></PrivateRoute>} 
+                />
+                <ReactRouterDOM.Route 
+                  path="/leaderboard" 
+                  element={<PrivateRoute><LeaderboardPage /></PrivateRoute>} 
                 />
                 
                 {/* Admin Routes */}

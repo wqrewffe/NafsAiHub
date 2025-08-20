@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 import { auth, googleProvider } from '../firebase/config';
 import { createUserProfileDocument } from '../services/firebaseService';
+import { initializeReferralInfo } from '../services/referralService';
 import { GoogleIcon } from '../tools/Icons';
 import { useSettings } from '../hooks/useSettings';
 
@@ -16,6 +17,10 @@ const SignUpPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = ReactRouterDOM.useNavigate();
   const { authSettings, loading: settingsLoading } = useSettings();
+  const location = ReactRouterDOM.useLocation();
+
+  // Get referral code from URL if present
+  const referralCode = new URLSearchParams(location.search).get('ref');
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +46,10 @@ const SignUpPage: React.FC = () => {
         await userCredential.user.updateProfile({
             displayName: `${firstName} ${lastName}`
         });
+        // Create user profile first
         await createUserProfileDocument(userCredential.user, password);
+        // Then handle referral
+        await initializeReferralInfo(userCredential.user.uid, referralCode || undefined);
         await userCredential.user.sendEmailVerification();
         navigate('/verify-email');
       }
@@ -58,7 +66,10 @@ const SignUpPage: React.FC = () => {
     try {
         const userCredential = await auth.signInWithPopup(googleProvider);
         if (userCredential.user) {
+            // Create user profile first
             await createUserProfileDocument(userCredential.user);
+            // Then handle referral
+            await initializeReferralInfo(userCredential.user.uid, referralCode || undefined);
         }
         navigate('/'); // Google users are auto-verified, so they can go to home
     } catch (err: any) {

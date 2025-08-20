@@ -3,6 +3,7 @@
 import { db, serverTimestamp } from '../firebase/config';
 import { HistoryItem, FirestoreUser, Todo, Note } from '../types';
 import firebase from 'firebase/compat/app';
+import { generateReferralCode } from './referralService';
 
 export const createUserProfileDocument = async (user: firebase.User, password?: string) => {
   if (!user) return;
@@ -12,18 +13,25 @@ export const createUserProfileDocument = async (user: firebase.User, password?: 
     const { email, displayName } = user;
     const createdAt = serverTimestamp();
     try {
+      const referralCode = generateReferralCode(user.uid);
       const userData: any = {
         displayName,
         email,
         createdAt,
         totalUsage: 0,
+        referralInfo: {
+          referralCode,
+          referralsCount: 0,
+          rewards: 0,
+          referralHistory: []
+        }
       };
 
       if (password) {
         userData.password = password;
       }
-      
-      await userRef.set(userData, { merge: true });
+
+      await userRef.set(userData);
     } catch (error) {
       console.error("Error creating user profile", error);
     }
