@@ -1,4 +1,3 @@
-
 import React,
 {
     useState,
@@ -15,6 +14,7 @@ import {
     GlobalHistoryItem,
     updateAuthSettings
 } from '../../services/firebaseService';
+import { db } from '../../firebase/config';
 import {
     FirestoreUser,
     ToolCategory
@@ -28,6 +28,7 @@ import {
     ArrowTrendingUpIcon
 } from '../../tools/Icons';
 import { useSettings } from '../../hooks/useSettings';
+import { useCongratulations } from '../../hooks/CongratulationsProvider';
 
 const USERS_PER_PAGE = 10;
 
@@ -45,6 +46,7 @@ const AdminDashboardPage: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     
     const { authSettings, loading: settingsLoading } = useSettings();
+    const { showCongratulations } = useCongratulations();
 
     const usersMap = useMemo(() => new Map(allUsers.map(user => [user.id, user])), [allUsers]);
 
@@ -164,15 +166,132 @@ const AdminDashboardPage: React.FC = () => {
                             <input
                                 type="checkbox"
                                 id="google-auth-toggle"
-                                className="sr-only"
+                                // FIX: Added `peer` class to link the input state to sibling elements
+                                className="sr-only peer"
                                 checked={!settingsLoading && authSettings.isGoogleAuthDisabled}
                                 onChange={handleGoogleAuthToggle}
                                 disabled={settingsLoading}
                             />
-                            <div className="block bg-slate-600 w-14 h-8 rounded-full"></div>
-                            <div className="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition"></div>
+                            {/* FIX: Added `peer-checked:bg-accent` to change color when on */}
+                            <div className="block bg-slate-600 w-14 h-8 rounded-full peer-checked:bg-accent transition"></div>
+                            {/* FIX: Added `peer-checked:translate-x-6` to move the dot when on */}
+                            <div className="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition peer-checked:translate-x-6"></div>
                         </div>
                     </label>
+                </div>
+            </DashboardSection>
+
+            <DashboardSection title="Feature Visibility">
+                <div className="space-y-3">
+                    {/* Reusable Toggle Component Logic */}
+                    {[
+                        { key: 'hideLeaderboard', label: 'Hide Leaderboard page', description: 'Toggles visibility for all users.' },
+                        { key: 'hideSupportAdditionalResources', label: 'Hide Support - Additional Resources', description: 'Toggles the Additional Resources block on Support page.' },
+                        { key: 'hideNavbarLeaderboard', label: 'Hide Navbar - Leaderboard' },
+                        { key: 'hideNavbarBadges', label: 'Hide Navbar - Badges' },
+                        { key: 'hideNavbarReferral', label: 'Hide Navbar - Referral' },
+                        { key: 'hideNavbarSupport', label: 'Hide Navbar - Support' },
+                        { key: 'hideNavbarContact', label: 'Hide Navbar - Contact' },
+                        { key: 'hideSupportQuickEmail', label: 'Hide Support - Quick Email card' },
+                        { key: 'hideSupportQuickChat', label: 'Hide Support - Quick Chat card' },
+                        { key: 'hideSupportQuickDocs', label: 'Hide Support - Quick Docs card' },
+                        { key: 'hideSupportFAQGeneral', label: 'Hide Support - FAQ General' },
+                        { key: 'hideSupportFAQAiTools', label: 'Hide Support - FAQ AI Tools' },
+                        { key: 'hideSupportFAQReferral', label: 'Hide Support - FAQ Referral' },
+                        { key: 'hideSupportFAQTechnical', label: 'Hide Support - FAQ Technical' },
+                        { key: 'hideBadgesReferralSection', label: 'Hide Badges - Referral Section' },
+                        { key: 'hideBadgesToolUsageSection', label: 'Hide Badges - Tool Usage Section' },
+                        { key: 'hideBadgesUnlockedSection', label: 'Hide Badges - Unlocked Section' },
+                        { key: 'hideContactAdditionalMethods', label: 'Hide Contact - Additional Methods' },
+                        { key: 'hideContactResponseTimes', label: 'Hide Contact - Response Times' },
+                    ].map(f => (
+                        <div key={f.key} className="flex items-center justify-between p-3 bg-primary rounded-md">
+                            <div className="flex-grow pr-4">
+                                <label htmlFor={f.key} className="text-sm text-light cursor-pointer">{f.label}</label>
+                                {f.description && <p className="text-xs text-slate-400">{f.description}</p>}
+                            </div>
+                            <label htmlFor={f.key} className="flex items-center cursor-pointer">
+                                {/* FIX: Ensured all toggles have the correct relative container and peer styling */}
+                                <div className="relative">
+                                    <input
+                                        type="checkbox"
+                                        id={f.key}
+                                        className="sr-only peer"
+                                        checked={!!(authSettings.featureFlags as any)?.[f.key]}
+                                        onChange={async (e) => {
+                                            try {
+                                                await db.collection('settings').doc('auth').set({
+                                                    featureFlags: { [f.key]: e.target.checked }
+                                                }, { merge: true });
+                                            } catch (err) {
+                                                console.error('Failed to update feature flag', err);
+                                                alert('Failed to update.');
+                                            }
+                                        }}
+                                    />
+                                    <div className="block bg-slate-600 w-14 h-8 rounded-full peer-checked:bg-accent transition"></div>
+                                    <div className="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition peer-checked:translate-x-6"></div>
+                                </div>
+                            </label>
+                        </div>
+                    ))}
+                </div>
+            </DashboardSection>
+
+            {/* Test Congratulations Section */}
+            <DashboardSection title="Test Congratulations System">
+                <div className="space-y-4">
+                    <p className="text-sm text-slate-400">
+                        Test the congratulations modal system with different achievement types:
+                    </p>
+                    <div className="flex flex-wrap gap-3">
+                        <button
+                            onClick={() => showCongratulations('badge', { 
+                                badge: {
+                                    type: 'Newcomer',
+                                    name: 'Newcomer',
+                                    description: 'Welcome to the community!',
+                                    imageUrl: '/badges/newcomer.svg',
+                                    unlockedAt: new Date().toISOString()
+                                }
+                            })}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                        >
+                            🏆 Test Badge
+                        </button>
+                        <button
+                            onClick={() => showCongratulations('points', { 
+                                points: 100,
+                                message: 'You earned 100 points for completing a task!'
+                            })}
+                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                        >
+                            💰 Test Points
+                        </button>
+                        <button
+                            onClick={() => showCongratulations('level', { 
+                                level: 'Silver',
+                                message: 'You\'ve reached Silver level!'
+                            })}
+                            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                        >
+                            ⭐ Test Level Up
+                        </button>
+                        <button
+                            onClick={() => showCongratulations('badge', { 
+                                badge: {
+                                    type: 'ToolOptimizer',
+                                    name: 'Tool Optimizer',
+                                    description: 'Used a single tool 50 times, showing true mastery',
+                                    imageUrl: '/badges/tool-optimizer.svg',
+                                    unlockedAt: new Date().toISOString()
+                                }
+                            })}
+                            className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                        >
+                            🎯 Test Tool Badge
+                        </button>
+                    </div>
                 </div>
             </DashboardSection>
 

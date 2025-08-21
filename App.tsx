@@ -4,6 +4,7 @@ import * as ReactRouterDOM from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
 import { SettingsProvider } from './hooks/useSettings';
+import { CongratulationsProvider } from './hooks/CongratulationsProvider';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -21,15 +22,21 @@ import TodoListPage from './pages/TodoListPage';
 import NoteTakingPage from './pages/NoteTakingPage';
 import ReferralPage from './pages/ReferralPage';
 import LeaderboardPage from './pages/LeaderboardPage';
+import BadgesPage from './pages/BadgesPage';
+import PoliciesPage from './pages/PoliciesPage';
+import SupportPage from './pages/SupportPage';
+import ContactPage from './pages/ContactPage';
+import HelpChatPage from './pages/HelpChatPage';
 
 function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
         <SettingsProvider>
-          <ReactRouterDOM.HashRouter>
-            <Layout>
-              <ReactRouterDOM.Routes>
+          <CongratulationsProvider>
+            <ReactRouterDOM.HashRouter>
+              <Layout>
+                <ReactRouterDOM.Routes>
                 {/* Public Routes */}
                 <ReactRouterDOM.Route path="/" element={<HomePage />} />
                 <ReactRouterDOM.Route path="/login" element={<LoginPage />} />
@@ -66,6 +73,26 @@ function App() {
                   path="/leaderboard" 
                   element={<PrivateRoute><LeaderboardPage /></PrivateRoute>} 
                 />
+                <ReactRouterDOM.Route 
+                  path="/badges" 
+                  element={<PrivateRoute><BadgesPage /></PrivateRoute>} 
+                />
+                <ReactRouterDOM.Route 
+                  path="/policies" 
+                  element={<PoliciesPage />} 
+                />
+                <ReactRouterDOM.Route 
+                  path="/support" 
+                  element={<SupportPage />} 
+                />
+                <ReactRouterDOM.Route 
+                  path="/contact" 
+                  element={<ContactPage />} 
+                />
+                <ReactRouterDOM.Route 
+                  path="/helpchat" 
+                  element={<HelpChatPage />} 
+                />
                 
                 {/* Admin Routes */}
                 <ReactRouterDOM.Route 
@@ -79,6 +106,7 @@ function App() {
               </ReactRouterDOM.Routes>
             </Layout>
           </ReactRouterDOM.HashRouter>
+          </CongratulationsProvider>
         </SettingsProvider>
       </ThemeProvider>
     </AuthProvider>

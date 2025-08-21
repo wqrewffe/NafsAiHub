@@ -141,6 +141,25 @@ const LoginPage: React.FC = () => {
             Sign up
           </ReactRouterDOM.Link>
         </p>
+        
+        <p className="mt-4 text-center text-xs text-slate-500">
+          By logging in, you agree to our{' '}
+          <ReactRouterDOM.Link 
+            to="/policies" 
+            target="_blank"
+            className="text-accent hover:text-sky-400 underline"
+          >
+            Terms of Service
+          </ReactRouterDOM.Link>
+          {' '}and{' '}
+          <ReactRouterDOM.Link 
+            to="/policies" 
+            target="_blank"
+            className="text-accent hover:text-sky-400 underline"
+          >
+            Privacy Policy
+          </ReactRouterDOM.Link>
+        </p>
       </div>
     </div>
   );

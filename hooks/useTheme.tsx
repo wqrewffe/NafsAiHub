@@ -155,10 +155,27 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   useEffect(() => {
     const root = document.documentElement;
+    // Set HEX variables
     root.style.setProperty('--color-primary', theme.colors.primary);
     root.style.setProperty('--color-secondary', theme.colors.secondary);
     root.style.setProperty('--color-accent', theme.colors.accent);
     root.style.setProperty('--color-light', theme.colors.light);
+
+    // Also set RGB versions for better contrast handling with alpha
+    const hexToRgb = (hex: string) => {
+      const clean = hex.replace('#', '');
+      const bigint = parseInt(clean, 16);
+      const r = (bigint >> 16) & 255;
+      const g = (bigint >> 8) & 255;
+      const b = bigint & 255;
+      return `${r} ${g} ${b}`;
+    };
+    try {
+      root.style.setProperty('--color-primary-rgb', hexToRgb(theme.colors.primary));
+      root.style.setProperty('--color-secondary-rgb', hexToRgb(theme.colors.secondary));
+      root.style.setProperty('--color-accent-rgb', hexToRgb(theme.colors.accent));
+      root.style.setProperty('--color-light-rgb', hexToRgb(theme.colors.light));
+    } catch {}
 
     try {
       localStorage.setItem('app-theme', JSON.stringify(theme));

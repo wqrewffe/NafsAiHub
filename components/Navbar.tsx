@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useSettings } from '../hooks/useSettings';
 import { auth } from '../firebase/config';
 import { Cog6ToothIcon, ClipboardDocumentCheckIcon, PencilIcon, UserGroupIcon } from '../tools/Icons';
 
@@ -20,6 +21,7 @@ const XIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 const Navbar: React.FC = () => {
   const { currentUser } = useAuth();
+  const { authSettings } = useSettings();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -71,6 +73,7 @@ const Navbar: React.FC = () => {
           >
             <Cog6ToothIcon className="h-5 w-5 md:hidden" /> Settings
           </Link>
+          {!authSettings.featureFlags?.hideNavbarReferral && (
           <Link
             onClick={closeMobileMenu}
             to="/referral"
@@ -78,6 +81,8 @@ const Navbar: React.FC = () => {
           >
             <UserGroupIcon className="h-5 w-5 md:hidden" /> Refer & Earn
           </Link>
+          )}
+          {!authSettings.featureFlags?.hideNavbarLeaderboard && (
           <Link
             onClick={closeMobileMenu}
             to="/leaderboard"
@@ -88,6 +93,43 @@ const Navbar: React.FC = () => {
             </svg>
             Leaderboard
           </Link>
+          )}
+          {!authSettings.featureFlags?.hideNavbarBadges && (
+          <Link
+            onClick={closeMobileMenu}
+            to="/badges"
+            className="text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
+          >
+            <svg className="h-5 w-5 md:hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 10.5l3-3 3 3M3.75 6.75h16.5M6 21l6-3 6 3V6.75H6V21z" />
+            </svg>
+            Badges
+          </Link>
+          )}
+          {!authSettings.featureFlags?.hideNavbarSupport && (
+          <Link
+            onClick={closeMobileMenu}
+            to="/support"
+            className="text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
+          >
+            <svg className="h-5 w-5 md:hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+            </svg>
+            Support
+          </Link>
+          )}
+          {!authSettings.featureFlags?.hideNavbarContact && (
+          <Link
+            onClick={closeMobileMenu}
+            to="/contact"
+            className="text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
+          >
+            <svg className="h-5 w-5 md:hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+            </svg>
+            Contact
+          </Link>
+          )}
           <button
             onClick={handleLogout}
             className="w-full md:w-auto bg-sky-500 text-white px-3 py-2 rounded-md text-sm font-medium btn-animated text-left"

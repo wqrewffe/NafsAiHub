@@ -11,6 +11,11 @@
   --color-text-primary: #e6edf3;    /* Main text color, easy on the eyes */
   --color-text-secondary: #8d96a0; /* Secondary text, for hints or subtitles */
   --color-border: rgba(255, 255, 255, 0.1); /* Subtle border color */
+  /* Default RGB values to avoid FOUC/invisible text before React sets theme */
+  --color-primary-rgb: 30 41 59;     /* Slate & Sky primary (#1e293b) */
+  --color-secondary-rgb: 51 65 85;   /* Slate & Sky secondary (#334155) */
+  --color-accent-rgb: 56 189 248;    /* Slate & Sky accent (#38bdf8) */
+  --color-light-rgb: 241 245 249;    /* Slate & Sky light (#f1f5f9) */
   
   --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --border-radius-md: 8px;
@@ -40,6 +45,31 @@ body {
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.3s ease;
 }
+
+/* Ensure links are visible on all backgrounds, without overriding Tailwind text-* utilities */
+a:not([class*="text-"]) {
+  color: var(--color-primary);
+}
+a:not([class*="text-"]):hover {
+  color: var(--color-accent);
+}
+
+/* Theme-only color enforcement: map common Tailwind slate/white utilities to theme tokens */
+/* Text colors */
+.text-white { color: var(--color-light) !important; }
+.text-slate-200 { color: rgb(var(--color-light-rgb) / 0.95) !important; }
+.text-slate-300 { color: rgb(var(--color-light-rgb) / 0.85) !important; }
+.text-slate-400 { color: rgb(var(--color-light-rgb) / 0.70) !important; }
+
+/* Border colors */
+.border-slate-600 { border-color: rgb(var(--color-secondary-rgb) / 0.80) !important; }
+.border-slate-700 { border-color: rgb(var(--color-secondary-rgb) / 0.90) !important; }
+
+/* Background colors */
+.bg-slate-700 { background-color: rgb(var(--color-primary-rgb) / 0.95) !important; }
+.bg-slate-800 { background-color: rgb(var(--color-primary-rgb) / 1) !important; }
+.hover\:bg-slate-700:hover { background-color: rgb(var(--color-primary-rgb) / 0.95) !important; }
+.hover\:bg-slate-800:hover { background-color: rgb(var(--color-primary-rgb) / 1) !important; }
 
 
 /* ==========================================================================
@@ -90,6 +120,52 @@ body {
 
 .animate-pop {
   animation: pop 0.3s ease-out;
+}
+
+/* Congratulations modal animations */
+@keyframes bounce {
+  0%, 20%, 53%, 80%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  40%, 43% {
+    transform: translate3d(0, -30px, 0);
+  }
+  70% {
+    transform: translate3d(0, -15px, 0);
+  }
+  90% {
+    transform: translate3d(0, -4px, 0);
+  }
+}
+
+.animate-bounce {
+  animation: bounce 1s ease-in-out;
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.animate-ping {
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.scale-in {
+  animation: scaleIn 0.3s ease-out;
 }
 
 

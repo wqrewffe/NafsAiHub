@@ -1,10 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import ThemeSelector from '../components/ThemeSelector';
 import { Cog6ToothIcon } from '../tools/Icons';
+import { deleteUserAccount } from '../services/firebaseService';
+import { useNavigate } from 'react-router-dom';
 
 const SettingsPage: React.FC = () => {
   const { themes, setTheme, theme: currentTheme } = useTheme();
+  const navigate = useNavigate();
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
@@ -29,6 +34,34 @@ const SettingsPage: React.FC = () => {
                 />
             ))}
         </div>
+      </div>
+
+      {/* Account Management */}
+      <div className="bg-secondary p-6 rounded-lg">
+        <h2 className="text-2xl font-bold mb-4 text-light">Account Management</h2>
+        <p className="text-light/80 mb-4">Deleting your account is permanent and will remove all your data, including history, referrals, badges, todos and notes.</p>
+        {deleteError && (
+          <p className="mb-3 text-red-400">{deleteError}</p>
+        )}
+        <button
+          disabled={deleting}
+          onClick={async () => {
+            setDeleteError(null);
+            if (!confirm('This action is permanent. Do you really want to delete your account?')) return;
+            setDeleting(true);
+            const result = await deleteUserAccount();
+            setDeleting(false);
+            if (!result.ok) {
+              setDeleteError(result.message || 'Failed to delete account.');
+              return;
+            }
+            // Redirect to home after deletion
+            navigate('/');
+          }}
+          className="bg-red-600 hover:bg-red-700 disabled:bg-red-800 text-white font-semibold px-4 py-2 rounded-lg transition-colors"
+        >
+          {deleting ? 'Deleting...' : 'Delete Account'}
+        </button>
       </div>
     </div>
   );

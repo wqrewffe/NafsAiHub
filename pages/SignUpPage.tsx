@@ -139,6 +139,34 @@ const SignUpPage: React.FC = () => {
               className="w-full mt-1 px-3 py-2 bg-primary border border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-accent focus:border-accent"
             />
           </div>
+          
+          <div className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              id="terms"
+              required
+              className="mt-1 h-4 w-4 text-accent focus:ring-accent border-slate-600 rounded"
+            />
+            <label htmlFor="terms" className="text-sm text-slate-300">
+              I agree to the{' '}
+              <ReactRouterDOM.Link 
+                to="/policies" 
+                target="_blank"
+                className="text-accent hover:text-sky-400 underline"
+              >
+                Terms of Service
+              </ReactRouterDOM.Link>
+              {' '}and{' '}
+              <ReactRouterDOM.Link 
+                to="/policies" 
+                target="_blank"
+                className="text-accent hover:text-sky-400 underline"
+              >
+                Privacy Policy
+              </ReactRouterDOM.Link>
+            </label>
+          </div>
+          
           <button
             type="submit"
             disabled={loading}

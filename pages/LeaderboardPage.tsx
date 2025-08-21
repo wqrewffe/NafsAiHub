@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSettings } from '../hooks/useSettings';
 import { getLeaderboard, LeaderboardUser } from '../services/leaderboardService';
 
 const LeaderboardSection: React.FC<{
@@ -117,6 +118,7 @@ const LeaderboardSection: React.FC<{
 };
 
 const LeaderboardPage: React.FC = () => {
+    const { authSettings } = useSettings();
     const [referralLeaderboard, setReferralLeaderboard] = useState<LeaderboardUser[]>([]);
     const [toolUsageLeaderboard, setToolUsageLeaderboard] = useState<LeaderboardUser[]>([]);
     const [loading, setLoading] = useState(true);
@@ -175,6 +177,15 @@ const LeaderboardPage: React.FC = () => {
         return (
             <div className="flex justify-center items-center min-h-screen">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    if (authSettings.featureFlags?.hideLeaderboard) {
+        return (
+            <div className="max-w-4xl mx-auto px-4 py-8">
+                <h1 className="text-3xl font-bold mb-4">Leaderboards</h1>
+                <p className="text-light/80">This section is currently unavailable.</p>
             </div>
         );
     }
