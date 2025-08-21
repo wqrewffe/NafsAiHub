@@ -156,11 +156,11 @@ const TOOL_BADGES: Record<ToolUsageBadgeType, Omit<Badge, 'unlockedAt'>> = {
 // Progressive levels focusing on expertise and innovation
 const TOOL_LEVELS = [
     { name: 'Beginner', minTools: 0, description: 'Starting your AI journey' },
-    { name: 'Explorer', minTools: 10, description: 'Actively exploring AI tools' },
-    { name: 'Innovator', minTools: 25, description: 'Creating innovative solutions' },
-    { name: 'Specialist', minTools: 40, description: 'Specialized in multiple domains' },
-    { name: 'Expert', minTools: 60, description: 'Expert across all categories' },
-    { name: 'Pioneer', minTools: 75, description: 'Pioneering new possibilities' }
+    { name: 'Explorer', minTools: 15, description: 'Actively exploring AI tools' },
+    { name: 'Innovator', minTools: 30, description: 'Creating innovative solutions' },
+    { name: 'Specialist', minTools: 45, description: 'Specialized in multiple domains' },
+    { name: 'Expert', minTools: 65, description: 'Expert across all categories' },
+    { name: 'Pioneer', minTools: 80, description: 'Pioneering new possibilities' }
 ];
 
 export function calculateToolLevel(toolCount: number) {
@@ -193,28 +193,31 @@ export function calculateToolBadges(stats: ToolUsageStats): Badge[] {
     const badges: Badge[] = [];
     const now = new Date().toISOString();
 
-    // Daily Usage Badges
+    // Daily Usage Badges - Only award if user actually has the required streak
+    // These are now much more conservative
     if (stats.dayStreak >= 5) badges.push({ ...TOOL_BADGES['DailyExplorer'], unlockedAt: now });
     if (stats.dayStreak >= 7) badges.push({ ...TOOL_BADGES['WeeklyChampion'], unlockedAt: now });
     if (stats.dayStreak >= 30) badges.push({ ...TOOL_BADGES['ConsistentLearner'], unlockedAt: now });
     if (stats.dayStreak >= 90) badges.push({ ...TOOL_BADGES['AIDevotee'], unlockedAt: now });
 
-    // Category Expert Badges
-    if (stats.categoryStats['General'] >= 10) badges.push({ ...TOOL_BADGES['GeneralExpert'], unlockedAt: now });
-    if (stats.categoryStats['Medical'] >= 10) badges.push({ ...TOOL_BADGES['MedicalPro'], unlockedAt: now });
-    if (stats.categoryStats['Programming'] >= 10) badges.push({ ...TOOL_BADGES['CodeMaster'], unlockedAt: now });
-    if (stats.categoryStats['Education'] >= 10) badges.push({ ...TOOL_BADGES['EduGenius'], unlockedAt: now });
-    if (stats.categoryStats['Creative'] >= 10) badges.push({ ...TOOL_BADGES['ArtisticAI'], unlockedAt: now });
+    // Category Expert Badges - Only award if user has used enough tools in each category
+    // Increased thresholds to make them more meaningful
+    if (stats.categoryStats['General'] >= 15) badges.push({ ...TOOL_BADGES['GeneralExpert'], unlockedAt: now });
+    if (stats.categoryStats['Medical'] >= 15) badges.push({ ...TOOL_BADGES['MedicalPro'], unlockedAt: now });
+    if (stats.categoryStats['Programming'] >= 15) badges.push({ ...TOOL_BADGES['CodeMaster'], unlockedAt: now });
+    if (stats.categoryStats['Education'] >= 15) badges.push({ ...TOOL_BADGES['EduGenius'], unlockedAt: now });
+    if (stats.categoryStats['Creative'] >= 15) badges.push({ ...TOOL_BADGES['ArtisticAI'], unlockedAt: now });
 
-    // Tool Count Milestone Badges
-    if (stats.totalTools >= 5) badges.push({ ...TOOL_BADGES['AIApprentice'], unlockedAt: now });
-    if (stats.totalTools >= 15) badges.push({ ...TOOL_BADGES['ToolCollector'], unlockedAt: now });
-    if (stats.totalTools >= 25) badges.push({ ...TOOL_BADGES['InnovationSeeker'], unlockedAt: now });
-    if (stats.totalTools >= 40) badges.push({ ...TOOL_BADGES['AIVirtuoso'], unlockedAt: now });
-    if (stats.totalTools >= 60) badges.push({ ...TOOL_BADGES['TechPioneer'], unlockedAt: now });
-    if (stats.totalTools >= 75) badges.push({ ...TOOL_BADGES['AIVanguard'], unlockedAt: now });
+    // Tool Count Milestone Badges - Only award if user has used enough different tools
+    // These thresholds are more realistic
+    if (stats.totalTools >= 8) badges.push({ ...TOOL_BADGES['AIApprentice'], unlockedAt: now });
+    if (stats.totalTools >= 20) badges.push({ ...TOOL_BADGES['ToolCollector'], unlockedAt: now });
+    if (stats.totalTools >= 35) badges.push({ ...TOOL_BADGES['InnovationSeeker'], unlockedAt: now });
+    if (stats.totalTools >= 50) badges.push({ ...TOOL_BADGES['AIVirtuoso'], unlockedAt: now });
+    if (stats.totalTools >= 70) badges.push({ ...TOOL_BADGES['TechPioneer'], unlockedAt: now });
+    if (stats.totalTools >= 85) badges.push({ ...TOOL_BADGES['AIVanguard'], unlockedAt: now });
 
-    // Special Achievement Badges
+    // Special Achievement Badges - Only award if user meets specific criteria
     if (stats.isFirstInCategory) badges.push({ ...TOOL_BADGES['CategoryPioneer'], unlockedAt: now });
     if (stats.maxToolUses >= 50) badges.push({ ...TOOL_BADGES['ToolOptimizer'], unlockedAt: now });
     if (stats.hasUsedAllCategories) badges.push({ ...TOOL_BADGES['AIResearcher'], unlockedAt: now });

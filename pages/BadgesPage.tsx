@@ -4,7 +4,6 @@ import { getReferralInfo } from '../services/referralService';
 import { getToolUsageInfo, ToolUsageInfo } from '../services/toolUsageService';
 import { ReferralInfo } from '../types';
 import { TrophyIcon, CheckBadgeIcon, SparklesIcon, FireIcon } from '../tools/Icons';
-
 interface ProgressItem {
   title: string;
   description: string;

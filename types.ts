@@ -50,6 +50,7 @@ export interface ReferralInfo {
   referredBy?: string | null;
   rewards: number;
   badges: Badge[];
+  toolBadges: Badge[];
   level: string;
   nextLevelPoints: number;
   referralHistory: Array<{
@@ -72,6 +73,10 @@ export interface FirestoreUser {
     referralsCount: number;
     referredBy?: string;
     rewards: number;
+    badges?: Badge[];
+    toolBadges?: Badge[];
+    level?: string;
+    nextLevelPoints?: number;
     referralHistory: Array<{
       referredUserId: string;
       referredUserEmail: string;

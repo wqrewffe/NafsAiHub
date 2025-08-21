@@ -1,6 +1,6 @@
 
 
-import { db, serverTimestamp } from '../firebase/config';
+import { db, serverTimestamp, auth } from '../firebase/config';
 import { HistoryItem, FirestoreUser, Todo, Note } from '../types';
 import firebase from 'firebase/compat/app';
 import { generateReferralCode } from './referralService';
@@ -261,6 +261,55 @@ export const getRecentActivity = async (limit: number = 5): Promise<GlobalHistor
 export const updateAuthSettings = async (settings: { isGoogleAuthDisabled: boolean }) => {
     const settingsRef = db.collection('settings').doc('auth');
     await settingsRef.set(settings, { merge: true });
+};
+
+// ------------------------------
+// Account Deletion Helpers
+// ------------------------------
+
+const deleteCollection = async (collectionRef: firebase.firestore.CollectionReference) => {
+  const snapshot = await collectionRef.get();
+  const batch = db.batch();
+  snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+  if (!snapshot.empty) {
+    await batch.commit();
+  }
+};
+
+export const deleteUserData = async (userId: string) => {
+  const userRef = db.collection('users').doc(userId);
+  // Known subcollections we maintain
+  const historyRef = userRef.collection('history');
+  const toolUsageRef = userRef.collection('toolUsage');
+  const todosRef = userRef.collection('todos');
+  const notesRef = userRef.collection('notes');
+
+  // Delete subcollection docs in batches
+  await Promise.all([
+    deleteCollection(historyRef),
+    deleteCollection(toolUsageRef),
+    deleteCollection(todosRef),
+    deleteCollection(notesRef),
+  ]);
+
+  // Finally delete the user document itself
+  await userRef.delete().catch(() => {});
+};
+
+export const deleteUserAccount = async (): Promise<{ ok: boolean; message?: string }> => {
+  const user = auth.currentUser;
+  if (!user) return { ok: false, message: 'No authenticated user.' };
+  try {
+    await deleteUserData(user.uid);
+    await user.delete();
+    return { ok: true };
+  } catch (error: any) {
+    if (error && (error.code === 'auth/requires-recent-login' || String(error).includes('requires-recent-login'))) {
+      return { ok: false, message: 'Recent login required. Please sign out and log back in, then try deleting again.' };
+    }
+    console.error('Account deletion failed:', error);
+    return { ok: false, message: 'Failed to delete account. Please try again.' };
+  }
 };
 
 // Todo Functions

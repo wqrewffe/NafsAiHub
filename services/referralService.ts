@@ -83,6 +83,9 @@ export async function initializeReferralInfo(userId: string, referralCode?: stri
                     'referralInfo.rewards': firebase.firestore.FieldValue.increment(50)
                 });
 
+                // Note: Congratulations will be triggered when the user next loads their profile
+                // or uses tools, as the congratulations system checks for new achievements
+
                 console.log('Successfully processed referral.');
             } else {
                 console.log('No referrer found for code:', referralCode);
