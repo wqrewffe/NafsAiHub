@@ -394,6 +394,19 @@ export const EnvelopeIcon: React.FC<{ className?: string }> = (props) => (
   </svg>
 );
 
+// Missing icons used by policy/support pages
+export const PhoneIcon: React.FC<{ className?: string }> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h1.5A2.25 2.25 0 0021 19.5v-2.25c0-.52-.356-.966-.861-1.09l-3.47-.868a1.125 1.125 0 00-1.086.27l-1.28 1.28a12.035 12.035 0 01-5.36-5.36l1.28-1.28a1.125 1.125 0 00.27-1.086l-.868-3.47A1.125 1.125 0 009 3H6.75A2.25 2.25 0 004.5 5.25v1.5z" />
+  </svg>
+);
+
+export const LockClosedIcon: React.FC<{ className?: string }> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V7.5a4.5 4.5 0 10-9 0v3m-1.5 0h12A2.25 2.25 0 0120.25 12.75V18A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18v-5.25A2.25 2.25 0 016 10.5z" />
+  </svg>
+);
+
 export const CubeTransparentIcon: React.FC<{ className?: string }> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9.75l-9-5.25m9 5.25l9-5.25" />

@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { logToolUsage } from '../../services/firebaseService';
+import { useCongratulations } from '../../hooks/CongratulationsProvider';
 import Spinner from '../../components/Spinner';
 import type { ToolOptionConfig, ImageFile } from '../../types';
 import { PaperClipIcon, XCircleIcon } from '../Icons';
@@ -26,6 +27,7 @@ const ToolContainer: React.FC<ToolContainerProps> = ({ toolId, toolName, toolCat
   const [image, setImage] = useState<ImageFile | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { currentUser } = useAuth();
+  const { checkForAchievements } = useCongratulations();
 
   const initialOptions = useMemo(() => {
     const state: Record<string, any> = {};
@@ -79,6 +81,11 @@ const ToolContainer: React.FC<ToolContainerProps> = ({ toolId, toolName, toolCat
           prompt,
           typeof result === 'string' ? result : JSON.stringify(result, null, 2)
         );
+        
+        // Check for new achievements after tool usage
+        setTimeout(() => {
+          checkForAchievements();
+        }, 1000); // Small delay to ensure Firebase updates are processed
       }
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred.');
