@@ -4,12 +4,16 @@ import { Badge } from '../types';
 interface CongratulationsModalProps {
     isOpen: boolean;
     onClose: () => void;
-    type: 'badge' | 'points' | 'level';
+    type: 'badge' | 'points' | 'level' | 'success' | 'error';
     data: {
         badge?: Badge;
         points?: number;
         level?: string;
         message?: string;
+        title?: string;
+        toolId?: string;
+        newBalance?: number;
+        redirectTo?: string;
     };
 }
 
@@ -31,7 +35,19 @@ const CongratulationsModal: React.FC<CongratulationsModalProps> = ({
 
     if (!isOpen) return null;
 
+    const handleAction = () => {
+        if (data.redirectTo) {
+            window.location.href = `/#${data.redirectTo}`;
+        } else if (data.toolId) {
+            window.location.href = `/#/tool/${data.toolId}`;
+        }
+        onClose();
+    };
+
     const getTitle = () => {
+        if (data.title) {
+            return data.title;
+        }
         switch (type) {
             case 'badge':
                 return '🎉 New Badge Unlocked!';
@@ -39,6 +55,10 @@ const CongratulationsModal: React.FC<CongratulationsModalProps> = ({
                 return '🎉 Points Earned!';
             case 'level':
                 return '🎉 Level Up!';
+            case 'success':
+                return '🎉 Success!';
+            case 'error':
+                return '⚠️ Attention!';
             default:
                 return '🎉 Congratulations!';
         }
@@ -89,6 +109,28 @@ const CongratulationsModal: React.FC<CongratulationsModalProps> = ({
                             <p className="text-slate-300">
                                 {data.message || 'You\'ve reached a new milestone!'}
                             </p>
+                        </div>
+                    </div>
+                );
+            case 'success':
+            case 'error':
+                const icon = type === 'success' ? '🎉' : '⚠️';
+                const buttonText = data.toolId ? 'Try it' : data.redirectTo ? 'Learn More' : 'OK';
+                const buttonClass = type === 'success' ? 'bg-green-500' : 'bg-yellow-500';
+                
+                return (
+                    <div className="text-center">
+                        <div className="mb-6">
+                            <div className="text-6xl mb-4">{icon}</div>
+                            <h3 className="text-2xl font-bold text-primary mb-2">
+                                {data.message}
+                            </h3>
+                            <button 
+                                onClick={handleAction}
+                                className={`mt-4 px-6 py-2 rounded-lg text-white ${buttonClass} hover:opacity-90`}
+                            >
+                                {buttonText}
+                            </button>
                         </div>
                     </div>
                 );
@@ -144,12 +186,15 @@ const CongratulationsModal: React.FC<CongratulationsModalProps> = ({
                     
                     {getContent()}
 
-                    <button 
-                        onClick={onClose}
-                        className="bg-primary hover:bg-primary/80 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200"
-                    >
-                        Awesome!
-                    </button>
+                    {/* Only show Awesome button for non-error messages */}
+                    {type !== 'error' && (
+                        <button 
+                            onClick={onClose}
+                            className="bg-primary hover:bg-primary/80 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200"
+                        >
+                            Awesome!
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

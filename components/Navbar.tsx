@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useSettings } from '../hooks/useSettings';
+import { usePoints } from '../hooks/usePoints';
 import { auth } from '../firebase/config';
-import { Cog6ToothIcon, ClipboardDocumentCheckIcon, PencilIcon, UserGroupIcon } from '../tools/Icons';
+import { Cog6ToothIcon, ClipboardDocumentCheckIcon, PencilIcon, UserGroupIcon, SparklesIcon } from '../tools/Icons';
 
 const ADMIN_EMAIL = 'nafisabdullah424@gmail.com';
 
@@ -22,6 +23,7 @@ const XIcon = (props: React.SVGProps<SVGSVGElement>) => (
 const Navbar: React.FC = () => {
   const { currentUser } = useAuth();
   const { authSettings } = useSettings();
+  const { points, isInfinite } = usePoints();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -221,7 +223,17 @@ const Navbar: React.FC = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-4">
-            {currentUser && desktopIconLinks}
+            {currentUser && (
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center px-3 py-1 bg-accent/10 rounded-full text-accent">
+                  <SparklesIcon className="w-5 h-5 mr-1" />
+                  <span className="font-semibold">
+                    {isInfinite ? '∞' : points.toLocaleString()}
+                  </span>
+                </div>
+                {desktopIconLinks}
+              </div>
+            )}
             {navLinks}
           </div>
 
@@ -241,6 +253,16 @@ const Navbar: React.FC = () => {
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden">
+          {currentUser && (
+            <div className="px-4 py-2 border-b border-gray-700">
+              <div className="flex items-center px-3 py-1 bg-accent/10 rounded-full text-accent w-fit">
+                <SparklesIcon className="w-5 h-5 mr-1" />
+                <span className="font-semibold">
+                  {isInfinite ? '∞' : points.toLocaleString()}
+                </span>
+              </div>
+            </div>
+          )}
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">{mobileMenuLinks}</div>
         </div>
       )}

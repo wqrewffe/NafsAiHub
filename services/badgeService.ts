@@ -1,6 +1,32 @@
 import { Badge, BadgeType } from '../types';
 
 const BADGES: Partial<Record<BadgeType, Omit<Badge, 'unlockedAt'>>> = {
+  // Streak Badges
+  'DailyExplorer': {
+    type: 'DailyExplorer',
+    name: 'Daily Explorer',
+    description: 'Used AI tools for 5 consecutive days',
+    imageUrl: '/badges/daily-explorer.svg'
+  },
+  'WeeklyChampion': {
+    type: 'WeeklyChampion',
+    name: 'Weekly Champion',
+    description: 'Engaged with AI tools every day for a week',
+    imageUrl: '/badges/weekly-champion.svg'
+  },
+  'ConsistentLearner': {
+    type: 'ConsistentLearner',
+    name: 'Consistent Learner',
+    description: 'Demonstrated dedication by using tools daily for a month',
+    imageUrl: '/badges/consistent-learner.svg'
+  },
+  'AIDevotee': {
+    type: 'AIDevotee',
+    name: 'AI Devotee',
+    description: 'Maintained a remarkable 90-day streak of daily AI tool usage',
+    imageUrl: '/badges/ai-devotee.svg'
+  },
+  // Regular Badges
   'Newcomer': {
     type: 'Newcomer',
     name: 'Newcomer',
@@ -55,6 +81,13 @@ const LEVELS = [
   { name: 'Grandmaster', minReferrals: 200 }
 ];
 
+const STREAK_BADGES = [
+  { type: 'DailyExplorer', days: 5 },
+  { type: 'WeeklyChampion', days: 7 },
+  { type: 'ConsistentLearner', days: 30 },
+  { type: 'AIDevotee', days: 90 }
+] as const;
+
 export function calculateLevel(referralsCount: number) {
   // Find the highest level that the user qualifies for
   const currentLevel = [...LEVELS]
@@ -85,3 +118,59 @@ export function calculateBadges(referralsCount: number): Badge[] {
 
   return badges;
 }
+
+import { db } from '../firebase/config';
+
+export const checkAndAwardStreakBadges = async (userId: string, currentStreak: number): Promise<Badge[]> => {
+  const userBadgesRef = db.collection('users').doc(userId).collection('badges');
+  const userBadgesSnapshot = await userBadgesRef.where('type', 'in', STREAK_BADGES.map(b => b.type)).get();
+  const existingBadgeTypes = new Set(userBadgesSnapshot.docs.map(doc => doc.data().type));
+  
+  const newBadges: Badge[] = [];
+  const now = new Date().toISOString();
+
+  // Check each streak badge in order
+  for (const { type, days } of STREAK_BADGES) {
+    if (currentStreak >= days && !existingBadgeTypes.has(type)) {
+      const badgeTemplate = BADGES[type];
+      if (badgeTemplate) {
+        const newBadge: Badge = {
+          ...badgeTemplate,
+          unlockedAt: now
+        };
+        
+        // Add the badge to Firestore
+        await userBadgesRef.add(newBadge);
+        newBadges.push(newBadge);
+      }
+    }
+  }
+
+  return newBadges;
+};
+
+export const getUserBadges = async (userId: string): Promise<Badge[]> => {
+  if (!userId) return [];
+
+  try {
+    const badgesSnapshot = await db.collection('users')
+      .doc(userId)
+      .collection('badges')
+      .get();
+
+    return badgesSnapshot.docs.map(doc => doc.data() as Badge);
+  } catch (error) {
+    console.error('Error fetching user badges:', error);
+    return [];
+  }
+};
+
+export const createBadge = (type: BadgeType, unlockedAt: string): Badge | null => {
+  const template = BADGES[type];
+  if (!template) return null;
+
+  return {
+    ...template,
+    unlockedAt
+  };
+};

@@ -1,7 +1,7 @@
 import { db } from '../firebase/config';
 import { calculateToolBadges, calculateToolLevel } from './toolBadgeService';
 import { Badge } from '../types';
-// The 'firebase' import was not used, so it has been removed for cleaner code.
+import { streakService } from './streakService';
 
 /**
  * A summary of a user's tool usage statistics, used for calculating badges.
@@ -47,12 +47,16 @@ export const getToolUsageInfo = async (userId: string): Promise<ToolUsageInfo | 
         const userToolUsageRef = db.collection('users').doc(userId).collection('toolUsage');
         const toolUsageSnapshot = await userToolUsageRef.get();
         
-        // Get user's total usage count from the main user document
         const userDoc = await db.collection('users').doc(userId).get();
         if (!userDoc.exists) {
             console.warn(`User document not found for userId: ${userId}`);
             return null;
         }
+
+        // Get streak data
+        const streakData = await streakService.getStreak(userId);
+
+        // Get usage data
         const userData = userDoc.data();
         const totalUsage = userData?.totalUsage || 0;
 
@@ -71,8 +75,7 @@ export const getToolUsageInfo = async (userId: string): Promise<ToolUsageInfo | 
             totalTools++;
         });
 
-        // This is a placeholder/estimate; a real implementation would use timestamps
-        const dayStreak = Math.min(Math.floor(totalUsage / 5), 90);
+        const dayStreak = streakData.currentStreak;
 
         // Check if the user has used at least one tool in every major category
         const allCategories = ['General', 'Medical', 'Programming', 'Education', 'Creative', 'Games & Entertainment', 'GameDev', 'Robotics & AI', 'Productivity'];

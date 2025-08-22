@@ -68,6 +68,10 @@ export interface FirestoreUser {
   createdAt: firebase.firestore.Timestamp;
   totalUsage?: number;
   password?: string;
+  isBlocked?: boolean;
+  currentStreak?: number;
+  longestStreak?: number;
+  lastDailyUse?: string;
   referralInfo?: {
     referralCode: string;
     referralsCount: number;

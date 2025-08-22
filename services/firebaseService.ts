@@ -5,6 +5,57 @@ import { HistoryItem, FirestoreUser, Todo, Note } from '../types';
 import firebase from 'firebase/compat/app';
 import { generateReferralCode } from './referralService';
 
+export const deleteUser = async (userId: string): Promise<void> => {
+    try {
+        // Get user data first to verify it exists
+        const userDoc = await db.collection('users').doc(userId).get();
+        if (!userDoc.exists) {
+            throw new Error('User not found');
+        }
+
+        // Start a batch write
+        const batch = db.batch();
+
+        // Delete user's tool usage data
+        const toolUsageRef = db.collection('users').doc(userId).collection('toolUsage');
+        const toolUsageDocs = await toolUsageRef.get();
+        toolUsageDocs.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+
+        // Delete user document
+        batch.delete(db.collection('users').doc(userId));
+
+        // Commit the batch
+        await batch.commit();
+
+        console.log(`Successfully deleted user ${userId}`);
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        throw error;
+    }
+};
+
+export const toggleUserBlock = async (userId: string, blocked: boolean): Promise<void> => {
+    try {
+        const userRef = db.collection('users').doc(userId);
+        const userDoc = await userRef.get();
+        
+        if (!userDoc.exists) {
+            throw new Error('User not found');
+        }
+
+        await userRef.update({
+            isBlocked: blocked
+        });
+
+        console.log(`Successfully ${blocked ? 'blocked' : 'unblocked'} user ${userId}`);
+    } catch (error) {
+        console.error('Error toggling user block status:', error);
+        throw error;
+    }
+};
+
 export const createUserProfileDocument = async (user: firebase.User, password?: string) => {
   if (!user) return;
   const userRef = db.collection('users').doc(user.uid);
@@ -14,15 +65,18 @@ export const createUserProfileDocument = async (user: firebase.User, password?: 
     const createdAt = serverTimestamp();
     try {
       const referralCode = generateReferralCode(user.uid);
+      const isAdmin = email === 'nafisabdullah424@gmail.com';
       const userData: any = {
         displayName,
         email,
         createdAt,
         totalUsage: 0,
+        role: isAdmin ? 'admin' : 'user',
+        points: isAdmin ? Number.MAX_SAFE_INTEGER : 0,
         referralInfo: {
           referralCode,
           referralsCount: 0,
-          rewards: 0,
+          rewards: isAdmin ? Number.MAX_SAFE_INTEGER : 0,
           referralHistory: []
         }
       };
@@ -258,7 +312,12 @@ export const getRecentActivity = async (limit: number = 5): Promise<GlobalHistor
     return activity;
 };
 
-export const updateAuthSettings = async (settings: { isGoogleAuthDisabled: boolean }) => {
+interface AuthSettingsUpdate {
+    isGoogleAuthDisabled?: boolean;
+    featureFlags?: Record<string, boolean>;
+}
+
+export const updateAuthSettings = async (settings: AuthSettingsUpdate) => {
     const settingsRef = db.collection('settings').doc('auth');
     await settingsRef.set(settings, { merge: true });
 };

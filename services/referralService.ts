@@ -57,7 +57,7 @@ export async function initializeReferralInfo(userId: string, referralCode?: stri
                 const newHistoryEntry = {
                     referredUserId: userId,
                     referredUserEmail: newUserData?.email || 'unknown',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    timestamp: new Date().toISOString(),
                     rewardClaimed: true
                 };
 
@@ -70,6 +70,7 @@ export async function initializeReferralInfo(userId: string, referralCode?: stri
                 const { currentLevel, nextLevelPoints } = calculateLevel(newReferralsCount);
                 const badges = calculateBadges(newReferralsCount);
 
+                // Update referrer with reward and new stats
                 await db.collection('users').doc(referrerId).update({
                     'referralInfo.referralsCount': firebase.firestore.FieldValue.increment(1),
                     'referralInfo.rewards': firebase.firestore.FieldValue.increment(100),
@@ -77,6 +78,11 @@ export async function initializeReferralInfo(userId: string, referralCode?: stri
                     'referralInfo.badges': badges,
                     'referralInfo.level': currentLevel,
                     'referralInfo.nextLevelPoints': nextLevelPoints
+                });
+
+                // Give reward points to the referred user
+                await userRef.update({
+                    'referralInfo.rewards': firebase.firestore.FieldValue.increment(50)
                 });
 
                 await userRef.update({

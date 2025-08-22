@@ -5,6 +5,7 @@ import { AuthProvider } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
 import { SettingsProvider } from './hooks/useSettings';
 import { CongratulationsProvider } from './hooks/CongratulationsProvider';
+import { ToolAccessProvider } from './hooks/useToolAccess';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -27,6 +28,7 @@ import PoliciesPage from './pages/PoliciesPage';
 import SupportPage from './pages/SupportPage';
 import ContactPage from './pages/ContactPage';
 import HelpChatPage from './pages/HelpChatPage';
+import CongratulationsModal from './components/CongratulationsModal';
 
 function App() {
   return (
@@ -34,9 +36,10 @@ function App() {
       <ThemeProvider>
         <SettingsProvider>
           <CongratulationsProvider>
-            <ReactRouterDOM.HashRouter>
-              <Layout>
-                <ReactRouterDOM.Routes>
+            <ToolAccessProvider>
+              <ReactRouterDOM.HashRouter>
+                  <Layout>
+                    <ReactRouterDOM.Routes>
                 {/* Public Routes */}
                 <ReactRouterDOM.Route path="/" element={<HomePage />} />
                 <ReactRouterDOM.Route path="/login" element={<LoginPage />} />
@@ -104,8 +107,10 @@ function App() {
                   element={<AdminRoute><UserHistoryPage /></AdminRoute>}
                 />
               </ReactRouterDOM.Routes>
-            </Layout>
-          </ReactRouterDOM.HashRouter>
+                  </Layout>
+                  <CongratulationsModal />
+              </ReactRouterDOM.HashRouter>
+            </ToolAccessProvider>
           </CongratulationsProvider>
         </SettingsProvider>
       </ThemeProvider>

@@ -203,10 +203,29 @@ export const CongratulationsProvider: React.FC<CongratulationsProviderProps> = (
             const initialCheckTimeout = setTimeout(checkForAchievements, 2000); 
 
             const interval = setInterval(checkForAchievements, 30000); // Check every 30 seconds
+
+            // Listen for real-time events from Firebase
+            const unsubscribeEvents = db.collection('userEvents')
+                .where('userId', '==', currentUser.uid)
+                .where('read', '==', false)
+                .onSnapshot(snapshot => {
+                    snapshot.docChanges().forEach(async change => {
+                        if (change.type === 'added') {
+                            const event = change.doc.data();
+                            showCongratulations(event.type, event.data);
+                            
+                            // Mark as read
+                            await db.collection('userEvents').doc(change.doc.id).update({
+                                read: true
+                            });
+                        }
+                    });
+                });
             
             return () => {
                 clearTimeout(initialCheckTimeout);
                 clearInterval(interval);
+                unsubscribeEvents();
             };
         }
     }, [currentUser]);
