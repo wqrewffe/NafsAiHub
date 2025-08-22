@@ -1,7 +1,9 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { logToolUsage } from '../../services/firebaseService';
+import { toolAccessService, ToolAccess } from '../../services/toolAccessService';
 import { useCongratulations } from '../../hooks/CongratulationsProvider';
+import { tools } from '../index';
 import Spinner from '../../components/Spinner';
 import type { ToolOptionConfig, ImageFile } from '../../types';
 import { PaperClipIcon, XCircleIcon } from '../Icons';
@@ -27,7 +29,7 @@ const ToolContainer: React.FC<ToolContainerProps> = ({ toolId, toolName, toolCat
   const [image, setImage] = useState<ImageFile | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { currentUser } = useAuth();
-  const { checkForAchievements } = useCongratulations();
+  const { checkForAchievements, showCongratulations } = useCongratulations();
 
   const initialOptions = useMemo(() => {
     const state: Record<string, any> = {};
@@ -75,6 +77,9 @@ const ToolContainer: React.FC<ToolContainerProps> = ({ toolId, toolName, toolCat
       const result = await onGenerate({ prompt, options, image: image ? { mimeType: image.type, data: image.base64 } : undefined });
       setOutput(result);
       if (currentUser) {
+        console.log('[DEBUG] Recording tool usage and unlocking progress');
+        
+        // Record the tool usage in history
         await logToolUsage(
           currentUser.uid,
           { id: toolId, name: toolName, category: toolCategory },
@@ -82,10 +87,33 @@ const ToolContainer: React.FC<ToolContainerProps> = ({ toolId, toolName, toolCat
           typeof result === 'string' ? result : JSON.stringify(result, null, 2)
         );
         
-        // Check for new achievements after tool usage
-        setTimeout(() => {
-          checkForAchievements();
-        }, 1000); // Small delay to ensure Firebase updates are processed
+        // Record the tool use for unlocking progress
+        const { unlockedToolId, currentProgress } = await toolAccessService.recordToolUse(currentUser.uid, toolId);
+        
+        console.log('[DEBUG] Tool usage recorded:', {
+          toolId,
+          currentProgress,
+          unlockedToolId: unlockedToolId || 'none'
+        });
+
+        if (unlockedToolId) {
+          // Show congratulations modal immediately for the unlocked tool
+          const unlockedTool = tools.find(t => t.id === unlockedToolId);
+          checkForAchievements(); // This will trigger the notification
+          if (unlockedTool) {
+            showCongratulations('success', {
+              title: '🎁 New Tool Unlocked!',
+              message: `You've unlocked ${unlockedTool.name}!`,
+              toolId: unlockedToolId,
+              redirectTo: `/tool/${unlockedToolId}`
+            });
+          }
+        } else {
+          // Check for other achievements after a delay
+          setTimeout(() => {
+            checkForAchievements();
+          }, 1000);
+        }
       }
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred.');
