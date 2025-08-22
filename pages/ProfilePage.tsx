@@ -5,23 +5,27 @@ import { BadgesDisplay } from '../components/BadgesDisplay';
 import { getReferralInfo } from '../services/referralService';
 import { getToolUsageInfo } from '../services/toolUsageService';
 import { ReferralInfo } from '../types';
+import { db } from '../firebase/config';
 import { ToolUsageInfo } from '../services/toolUsageService';
 
 const ProfilePage: React.FC = () => {
   const { currentUser } = useAuth();
   const [referralInfo, setReferralInfo] = useState<ReferralInfo | null>(null);
   const [toolUsageInfo, setToolUsageInfo] = useState<ToolUsageInfo | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     const loadUserInfo = async () => {
       if (currentUser) {
         try {
-          // Load both referral info and tool usage info
-          const [referralData, toolData] = await Promise.all([
+          // Load user info, referral info and tool usage info
+          const [userDoc, referralData, toolData] = await Promise.all([
+            db.collection('users').doc(currentUser.uid).get(),
             getReferralInfo(currentUser.uid),
             getToolUsageInfo(currentUser.uid)
           ]);
           
+          setUserRole(userDoc.data()?.role || null);
           setReferralInfo(referralData);
           setToolUsageInfo(toolData);
         } catch (error) {
@@ -72,7 +76,9 @@ const ProfilePage: React.FC = () => {
             </div>
             <div className="p-4 rounded-lg bg-gradient-to-br from-primary/30 to-secondary/40 border border-secondary/50">
               <p className="text-light/80 text-sm">Rewards Points</p>
-              <p className="text-2xl font-bold">{referralInfo.rewards}</p>
+              <p className="text-2xl font-bold">
+                {userRole === 'admin' ? '∞' : referralInfo.rewards}
+              </p>
             </div>
             <div className="p-4 rounded-lg bg-gradient-to-br from-primary/30 to-secondary/40 border border-secondary/50">
               <p className="text-light/80 text-sm">Referral Code</p>

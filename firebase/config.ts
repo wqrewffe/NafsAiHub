@@ -15,30 +15,46 @@ export const firebaseConfig = {
 };
 
 // Initialize Firebase App
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
-
-export const auth = firebase.auth();
-export const db = firebase.firestore();
-
-// Enable offline persistence
+let app: firebase.app.App;
 try {
-  db.enablePersistence()
-    .catch((err) => {
-      if (err.code === 'failed-precondition') {
-        // Multiple tabs open, persistence can only be enabled
-        // in one tab at a time.
-        console.warn('Firestore persistence failed: multiple tabs open.');
-      } else if (err.code === 'unimplemented') {
-        // The current browser does not support all of the
-        // features required to enable persistence
-        console.warn('Firestore persistence not supported in this browser.');
-      }
-    });
+  if (!firebase.apps.length) {
+    app = firebase.initializeApp(firebaseConfig);
+  } else {
+    app = firebase.app();
+  }
 } catch (error) {
-    console.error("Error enabling Firestore persistence", error);
+  console.error("Error initializing Firebase:", error);
+  throw new Error("Critical: Firebase initialization failed");
 }
+
+// Initialize Firebase services
+export const auth = app.auth();
+export const db = app.firestore();
+
+// Configure Firestore settings
+db.settings({
+  cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
+});
+
+// Enable offline persistence with better error handling
+const enableFirestorePersistence = async () => {
+  try {
+    await db.enablePersistence({
+      synchronizeTabs: true
+    });
+    console.log('Firestore persistence enabled successfully');
+  } catch (err: any) {
+    if (err.code === 'failed-precondition') {
+      console.warn('Firestore persistence failed: Multiple tabs open. Only one tab can enable persistence.');
+    } else if (err.code === 'unimplemented') {
+      console.warn('Firestore persistence not supported in this browser');
+    } else {
+      console.error('Unexpected error enabling Firestore persistence:', err);
+    }
+  }
+};
+
+enableFirestorePersistence();
 
 export const serverTimestamp = firebase.firestore.FieldValue.serverTimestamp;
 export const googleProvider = new firebase.auth.GoogleAuthProvider();

@@ -2,6 +2,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import ToolCard from '../components/ToolCard';
 import CategoryCard from '../components/CategoryCard';
+import ProgressPanel from '../components/ProgressPanel';
+import SocialFeed from '../components/SocialFeed';
 import { tools } from '../tools';
 import { Tool, ToolCategory } from '../types';
 import { 
@@ -9,7 +11,9 @@ import {
     StethoscopeIcon, CodeBracketIcon, LightBulbIcon, CpuChipIcon, ArrowLeftIcon, ClipboardDocumentCheckIcon
 } from '../tools/Icons';
 import { useAuth } from '../hooks/useAuth';
+import { useEngagement } from '../hooks/useEngagement';
 import { getTopUsedToolsGlobal, getTopUsedToolsForUser } from '../services/firebaseService';
+import { toolAccessService } from '../services/toolAccessService';
 import ToolRow from '../components/ToolRow';
 
 
@@ -19,10 +23,12 @@ const HomePage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<ToolCategory | null>(null);
   const { currentUser } = useAuth();
+  const { streak, dailyReward } = useEngagement();
   
   const [trendingTools, setTrendingTools] = useState<Tool[] | null>(null);
   const [userTopTools, setUserTopTools] = useState<Tool[] | null>(null);
   const [recommendedTools, setRecommendedTools] = useState<Tool[] | null>(null);
+  const [activeUsers, setActiveUsers] = useState<number>(0);
   
   const [loadingTrending, setLoadingTrending] = useState(true);
   const [loadingUser, setLoadingUser] = useState(true);
@@ -36,6 +42,17 @@ const HomePage: React.FC = () => {
       return toolIds.map(id => tools.find(tool => tool.id === id)).filter((t): t is Tool => !!t);
   }, []);
 
+
+  useEffect(() => {
+    const checkNewUser = async () => {
+      if (!currentUser) return;
+      
+      // Initialize tool access for new users
+      await toolAccessService.getToolAccess(currentUser.uid);
+    };
+
+    checkNewUser();
+  }, [currentUser]);
 
   useEffect(() => {
     const fetchTrendingTools = async () => {
@@ -92,6 +109,21 @@ const HomePage: React.FC = () => {
       setLoadingUser(false);
     }
   }, [currentUser, toolsById]);
+
+  useEffect(() => {
+    const initializeNewUser = async () => {
+      if (!currentUser) return;
+      
+      try {
+        // This will automatically set up tool access for new users
+        await toolAccessService.getToolAccess(currentUser.uid);
+      } catch (error) {
+        console.error('Error initializing tool access:', error);
+      }
+    };
+    
+    initializeNewUser();
+  }, [currentUser]);
 
   const features = [
     {

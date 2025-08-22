@@ -1,10 +1,10 @@
-import React,
-{
+import React, {
     useState,
     useEffect,
-    useMemo
+    useMemo,
+    useCallback
 } from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
     getAllUsers,
     getDashboardStats,
@@ -12,21 +12,24 @@ import {
     getRecentActivity,
     DashboardStats,
     GlobalHistoryItem,
-    updateAuthSettings
+    updateAuthSettings,
+    deleteUser,
+    toggleUserBlock
 } from '../../services/firebaseService';
-import { db } from '../../firebase/config';
 import {
     FirestoreUser,
     ToolCategory
 } from '../../types';
+import PointsManagement from '../../components/admin/PointsManagement';
 import Spinner from '../../components/Spinner';
 import StatCard from '../../components/StatCard';
+import NotificationControl from '../../components/admin/NotificationControl';
 import {
     UsersIcon,
     UserPlusIcon,
     ChartBarIcon,
     ArrowTrendingUpIcon
-} from '../../tools/Icons';
+} from '@heroicons/react/24/outline';
 import { useSettings } from '../../hooks/useSettings';
 import { useCongratulations } from '../../hooks/CongratulationsProvider';
 
@@ -36,61 +39,112 @@ const AdminDashboardPage: React.FC = () => {
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [allUsers, setAllUsers] = useState<FirestoreUser[]>([]);
     const [topUsers, setTopUsers] = useState<FirestoreUser[]>([]);
-    const [topTools, setTopTools] = useState<{ toolId: string; toolName: string; useCount: number }[]>([]);
+    const [topTools, setTopTools] = useState<{ toolId: string; toolName: string; useCount: number; category: ToolCategory }[]>([]);
     const [toolCategories, setToolCategories] = useState<{ name: ToolCategory; count: number }[]>([]);
     const [recentActivity, setRecentActivity] = useState<GlobalHistoryItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    
+    const [selectedUser, setSelectedUser] = useState<FirestoreUser | null>(null);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [actionType, setActionType] = useState<'delete' | 'block' | 'unblock' | null>(null);
+
     const { authSettings, loading: settingsLoading } = useSettings();
     const { showCongratulations } = useCongratulations();
 
     const usersMap = useMemo(() => new Map(allUsers.map(user => [user.id, user])), [allUsers]);
 
-    useEffect(() => {
-        const fetchDashboardData = async () => {
-            try {
-                const [statsData, allUsersData, topUsersData, allToolsData, activityData] = await Promise.all([
-                    getDashboardStats(),
-                    getAllUsers(),
-                    getAllUsers('totalUsage', 'desc', 5),
-                    getTopUsedToolsGlobal(),
-                    getRecentActivity(5),
-                ]);
+    const fetchDashboardData = useCallback(async () => {
+        try {
+            setLoading(true);
+            const [statsData, allUsersData, topUsersData, allToolsData, activityData] = await Promise.all([
+                getDashboardStats(),
+                getAllUsers(),
+                getAllUsers('totalUsage', 'desc', 5),
+                getTopUsedToolsGlobal(),
+                getRecentActivity(5),
+            ]);
 
-                setStats(statsData);
-                setAllUsers(allUsersData);
-                setTopUsers(topUsersData);
-                setTopTools(allToolsData.slice(0, 5));
-                setRecentActivity(activityData);
+            setStats(statsData);
+            setAllUsers(allUsersData);
+            setTopUsers(topUsersData);
+            setTopTools(allToolsData.slice(0, 5));
+            setRecentActivity(activityData);
 
-                const categoryCounts = allToolsData.reduce((acc, tool) => {
-                    acc[tool.category] = (acc[tool.category] || 0) + tool.useCount;
-                    return acc;
-                }, {} as Record<ToolCategory, number>);
+            const categoryCounts = allToolsData.reduce((acc, tool) => {
+                acc[tool.category] = (acc[tool.category] || 0) + tool.useCount;
+                return acc;
+            }, {} as Record<ToolCategory, number>);
 
-                const sortedCategories = (Object.entries(categoryCounts) as [ToolCategory, number][])
-                    .sort(([, a], [, b]) => b - a)
-                    .map(([name, count]) => ({
-                        name,
-                        count
-                    }));
-                setToolCategories(sortedCategories);
-
-            } catch (err) {
-                setError('Failed to fetch dashboard data.');
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchDashboardData();
+            const sortedCategories = (Object.entries(categoryCounts) as [ToolCategory, number][])
+                .sort(([, a], [, b]) => b - a)
+                .map(([name, count]) => ({
+                    name,
+                    count
+                }));
+            setToolCategories(sortedCategories);
+        } catch (err) {
+            setError('Failed to fetch dashboard data.');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
+    useEffect(() => {
+        fetchDashboardData();
+    }, [fetchDashboardData]);
+
+    const handleConfirmAction = async () => {
+        if (!selectedUser?.id || !actionType) {
+            setError('Invalid user selection');
+            return;
+        }
+
+        try {
+            if (actionType === 'delete') {
+                const userExists = allUsers.some(u => u.id === selectedUser.id);
+                if (!userExists) {
+                    setError('User not found');
+                    return;
+                }
+                await deleteUser(selectedUser.id);
+                setAllUsers(allUsers.filter(u => u.id !== selectedUser.id));
+                showCongratulations('points', {
+                    message: 'User deleted successfully',
+                    points: 0
+                });
+            } else if (actionType === 'block' || actionType === 'unblock') {
+                await toggleUserBlock(selectedUser.id, actionType === 'block');
+                setAllUsers(allUsers.map(u =>
+                    u.id === selectedUser.id ?
+                    { ...u,
+                        isBlocked: actionType === 'block'
+                    } :
+                    u
+                ));
+                showCongratulations('points', {
+                    message: `User ${actionType === 'block' ? 'blocked' : 'unblocked'} successfully`,
+                    points: 0
+                });
+            }
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : `Failed to ${actionType} user`;
+            setError(errorMessage);
+            console.error(err);
+        } finally {
+            setShowConfirmModal(false);
+            setSelectedUser(null);
+            setActionType(null);
+        }
+    };
+
+    const confirmAction = (user: FirestoreUser, action: 'delete' | 'block' | 'unblock') => {
+        setSelectedUser(user);
+        setActionType(action);
+        setShowConfirmModal(true);
+    };
 
     const filteredUsers = useMemo(() => {
         return allUsers.filter(user =>
@@ -107,12 +161,26 @@ const AdminDashboardPage: React.FC = () => {
     const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE);
 
     const handleGoogleAuthToggle = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const isDisabled = e.target.checked;
         try {
-            await updateAuthSettings({ isGoogleAuthDisabled: isDisabled });
+            await updateAuthSettings({ isGoogleAuthDisabled: e.target.checked });
         } catch (err) {
             console.error("Failed to update auth settings", err);
             alert("Failed to update settings.");
+        }
+    };
+
+    const handleFeatureFlagToggle = async (key: string, enabled: boolean) => {
+        try {
+            const currentFlags = authSettings?.featureFlags || {};
+            await updateAuthSettings({
+                featureFlags: {
+                    ...currentFlags,
+                    [key]: enabled
+                }
+            });
+        } catch (err) {
+            console.error('Failed to update feature flag', err);
+            alert('Failed to update settings.');
         }
     };
 
@@ -132,7 +200,7 @@ const AdminDashboardPage: React.FC = () => {
     );
 
     if (loading) {
-        return <div className="flex justify-center items-center h-64"><Spinner /></div>;
+        return <div className="flex justify-center items-center h-screen"><Spinner /></div>;
     }
     if (error) {
         return <p className="text-red-400 text-center">{error}</p>;
@@ -152,7 +220,7 @@ const AdminDashboardPage: React.FC = () => {
                 <StatCard icon={UserPlusIcon} title="New Users (7 Days)" value={stats?.newUsers7Days ?? 0} loading={loading} />
                 <StatCard icon={ArrowTrendingUpIcon} title="New Users (30 Days)" value={stats?.newUsers30Days ?? 0} loading={loading} />
             </div>
-            
+
             <DashboardSection title="Authentication Settings">
                 <div className="flex items-center justify-between p-3 bg-primary rounded-md">
                     <div className="flex-grow pr-4">
@@ -166,15 +234,12 @@ const AdminDashboardPage: React.FC = () => {
                             <input
                                 type="checkbox"
                                 id="google-auth-toggle"
-                                // FIX: Added `peer` class to link the input state to sibling elements
                                 className="sr-only peer"
-                                checked={!settingsLoading && authSettings.isGoogleAuthDisabled}
+                                checked={!settingsLoading && !!authSettings?.isGoogleAuthDisabled}
                                 onChange={handleGoogleAuthToggle}
                                 disabled={settingsLoading}
                             />
-                            {/* FIX: Added `peer-checked:bg-accent` to change color when on */}
                             <div className="block bg-slate-600 w-14 h-8 rounded-full peer-checked:bg-accent transition"></div>
-                            {/* FIX: Added `peer-checked:translate-x-6` to move the dot when on */}
                             <div className="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition peer-checked:translate-x-6"></div>
                         </div>
                     </label>
@@ -183,7 +248,6 @@ const AdminDashboardPage: React.FC = () => {
 
             <DashboardSection title="Feature Visibility">
                 <div className="space-y-3">
-                    {/* Reusable Toggle Component Logic */}
                     {[
                         { key: 'hideLeaderboard', label: 'Hide Leaderboard page', description: 'Toggles visibility for all users.' },
                         { key: 'hideSupportAdditionalResources', label: 'Hide Support - Additional Resources', description: 'Toggles the Additional Resources block on Support page.' },
@@ -211,23 +275,14 @@ const AdminDashboardPage: React.FC = () => {
                                 {f.description && <p className="text-xs text-slate-400">{f.description}</p>}
                             </div>
                             <label htmlFor={f.key} className="flex items-center cursor-pointer">
-                                {/* FIX: Ensured all toggles have the correct relative container and peer styling */}
                                 <div className="relative">
                                     <input
                                         type="checkbox"
                                         id={f.key}
                                         className="sr-only peer"
-                                        checked={!!(authSettings.featureFlags as any)?.[f.key]}
-                                        onChange={async (e) => {
-                                            try {
-                                                await db.collection('settings').doc('auth').set({
-                                                    featureFlags: { [f.key]: e.target.checked }
-                                                }, { merge: true });
-                                            } catch (err) {
-                                                console.error('Failed to update feature flag', err);
-                                                alert('Failed to update.');
-                                            }
-                                        }}
+                                        checked={!settingsLoading && !!(authSettings?.featureFlags as Record<string, boolean>)?.[f.key]}
+                                        onChange={(e) => handleFeatureFlagToggle(f.key, e.target.checked)}
+                                        disabled={settingsLoading}
                                     />
                                     <div className="block bg-slate-600 w-14 h-8 rounded-full peer-checked:bg-accent transition"></div>
                                     <div className="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition peer-checked:translate-x-6"></div>
@@ -238,135 +293,20 @@ const AdminDashboardPage: React.FC = () => {
                 </div>
             </DashboardSection>
 
-            {/* Test Congratulations Section */}
             <DashboardSection title="Test Congratulations System">
                 <div className="space-y-4">
                     <p className="text-sm text-slate-400">
                         Test the congratulations modal system with different achievement types:
                     </p>
                     <div className="flex flex-wrap gap-3">
-                        <button
-                            onClick={() => showCongratulations('badge', { 
-                                badge: {
-                                    type: 'Newcomer',
-                                    name: 'Newcomer',
-                                    description: 'Welcome to the community!',
-                                    imageUrl: '/badges/newcomer.svg',
-                                    unlockedAt: new Date().toISOString()
-                                }
-                            })}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-                        >
-                            🏆 Test Badge
-                        </button>
-                        <button
-                            onClick={() => showCongratulations('points', { 
-                                points: 100,
-                                message: 'You earned 100 points for completing a task!'
-                            })}
-                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-                        >
-                            💰 Test Points
-                        </button>
-                        <button
-                            onClick={() => showCongratulations('level', { 
-                                level: 'Silver',
-                                message: 'You\'ve reached Silver level!'
-                            })}
-                            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-                        >
-                            ⭐ Test Level Up
-                        </button>
-                        <button
-                            onClick={() => showCongratulations('badge', { 
-                                badge: {
-                                    type: 'ToolOptimizer',
-                                    name: 'Tool Optimizer',
-                                    description: 'Used a single tool 50 times, showing true mastery',
-                                    imageUrl: '/badges/tool-optimizer.svg',
-                                    unlockedAt: new Date().toISOString()
-                                }
-                            })}
-                            className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-                        >
-                            🎯 Test Tool Badge
-                        </button>
+                         <button onClick={() => showCongratulations('points', { points: 100, message: 'You earned 100 points!' })} className="px-4 py-2 bg-primary hover:bg-primary/80 rounded-md text-sm">Test +100 Points</button>
+                         <button onClick={() => showCongratulations('levelUp', { level: 5 })} className="px-4 py-2 bg-primary hover:bg-primary/80 rounded-md text-sm">Test Level Up (Lv 5)</button>
+                         <button onClick={() => showCongratulations('badge', { badgeName: 'Power User' })} className="px-4 py-2 bg-primary hover:bg-primary/80 rounded-md text-sm">Test Badge Earned</button>
                     </div>
                 </div>
             </DashboardSection>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <DashboardSection title="Recent Activity" className="lg:col-span-2">
-                    <div className="space-y-3">
-                        {recentActivity.map(activity => (
-                            <div key={activity.id} className="flex items-center justify-between bg-primary p-2 rounded-md">
-                                <div>
-                                    <p className="text-sm text-light">
-                                        <span className="font-bold text-accent">{usersMap.get(activity.userId)?.displayName || 'A user'}</span>
-                                        {' '}used {activity.toolName}
-                                    </p>
-                                </div>
-                                <p className="text-xs text-slate-500">{activity.timestamp.toLocaleTimeString()}</p>
-                            </div>
-                        ))}
-                    </div>
-                </DashboardSection>
-
-                <DashboardSection title="System Status">
-                    <div className="flex items-center space-x-3 p-3 bg-primary rounded-md">
-                        <div className="w-4 h-4 rounded-full bg-green-500 animate-pulse" />
-                        <div>
-                            <p className="font-semibold text-green-400">All Systems Operational</p>
-                            <p className="text-xs text-slate-400">Firebase & Gemini API Connected</p>
-                        </div>
-                    </div>
-                </DashboardSection>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <DashboardSection title="Top 5 Most Used Tools">
-                    <ol className="space-y-2 list-decimal list-inside">
-                        {topTools.map(tool => (
-                            <li key={tool.toolId} className="text-sm text-light">
-                                {tool.toolName}
-                                <span className="text-xs text-slate-400"> ({tool.useCount} uses)</span>
-                            </li>
-                        ))}
-                    </ol>
-                </DashboardSection>
-
-                <DashboardSection title="Top 5 Active Users">
-                    <ol className="space-y-2 list-decimal list-inside">
-                        {topUsers.map(user => (
-                            <li key={user.id} className="text-sm text-light">
-                                {user.displayName}
-                                <span className="text-xs text-slate-400"> ({user.totalUsage} uses)</span>
-                            </li>
-                        ))}
-                    </ol>
-                </DashboardSection>
-
-                <DashboardSection title="Usage by Category">
-                    <div className="space-y-2">
-                        {toolCategories.map(cat => (
-                            <div key={cat.name} className="text-sm">
-                                <div className="flex justify-between mb-1">
-                                    <span className="text-light">{cat.name}</span>
-                                    <span className="text-slate-400">{cat.count}</span>
-                                </div>
-                                <div className="w-full bg-primary rounded-full h-2.5">
-                                    <div
-                                        className="bg-accent h-2.5 rounded-full"
-                                        style={{ width: `${(cat.count / (stats?.totalUsage || 1)) * 100}%` }}>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </DashboardSection>
-            </div>
-
-            <DashboardSection title="All Users">
+            <DashboardSection title="User Management">
                 <input
                     type="text"
                     placeholder="Search by name or email..."
@@ -381,9 +321,10 @@ const AdminDashboardPage: React.FC = () => {
                     <table className="min-w-full divide-y divide-slate-700">
                         <thead className="bg-primary/50">
                             <tr>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Display Name</th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Name</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Email</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Password</th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Usage</th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Role</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Actions</th>
                             </tr>
@@ -391,21 +332,34 @@ const AdminDashboardPage: React.FC = () => {
                         <tbody className="bg-secondary divide-y divide-slate-700">
                             {paginatedUsers.map(user => (
                                 <tr key={user.id} className="hover:bg-primary/50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-light">{user.displayName}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-light">
+                                        {user.displayName || 'N/A'}
+                                    </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">{user.email}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400 font-mono">{user.password || 'N/A'}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">{user.totalUsage || 0}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${user.isBlocked ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}`}>
+                                            {user.isBlocked ? 'Blocked' : 'Active'}
+                                        </span>
+                                    </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.email === 'nafisabdullah424@gmail.com' ? 'bg-yellow-200 text-yellow-800' : 'bg-sky-200 text-sky-800'}`}>
                                             {user.email === 'nafisabdullah424@gmail.com' ? 'Admin' : 'User'}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-4">
-                                        <ReactRouterDOM.Link to={`/admin/user/${user.id}`} className="text-accent hover:text-sky-400">
-                                            View History
-                                        </ReactRouterDOM.Link>
-                                        <button className="text-slate-400 hover:text-white" onClick={() => alert('Role management feature coming soon!')}>
-                                            Edit Role
-                                        </button>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                        <div className="flex flex-col gap-2">
+                                            <div className="flex gap-2">
+                                                <Link to={`/admin/user/${user.id}`} className="text-accent hover:text-sky-400">View</Link>
+                                                <button onClick={() => confirmAction(user, user.isBlocked ? 'unblock' : 'block')} className={user.isBlocked ? 'text-green-400 hover:text-green-300' : 'text-yellow-400 hover:text-yellow-300'}>
+                                                    {user.isBlocked ? 'Unblock' : 'Block'}
+                                                </button>
+                                                <button onClick={() => confirmAction(user, 'delete')} className="text-red-400 hover:text-red-300">
+                                                    Delete
+                                                </button>
+                                            </div>
+                                            <PointsManagement user={user} onPointsUpdated={fetchDashboardData} />
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -417,23 +371,77 @@ const AdminDashboardPage: React.FC = () => {
                         Showing {paginatedUsers.length} of {filteredUsers.length} users
                     </span>
                     <div className="space-x-2">
-                        <button
-                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                            disabled={currentPage === 1}
-                            className="px-3 py-1 text-sm rounded-md bg-primary disabled:opacity-50"
-                        >
+                        <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 text-sm rounded-md bg-primary disabled:opacity-50">
                             Previous
                         </button>
-                        <button
-                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                            disabled={currentPage === totalPages}
-                            className="px-3 py-1 text-sm rounded-md bg-primary disabled:opacity-50"
-                        >
+                        <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 text-sm rounded-md bg-primary disabled:opacity-50">
                             Next
                         </button>
                     </div>
                 </div>
             </DashboardSection>
+
+            {showConfirmModal && selectedUser && actionType && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-secondary p-6 rounded-lg max-w-md w-full mx-4">
+                        <h3 className="text-xl font-semibold mb-4">
+                            Confirm {actionType.charAt(0).toUpperCase() + actionType.slice(1)} User
+                        </h3>
+                        <p className="mb-4">
+                            Are you sure you want to {actionType} {selectedUser.email}?
+                            {actionType === 'delete' && (
+                                <span className="block text-red-500 mt-2">
+                                    This action cannot be undone.
+                                </span>
+                            )}
+                        </p>
+                        <div className="flex justify-end gap-4">
+                            <button onClick={() => setShowConfirmModal(false)} className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded text-white">
+                                Cancel
+                            </button>
+                            <button onClick={handleConfirmAction} className={`px-4 py-2 text-white rounded ${actionType === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                                Confirm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Other Dashboard Sections can be added here */}
+                 <DashboardSection title="Top Users by Usage">
+                    <ul className="space-y-3">
+                        {topUsers.map(user => (
+                            <li key={user.id} className="flex items-center justify-between text-sm">
+                                <span className="truncate">{user.displayName || user.email}</span>
+                                <span className="font-semibold text-accent">{user.totalUsage} uses</span>
+                            </li>
+                        ))}
+                    </ul>
+                </DashboardSection>
+                <DashboardSection title="Top Tools">
+                     <ul className="space-y-3">
+                        {topTools.map(tool => (
+                            <li key={tool.toolId} className="flex items-center justify-between text-sm">
+                                <span className="truncate">{tool.toolName}</span>
+                                <span className="font-semibold text-accent">{tool.useCount} uses</span>
+                            </li>
+                        ))}
+                    </ul>
+                </DashboardSection>
+                <DashboardSection title="Recent Activity">
+                     <ul className="space-y-3">
+                        {recentActivity.map(activity => (
+                            <li key={activity.id} className="text-sm">
+                                <p className="truncate">
+                                    <span className="font-semibold">{usersMap.get(activity.userId)?.displayName || 'A user'}</span> used <span className="font-semibold text-accent">{activity.toolName}</span>
+                                </p>
+                                <p className="text-xs text-slate-400">{new Date(activity.timestamp.seconds * 1000).toLocaleString()}</p>
+                            </li>
+                        ))}
+                    </ul>
+                </DashboardSection>
+            </div>
         </div>
     );
 };
