@@ -1,0 +1,13 @@
+.fallback-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.fallback-avatar::before {
+    content: attr(data-initials);
+}

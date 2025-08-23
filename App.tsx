@@ -12,6 +12,7 @@ import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
 import ToolPage from './pages/ToolPage';
 import ProfilePage from './pages/ProfilePage';
+import { Routes, Route } from 'react-router-dom';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -52,9 +53,15 @@ function App() {
                   path="/tool/:toolId" 
                   element={<PrivateRoute><ToolPage /></PrivateRoute>} 
                 />
+                {/* Route for own profile */}
                 <ReactRouterDOM.Route 
                   path="/profile" 
                   element={<PrivateRoute><ProfilePage /></PrivateRoute>} 
+                />
+                {/* Route for viewing any user's profile */}
+                <ReactRouterDOM.Route 
+                  path="/profile/:username" 
+                  element={<ProfilePage />} 
                 />
                 <ReactRouterDOM.Route 
                   path="/settings" 

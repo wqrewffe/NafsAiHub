@@ -23,18 +23,6 @@ const UserRow: React.FC<{
         <td className="px-4 py-3">{user.email}</td>
         <td className="px-4 py-3">{user.totalUsage || 0}</td>
         <td className="px-4 py-3">
-            <div className="flex flex-col items-start">
-                <span className="text-sm font-medium">
-                    🔥 {user.currentStreak || 0} days
-                </span>
-                {user.longestStreak && user.longestStreak > 0 && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                        Best: {user.longestStreak} days
-                    </span>
-                )}
-            </div>
-        </td>
-        <td className="px-4 py-3">
             <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                 user.isBlocked 
                     ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' 
@@ -44,45 +32,45 @@ const UserRow: React.FC<{
             </span>
         </td>
         <td className="px-4 py-3">
-            <div className="flex items-center space-x-2">
-                <button
-                    onClick={onToggleExpand}
-                    className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-md shadow-sm transition-all duration-150
-                        ${isExpanded
-                            ? 'bg-blue-600 text-white dark:bg-blue-500 ring-2 ring-blue-300 dark:ring-blue-400'
-                            : 'bg-white text-blue-600 hover:bg-blue-50 dark:bg-gray-700 dark:text-blue-400 dark:hover:bg-gray-600 border border-blue-300 dark:border-blue-500'
-                        }`}
-                >
-                    <span className="mr-2">{isExpanded ? 'Hide Options' : 'Show Options'}</span>
-                    <svg 
-                        className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'transform rotate-180' : ''}`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                </button>
-                <button
-                    onClick={onToggleBlock}
-                    className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-150
-                        ${user.isBlocked
-                            ? 'text-green-700 dark:text-green-200 hover:bg-green-100 dark:hover:bg-green-900/20'
-                            : 'text-yellow-700 dark:text-yellow-200 hover:bg-yellow-100 dark:hover:bg-yellow-900/20'
-                        }`}
-                >
-                    {user.isBlocked ? 'Unblock' : 'Block'}
-                </button>
-                <button
-                    onClick={onDelete}
-                    className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md text-red-700 dark:text-red-200 hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors duration-150"
-                >
-                    Delete
-                </button>
-            </div>
+            <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                {user.role || 'User'}
+            </span>
+        </td>
+        <td className="px-4 py-3 flex items-center space-x-2">
+            <button
+                onClick={onToggleExpand}
+                className="px-3 py-1.5 text-sm font-medium text-purple-600 hover:text-purple-800 border border-purple-200 rounded-md hover:bg-purple-50"
+            >
+                View
+            </button>
+            <button
+                onClick={onToggleBlock}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md border ${
+                    user.isBlocked 
+                        ? 'text-green-600 hover:text-green-800 border-green-200 hover:bg-green-50' 
+                        : 'text-yellow-600 hover:text-yellow-800 border-yellow-200 hover:bg-yellow-50'
+                }`}
+            >
+                {user.isBlocked ? 'Unblock' : 'Block'}
+            </button>
+            <button
+                onClick={onDelete}
+                className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-800 border border-red-200 rounded-md hover:bg-red-50"
+            >
+                Delete
+            </button>
         </td>
     </tr>
 );
+
+const HEADERS = [
+    { key: 'name', label: 'Name' },
+    { key: 'email', label: 'Email' },
+    { key: 'totalUsage', label: 'Usage' },
+    { key: 'status', label: 'Status' },
+    { key: 'role', label: 'Role' },
+    { key: 'actions', label: 'Actions' },
+];
 
 export const AdminDashboard: React.FC = () => {
     const [users, setUsers] = useState<FirestoreUser[]>([]);
@@ -168,12 +156,11 @@ export const AdminDashboard: React.FC = () => {
                 <table className="w-full text-sm text-left">
                     <thead className="text-xs uppercase bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
                         <tr>
-                            <th className="px-4 py-3 font-semibold tracking-wider">Name</th>
-                            <th className="px-4 py-3 font-semibold tracking-wider">Email</th>
-                            <th className="px-4 py-3 font-semibold tracking-wider">Total Usage</th>
-                            <th className="px-4 py-3 font-semibold tracking-wider">Streak</th>
-                            <th className="px-4 py-3 font-semibold tracking-wider">Status</th>
-                            <th className="px-4 py-3 font-semibold tracking-wider">Actions</th>
+                            {HEADERS.map(header => (
+                                <th key={header.key} className="px-4 py-3 font-semibold tracking-wider">
+                                    {header.label}
+                                </th>
+                            ))}
                         </tr>
                     </thead>
                     <tbody>
@@ -188,15 +175,19 @@ export const AdminDashboard: React.FC = () => {
                                 />
                                 {expandedUser === user.id && (
                                     <tr>
-                                        <td colSpan={5} className="p-0">
-                                            <div className="p-6 bg-white dark:bg-gray-800 shadow-inner border-t-4 border-blue-500">
-                                                <div className="space-y-6">
-                                                    <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg shadow-sm">
-                                                        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Points Management</h3>
+                                        <td colSpan={6} className="p-0">
+                                            <div className="p-4 bg-gray-50 dark:bg-gray-900">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                                                        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+                                                            Points Management
+                                                        </h3>
                                                         <PointsManagement user={user} onPointsUpdated={loadUsers} />
                                                     </div>
-                                                    <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg shadow-sm">
-                                                        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Tool Management</h3>
+                                                    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                                                        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+                                                            Tool Management
+                                                        </h3>
                                                         <ToolAwardManagement user={user} />
                                                     </div>
                                                 </div>

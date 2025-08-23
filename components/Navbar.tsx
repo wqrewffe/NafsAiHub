@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useSettings } from '../hooks/useSettings';
 import { usePoints } from '../hooks/usePoints';
+import { useProfile } from '../hooks/useProfile';
 import { auth } from '../firebase/config';
 import { Cog6ToothIcon, ClipboardDocumentCheckIcon, PencilIcon, UserGroupIcon, SparklesIcon } from '../tools/Icons';
+import { ExtendedUser } from '../types/auth';
+import './Navbar.css';
 
 const ADMIN_EMAIL = 'nafisabdullah424@gmail.com';
 
@@ -21,11 +24,19 @@ const XIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 const Navbar: React.FC = () => {
-  const { currentUser } = useAuth();
+  const { currentUser } = useAuth() as { currentUser: ExtendedUser | null };
+  const { profile } = useProfile(currentUser?.uid || '');
   const { authSettings } = useSettings();
   const { points, isInfinite } = usePoints();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Debug logs
+  useEffect(() => {
+    console.log('Navbar Profile:', profile);
+    console.log('Current User:', currentUser);
+    console.log('Avatar URL:', profile?.avatarUrl);
+  }, [profile, currentUser]);
 
   const handleLogout = async () => {
     try {
@@ -63,10 +74,44 @@ const Navbar: React.FC = () => {
           )}
           <Link
             onClick={closeMobileMenu}
-            to="/profile"
-            className="text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+            to={currentUser ? `/profile/${currentUser.displayName}-${currentUser.uid}` : '/profile'}
+            className="flex items-center space-x-2 text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
           >
-            {getGreeting()}
+            <div 
+                className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-primary"
+                data-initials={profile?.displayName?.charAt(0)?.toUpperCase() || 'U'}
+              >
+              {profile?.avatarUrl ? (
+                <img
+                  key={profile.avatarUrl}
+                  src={profile.avatarUrl.startsWith('/') ? profile.avatarUrl : `/avatars/${profile.avatarUrl}`}
+                  alt={profile.displayName}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.error('Failed to load avatar:', profile.avatarUrl);
+                    e.currentTarget.onerror = null;
+                    // Don't fallback to Google photo URL, show initials instead
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement?.classList.add('fallback-avatar');
+                  }}
+                />
+              ) : currentUser?.photoURL ? (
+                <img
+                  src={currentUser.photoURL}
+                  alt={currentUser.displayName || 'User'}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.error('Failed to load photo URL:', currentUser.photoURL);
+                    e.currentTarget.onerror = null;
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full bg-primary flex items-center justify-center text-white">
+                  {(profile?.displayName?.[0] || currentUser?.displayName?.[0] || currentUser?.email?.[0] || '?').toUpperCase()}
+                </div>
+              )}
+            </div>
+            <span>{getGreeting()}</span>
           </Link>
           <Link
             onClick={closeMobileMenu}
