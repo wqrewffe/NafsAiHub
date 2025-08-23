@@ -96,13 +96,13 @@ export function usePoints() {
       }
     );
 
-    // Listener for referral points
+    // Listener for referral points from user document
     const unsubscribeReferral = onSnapshot(
-      doc(db, 'referrals', currentUser.uid),
+      doc(db, 'users', currentUser.uid),
       (doc) => {
         if (doc.exists()) {
           const data = doc.data();
-          const referralPoints = data?.rewards || 0;
+          const referralPoints = data?.referralInfo?.rewards || 0;
 
           setPointsState((prev) => {
             const newTotal = prev.isAdmin 
