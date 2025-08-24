@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
       preview: {
         host: true,
         port: Number(process.env.PORT) || 3000,
-        allowedHosts: ['nafsaihub.onrender.com']
+        allowedHosts: ['nafs-ai-hub.vercel.app']
       },
       // base: 'https://nafsaihub.onrender.com/'
          base: 'https://nafs-ai-hub.vercel.app/'
