@@ -90,7 +90,7 @@ export interface FirestoreUser {
   };
 }
 
-export type ToolCategory = 'High School' | 'Medical' | 'Programming' | 'General' | 'Games & Entertainment' | 'GameDev' | 'Robotics & AI' | 'Productivity';
+export type ToolCategory = 'High School' | 'Medical' | 'Programming' | 'General' | 'Games & Entertainment' | 'GameDev' | 'Robotics & AI' | 'Productivity' | 'Online' | 'Utility';
 
 export interface TimeWindow {
   startHour: number; // 0-23

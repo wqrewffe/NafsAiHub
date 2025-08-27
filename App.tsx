@@ -11,6 +11,7 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
 import ToolPage from './pages/ToolPage';
+import CompetitionPage from './components/CompetitionPage';
 import ProfilePage from './pages/ProfilePage';
 import { Routes, Route } from 'react-router-dom';
 import PrivateRoute from './components/PrivateRoute';
@@ -52,6 +53,10 @@ function App() {
                 <ReactRouterDOM.Route 
                   path="/tool/:toolId" 
                   element={<PrivateRoute><ToolPage /></PrivateRoute>} 
+                />
+                <ReactRouterDOM.Route 
+                  path="/competition/:id"
+                  element={<PrivateRoute><CompetitionPage /></PrivateRoute>}
                 />
                 {/* Route for own profile */}
                 <ReactRouterDOM.Route 
