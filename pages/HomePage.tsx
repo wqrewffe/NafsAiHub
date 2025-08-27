@@ -10,6 +10,9 @@ import {
     AcademicCapIcon, SparklesIcon, UserCircleIcon, RocketLaunchIcon,
     StethoscopeIcon, CodeBracketIcon, LightBulbIcon, CpuChipIcon, ArrowLeftIcon, ClipboardDocumentCheckIcon
 } from '../tools/Icons';
+import { KeyIcon } from '../tools/Icons';
+
+import { GlobeAltIcon } from '../tools/Icons';
 import { useAuth } from '../hooks/useAuth';
 import { useEngagement } from '../hooks/useEngagement';
 import { getTopUsedToolsGlobal, getTopUsedToolsForUser } from '../services/firebaseService';
@@ -152,7 +155,9 @@ const HomePage: React.FC = () => {
       'Robotics & AI': { icon: CpuChipIcon, count: 0 },
       'GameDev': { icon: LightBulbIcon, count: 0 },
       'Games & Entertainment': { icon: RocketLaunchIcon, count: 0 },
-      'Productivity': { icon: ClipboardDocumentCheckIcon, count: 0 },
+  'Productivity': { icon: ClipboardDocumentCheckIcon, count: 0 },
+  'Online': { icon: GlobeAltIcon, count: 0 },
+  'Utility': { icon: KeyIcon, count: 0 },
     };
 
     tools.forEach(tool => {

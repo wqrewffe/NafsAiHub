@@ -17,6 +17,14 @@ import {
     toggleUserBlock
 } from '../../services/firebaseService';
 import {
+    listCompetitions,
+    deleteCompetition,
+    setCompetitionVisibility,
+    hidePastCompetitions,
+    hideFutureCompetitions,
+    showAllCompetitions
+} from '../../services/quizService';
+import {
     FirestoreUser,
     ToolCategory
 } from '../../types';
@@ -49,6 +57,8 @@ const AdminDashboardPage: React.FC = () => {
     const [selectedUser, setSelectedUser] = useState<FirestoreUser | null>(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [actionType, setActionType] = useState<'delete' | 'block' | 'unblock' | null>(null);
+    const [competitions, setCompetitions] = useState<any[]>([]);
+    const [loadingComps, setLoadingComps] = useState(false);
 
     const { authSettings, loading: settingsLoading } = useSettings();
     const { showCongratulations } = useCongratulations();
@@ -95,6 +105,22 @@ const AdminDashboardPage: React.FC = () => {
     useEffect(() => {
         fetchDashboardData();
     }, [fetchDashboardData]);
+
+    useEffect(() => {
+        loadCompetitions();
+    }, []);
+
+    const loadCompetitions = async () => {
+        setLoadingComps(true);
+        try {
+            const items = await listCompetitions();
+            setCompetitions(items || []);
+        } catch (err) {
+            console.error('Failed to load competitions', err);
+        } finally {
+            setLoadingComps(false);
+        }
+    };
 
     const handleConfirmAction = async () => {
         if (!selectedUser?.id || !actionType) {
@@ -144,6 +170,65 @@ const AdminDashboardPage: React.FC = () => {
         setSelectedUser(user);
         setActionType(action);
         setShowConfirmModal(true);
+    };
+
+    // Competitions admin
+    const handleDeleteCompetition = async (compId: string) => {
+        if (!confirm('Delete competition? This cannot be undone.')) return;
+        try {
+            await deleteCompetition(compId);
+            setCompetitions(competitions.filter(c => c.id !== compId));
+            showCongratulations('points', { message: 'Competition deleted', points: 0 });
+        } catch (err) {
+            console.error('Failed to delete competition', err);
+            alert('Failed to delete competition');
+        }
+    };
+
+    const handleToggleVisibility = async (compId: string, visible?: boolean) => {
+        try {
+            await setCompetitionVisibility(compId, !!visible);
+            setCompetitions(competitions.map(c => c.id === compId ? { ...c, visible: !!visible } : c));
+        } catch (err) {
+            console.error('Failed to toggle visibility', err);
+            alert('Failed to update visibility');
+        }
+    };
+
+    const handleBulkHidePast = async () => {
+        if (!confirm('Hide all past competitions?')) return;
+        try {
+            const count = await hidePastCompetitions();
+            alert(`Updated ${count} competitions`);
+            loadCompetitions();
+        } catch (err) {
+            console.error(err);
+            alert('Failed to hide past competitions');
+        }
+    };
+
+    const handleBulkHideFuture = async () => {
+        if (!confirm('Hide all future competitions?')) return;
+        try {
+            const count = await hideFutureCompetitions();
+            alert(`Updated ${count} competitions`);
+            loadCompetitions();
+        } catch (err) {
+            console.error(err);
+            alert('Failed to hide future competitions');
+        }
+    };
+
+    const handleShowAll = async () => {
+        if (!confirm('Make all competitions visible?')) return;
+        try {
+            const count = await showAllCompetitions();
+            alert(`Updated ${count} competitions`);
+            loadCompetitions();
+        } catch (err) {
+            console.error(err);
+            alert('Failed to show competitions');
+        }
     };
 
     const filteredUsers = useMemo(() => {
@@ -378,6 +463,53 @@ const AdminDashboardPage: React.FC = () => {
                             Next
                         </button>
                     </div>
+                </div>
+            </DashboardSection>
+
+            <DashboardSection title="Competitions Management">
+                <div className="flex gap-2 mb-4">
+                    <button onClick={handleBulkHidePast} className="px-3 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600">Hide Past</button>
+                    <button onClick={handleBulkHideFuture} className="px-3 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600">Hide Future</button>
+                    <button onClick={handleShowAll} className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Show All</button>
+                    <button onClick={loadCompetitions} className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Refresh</button>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-slate-700">
+                        <thead className="bg-primary/50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Title</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Start</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">End</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Paid</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Visible</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-secondary divide-y divide-slate-700">
+                            {loadingComps && (
+                                <tr><td colSpan={6} className="p-4">Loading competitions...</td></tr>
+                            )}
+                            {!loadingComps && competitions.length === 0 && (
+                                <tr><td colSpan={6} className="p-4">No competitions found</td></tr>
+                            )}
+                            {competitions.map(comp => (
+                                <tr key={comp.id} className="hover:bg-primary/50">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-light">{comp.quiz?.title || comp.title || comp.id}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">{comp.startAt ? new Date(comp.startAt).toLocaleString() : '-'}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">{comp.endAt ? new Date(comp.endAt).toLocaleString() : '-'}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">{comp.isPaid ? 'Yes' : 'No'}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">{comp.visible === false ? 'Hidden' : 'Visible'}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                        <div className="flex gap-2">
+                                            <button onClick={() => handleToggleVisibility(comp.id, !comp.visible)} className="text-sm px-3 py-1 rounded bg-primary">{comp.visible === false ? 'Show' : 'Hide'}</button>
+                                            <button onClick={() => handleDeleteCompetition(comp.id)} className="text-sm px-3 py-1 rounded bg-red-600 text-white">Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </DashboardSection>
 

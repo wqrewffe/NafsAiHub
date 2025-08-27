@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { FirestoreUser } from '../types';
 import { deleteUser, toggleUserBlock, getAllUsers } from '../services/adminService';
+import {
+    listCompetitions,
+    deleteCompetition,
+    setCompetitionVisibility,
+    hidePastCompetitions,
+    hideFutureCompetitions,
+    showAllCompetitions
+} from '../services/quizService';
 import Modal from './Modal';
 import Spinner from './Spinner';
 import PointsManagement from './admin/PointsManagement';
@@ -80,6 +88,8 @@ export const AdminDashboard: React.FC = () => {
     const [selectedUser, setSelectedUser] = useState<FirestoreUser | null>(null);
     const [actionType, setActionType] = useState<UserActionType | null>(null);
     const [expandedUser, setExpandedUser] = useState<string | null>(null);
+    const [competitions, setCompetitions] = useState<any[]>([]);
+    const [loadingComps, setLoadingComps] = useState(false);
 
     const toggleUserExpand = (userId: string) => {
         setExpandedUser(currentId => (currentId === userId ? null : userId));
@@ -87,6 +97,7 @@ export const AdminDashboard: React.FC = () => {
 
     useEffect(() => {
         loadUsers();
+    loadCompetitions();
     }, []);
 
     const loadUsers = async () => {
@@ -100,6 +111,18 @@ export const AdminDashboard: React.FC = () => {
             console.error(err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadCompetitions = async () => {
+        setLoadingComps(true);
+        try {
+            const items = await listCompetitions();
+            setCompetitions(items || []);
+        } catch (err) {
+            console.error('Failed to load competitions', err);
+        } finally {
+            setLoadingComps(false);
         }
     };
 
@@ -133,6 +156,64 @@ export const AdminDashboard: React.FC = () => {
         setSelectedUser(user);
         setActionType(action);
         setShowConfirmModal(true);
+    };
+
+    // Competition admin actions
+    const handleDeleteCompetition = async (compId: string) => {
+        if (!confirm('Delete competition? This cannot be undone.')) return;
+        try {
+            await deleteCompetition(compId);
+            setCompetitions(competitions.filter(c => c.id !== compId));
+        } catch (err) {
+            console.error('Failed to delete competition', err);
+            alert('Failed to delete competition');
+        }
+    };
+
+    const handleToggleVisibility = async (compId: string, visible?: boolean) => {
+        try {
+            await setCompetitionVisibility(compId, !!visible);
+            setCompetitions(competitions.map(c => c.id === compId ? { ...c, visible: !!visible } : c));
+        } catch (err) {
+            console.error('Failed to toggle visibility', err);
+            alert('Failed to update visibility');
+        }
+    };
+
+    const handleBulkHidePast = async () => {
+        if (!confirm('Hide all past competitions?')) return;
+        try {
+            const count = await hidePastCompetitions();
+            alert(`Updated ${count} competitions`);
+            loadCompetitions();
+        } catch (err) {
+            console.error(err);
+            alert('Failed to hide past competitions');
+        }
+    };
+
+    const handleBulkHideFuture = async () => {
+        if (!confirm('Hide all future competitions?')) return;
+        try {
+            const count = await hideFutureCompetitions();
+            alert(`Updated ${count} competitions`);
+            loadCompetitions();
+        } catch (err) {
+            console.error(err);
+            alert('Failed to hide future competitions');
+        }
+    };
+
+    const handleShowAll = async () => {
+        if (!confirm('Make all competitions visible?')) return;
+        try {
+            const count = await showAllCompetitions();
+            alert(`Updated ${count} competitions`);
+            loadCompetitions();
+        } catch (err) {
+            console.error(err);
+            alert('Failed to show competitions');
+        }
     };
 
     if (loading) return <Spinner />;
@@ -184,6 +265,57 @@ export const AdminDashboard: React.FC = () => {
                                                         </h3>
                                                         <PointsManagement user={user} onPointsUpdated={loadUsers} />
                                                     </div>
+
+                                                <div className="mt-10">
+                                                    <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-300">Competitions</h2>
+                                                    <div className="flex gap-2 mb-4">
+                                                        <button onClick={handleBulkHidePast} className="px-3 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600">Hide Past</button>
+                                                        <button onClick={handleBulkHideFuture} className="px-3 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600">Hide Future</button>
+                                                        <button onClick={handleShowAll} className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Show All</button>
+                                                        <button onClick={loadCompetitions} className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Refresh</button>
+                                                    </div>
+                                                    <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+                                                        <table className="w-full text-sm text-left">
+                                                            <thead className="text-xs uppercase bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                                                                <tr>
+                                                                    <th className="px-4 py-3">Title</th>
+                                                                    <th className="px-4 py-3">Start</th>
+                                                                    <th className="px-4 py-3">End</th>
+                                                                    <th className="px-4 py-3">Registration Ends</th>
+                                                                    <th className="px-4 py-3">Paid</th>
+                                                                    <th className="px-4 py-3">Visible</th>
+                                                                    <th className="px-4 py-3">Actions</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {loadingComps && (
+                                                                    <tr>
+                                                                        <td colSpan={7} className="px-4 py-6 text-center">Loading...</td>
+                                                                    </tr>
+                                                                )}
+                                                                {!loadingComps && competitions.length === 0 && (
+                                                                    <tr>
+                                                                        <td colSpan={7} className="px-4 py-6 text-center">No competitions found</td>
+                                                                    </tr>
+                                                                )}
+                                                                {competitions.map(comp => (
+                                                                    <tr key={comp.id} className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                                                        <td className="px-4 py-3">{comp.quiz?.title || comp.title || comp.id}</td>
+                                                                        <td className="px-4 py-3">{comp.startAt ? new Date(comp.startAt).toLocaleString() : '-'}</td>
+                                                                        <td className="px-4 py-3">{comp.endAt ? new Date(comp.endAt).toLocaleString() : '-'}</td>
+                                                                        <td className="px-4 py-3">{comp.registrationEndsAt ? new Date(comp.registrationEndsAt).toLocaleString() : '-'}</td>
+                                                                        <td className="px-4 py-3">{comp.isPaid ? 'Yes' : 'No'}</td>
+                                                                        <td className="px-4 py-3">{comp.visible === false ? 'Hidden' : 'Visible'}</td>
+                                                                        <td className="px-4 py-3 flex items-center gap-2">
+                                                                            <button onClick={() => handleToggleVisibility(comp.id, !comp.visible)} className="px-3 py-1.5 bg-gray-200 rounded-md">{comp.visible === false ? 'Show' : 'Hide'}</button>
+                                                                            <button onClick={() => handleDeleteCompetition(comp.id)} className="px-3 py-1.5 bg-red-100 text-red-700 rounded-md">Delete</button>
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
                                                     <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
                                                         <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
                                                             Tool Management
