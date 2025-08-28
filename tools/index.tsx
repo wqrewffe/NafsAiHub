@@ -68,6 +68,7 @@ import AlienEncounterSimulator, { renderAlienEncounterSimulatorOutput } from './
 import FlashcardGenerator, { renderFlashcardGeneratorOutput } from './FlashcardGenerator';
 import ArrangeQuizCompetition from '../components/ArrangeQuizCompetition';
 import ParticipateQuizCompetition from '../components/ParticipateQuizCompetition';
+import CollaborativeStudyRoom from '../components/CollaborativeStudyRoom';
 import PasswordGenerator from './PasswordGenerator';
 import PhotoResizer from './PhotoResizer';
 import FileConverter from './FileConverter';
@@ -905,6 +906,18 @@ export const tools: Tool[] = [
     icon: GlobeAltIcon,
     component: ParticipateQuizCompetition,
     promptSuggestion: 'Join the latest scheduled quiz and start answering questions.'
+  ,
+  renderOutput: (output: any) => <pre className="whitespace-pre-wrap">{typeof output === 'string' ? output : JSON.stringify(output, null, 2)}</pre>
+  },
+
+  {
+    id: 'collaborative-study-room',
+    name: 'Collaborative Study Room',
+    description: 'Create a shared room where multiple students can take notes together and chat in real time using Firestore.',
+    category: 'Online',
+    icon: UsersIcon,
+    component: CollaborativeStudyRoom,
+    promptSuggestion: 'Create a room for my calculus study group.'
   ,
   renderOutput: (output: any) => <pre className="whitespace-pre-wrap">{typeof output === 'string' ? output : JSON.stringify(output, null, 2)}</pre>
   },
