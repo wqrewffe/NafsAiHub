@@ -10,12 +10,15 @@ import {
     AcademicCapIcon, SparklesIcon, UserCircleIcon, RocketLaunchIcon,
     StethoscopeIcon, CodeBracketIcon, LightBulbIcon, CpuChipIcon, ArrowLeftIcon, ClipboardDocumentCheckIcon
 } from '../tools/Icons';
+import { BoltIcon } from '../tools/Icons';
 import { KeyIcon } from '../tools/Icons';
 
 import { GlobeAltIcon } from '../tools/Icons';
 import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import { useEngagement } from '../hooks/useEngagement';
 import { getTopUsedToolsGlobal, getTopUsedToolsForUser } from '../services/firebaseService';
+import { getTrainerMeta } from '../TRAINER/modes';
 import { toolAccessService } from '../services/toolAccessService';
 import ToolRow from '../components/ToolRow';
 
@@ -26,6 +29,7 @@ const HomePage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<ToolCategory | null>(null);
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
   const { streak, dailyReward } = useEngagement();
   
   const [trendingTools, setTrendingTools] = useState<Tool[] | null>(null);
@@ -63,7 +67,24 @@ const HomePage: React.FC = () => {
       try {
         const topToolsData = await getTopUsedToolsGlobal(7);
         const fetchedTools = topToolsData
-          .map(data => toolsById.get(data.toolId))
+          .map(data => {
+            const found = toolsById.get(data.toolId);
+            if (found) return found;
+            // Support trainer tools which are recorded as toolStats with id like 'trainer-<mode>'
+            if (data.toolId && data.toolId.startsWith('trainer-')) {
+              const slug = data.toolId.replace(/^trainer-/, '');
+              const meta = getTrainerMeta(slug);
+              return {
+                id: data.toolId,
+                name: data.toolName || (meta ? meta.title : `Trainer - ${slug}`),
+                description: data.toolName ? '' : (meta ? meta.description : 'Trainer tool'),
+                category: 'Trainer' as Tool['category'],
+                icon: BoltIcon,
+                path: `/trainer/${slug}`,
+              } as Tool;
+            }
+            return null;
+          })
           .filter((t): t is Tool => !!t);
         setTrendingTools(fetchedTools);
       } catch (error) {
@@ -83,7 +104,23 @@ const HomePage: React.FC = () => {
           // Fetch user's top tools
           const userTopToolsData = await getTopUsedToolsForUser(currentUser.uid, 7);
           const userTools = userTopToolsData
-            .map(data => toolsById.get(data.toolId))
+            .map(data => {
+              const found = toolsById.get(data.toolId);
+              if (found) return found;
+              if (data.toolId && data.toolId.startsWith('trainer-')) {
+                const slug = data.toolId.replace(/^trainer-/, '');
+                const meta = getTrainerMeta(slug);
+                return {
+                  id: data.toolId,
+                  name: data.toolName || (meta ? meta.title : `Trainer - ${slug}`),
+                  description: data.toolName ? '' : (meta ? meta.description : 'Trainer tool'),
+                  category: 'Trainer' as Tool['category'],
+                  icon: BoltIcon,
+                  path: `/trainer/${slug}`,
+                } as Tool;
+              }
+              return null;
+            })
             .filter((t): t is Tool => !!t);
           setUserTopTools(userTools);
 
@@ -92,7 +129,23 @@ const HomePage: React.FC = () => {
           const userToolIds = new Set(userTopToolsData.map(t => t.toolId));
           
           const recommended = globalTopToolsData
-            .map(data => toolsById.get(data.toolId))
+            .map(data => {
+              const found = toolsById.get(data.toolId);
+              if (found) return found;
+              if (data.toolId && data.toolId.startsWith('trainer-')) {
+                const slug = data.toolId.replace(/^trainer-/, '');
+                const meta = getTrainerMeta(slug);
+                return {
+                  id: data.toolId,
+                  name: data.toolName || (meta ? meta.title : `Trainer - ${slug}`),
+                  description: data.toolName ? '' : (meta ? meta.description : 'Trainer tool'),
+                  category: 'Trainer' as Tool['category'],
+                  icon: BoltIcon,
+                  path: `/trainer/${slug}`,
+                } as Tool;
+              }
+              return null;
+            })
             .filter((t): t is Tool => !!t && !userToolIds.has(t.id))
             .slice(0, 7);
           
@@ -147,7 +200,7 @@ const HomePage: React.FC = () => {
   ];
   
   const categoryDetails: Array<{ name: ToolCategory; icon: React.ComponentType<{ className?: string; }>; count: number; }> = useMemo(() => {
-    const categoryMap: Record<ToolCategory, { icon: React.ComponentType<{ className?: string; }>; count: number; }> = {
+    const categoryMap: Partial<Record<ToolCategory, { icon: React.ComponentType<{ className?: string; }>; count: number; }>> = {
       'General': { icon: SparklesIcon, count: 0 },
       'High School': { icon: AcademicCapIcon, count: 0 },
       'Medical': { icon: StethoscopeIcon, count: 0 },
@@ -158,6 +211,7 @@ const HomePage: React.FC = () => {
   'Productivity': { icon: ClipboardDocumentCheckIcon, count: 0 },
   'Online': { icon: GlobeAltIcon, count: 0 },
   'Utility': { icon: KeyIcon, count: 0 },
+  'Trainer': { icon: BoltIcon, count: 0 },
     };
 
     tools.forEach(tool => {
@@ -169,7 +223,7 @@ const HomePage: React.FC = () => {
     return (Object.keys(categoryMap) as ToolCategory[]).map(name => ({
       name,
       ...categoryMap[name]
-    })).filter(cat => cat.count > 0);
+    })).filter(cat => cat.count > 0 || cat.name === 'Trainer');
   }, []);
 
   const filteredCategories = useMemo(() => {
@@ -311,6 +365,13 @@ const HomePage: React.FC = () => {
                     icon={cat.icon}
                     toolCount={cat.count}
                     onClick={() => {
+                      // Special handling for Trainer category: open the TRAINER folder index.html in a new tab
+                      if (cat.name === 'Trainer') {
+                        // Navigate to in-app Trainer route
+                        navigate('/trainer');
+                        return;
+                      }
+
                       setActiveCategory(cat.name);
                       setSearchTerm('');
                       document.getElementById('tools')?.scrollIntoView();
