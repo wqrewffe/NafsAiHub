@@ -6,7 +6,7 @@ interface ResultDisplayProps {
 
 const ResultDisplay: React.FC<ResultDisplayProps> = ({ time }) => {
   const getRating = (ms: number): { text: string; color: string } => {
-    if (ms < 150) return { text: 'God-like Reflexes', color: 'text-green-400' };
+    if (ms < 150) return { text: 'Infinity Reflexes', color: 'text-green-400' };
     if (ms < 200) return { text: 'Excellent', color: 'text-green-500' };
     if (ms < 250) return { text: 'Great', color: 'text-yellow-400' };
     if (ms < 300) return { text: 'Good', color: 'text-yellow-500' };
