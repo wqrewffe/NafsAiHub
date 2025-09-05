@@ -211,7 +211,7 @@ const HomePage: React.FC = () => {
   'Productivity': { icon: ClipboardDocumentCheckIcon, count: 0 },
   'Online': { icon: GlobeAltIcon, count: 0 },
   'Utility': { icon: KeyIcon, count: 0 },
-  'Trainer': { icon: BoltIcon, count: 0 },
+  'Trainer': { icon: BoltIcon, count: 12 },
     };
 
     tools.forEach(tool => {
