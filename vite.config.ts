@@ -20,9 +20,11 @@ export default defineConfig(({ mode }) => {
       preview: {
         host: true,
         port: Number(process.env.PORT) || 3000,
-        allowedHosts: ['nafs-ai-hub.vercel.app']
+  // Allow both Vercel and Render preview hosts
+  allowedHosts: ['nafs-ai-hub.vercel.app', 'nafsaihub.onrender.com']
       },
       // base: 'https://nafsaihub.onrender.com/'
-         base: 'https://nafs-ai-hub.vercel.app/'
+   // Primary base used for production assets. Alternate deploy URL: https://nafsaihub.onrender.com/
+   base: 'https://nafs-ai-hub.vercel.app/'
     };
 });
