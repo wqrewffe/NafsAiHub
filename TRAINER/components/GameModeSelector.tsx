@@ -1,5 +1,6 @@
 import React from 'react';
 import { TRAINER_MODES } from '../modes';
+import Leaderboard from './Leaderboard';
 
 interface GameModeSelectorProps {
   onSelectLightsOut: () => void;
@@ -49,6 +50,8 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = (props) => {
           </div>
         ))}
       </div>
+  {/* Leaderboard shown below the mode selector so players can view top scores */}
+  <Leaderboard />
     </div>
   );
 };
