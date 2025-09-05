@@ -248,7 +248,7 @@ const HomePage: React.FC = () => {
         <div className="md:w-1/2 text-center md:text-left">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-light">Welcome to Naf's AI Hub</h1>
           <p className="mt-6 text-lg max-w-3xl mx-auto md:mx-0 leading-8 text-slate-300">
-            Unlock your potential with over 75 specialized AI tools designed for students, professionals, and curious minds. Your all-in-one platform for learning, creating, and innovating.
+            Unlock your potential with over 110 specialized AI tools designed for students, professionals, and curious minds. Your all-in-one platform for learning, creating, and innovating.
           </p>
         </div>
         <div className="md:w-1/2">
