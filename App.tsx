@@ -174,7 +174,7 @@ function App() {
                     }
                   />
                 </ReactRouterDOM.Routes>
-                <CongratulationsModal />
+                {/* CongratulationsModal is rendered by the CongratulationsProvider */}
               </ReactRouterDOM.HashRouter>
             </ToolAccessProvider>
           </CongratulationsProvider>
