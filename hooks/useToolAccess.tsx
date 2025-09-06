@@ -63,7 +63,7 @@ export function ToolAccessProvider({ children }: { children: React.ReactNode }) 
       unlockedTools: toolAccess?.unlockedTools || [],
       isToolUnlocked,
       unlockProgress: toolAccess?.nextUnlockProgress || 0,
-      totalToolUses: toolAccess?.totalToolUses || 0,
+  totalToolUses: toolAccess?.totalToolUses ?? Object.values(toolAccess?.toolUsage || {}).reduce((s, t) => s + (t.timesUsed || 0), 0),
       unlockToolWithPoints,
       isAdmin: toolAccess?.isAdmin || false
     }}>

@@ -8,17 +8,21 @@ import CongratulationsModal from '../components/CongratulationsModal';
 
 interface CongratulationsState {
     isOpen: boolean;
-    type: 'badge' | 'points' | 'level';
+    type: 'badge' | 'points' | 'level' | 'success' | 'error';
     data: {
         badge?: Badge;
         points?: number;
         level?: string;
         message?: string;
+        title?: string;
+        toolId?: string;
+        newBalance?: number;
+        redirectTo?: string;
     };
 }
 
 interface CongratulationsContextType {
-    showCongratulations: (type: 'badge' | 'points' | 'level', data: any) => void;
+    showCongratulations: (type: 'badge' | 'points' | 'level' | 'success' | 'error', data: any) => void;
     hideCongratulations: () => void;
     checkForAchievements: () => Promise<void>;
 }
