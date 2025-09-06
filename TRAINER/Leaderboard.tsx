@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
-import { db } from '../../firebase/config';
-import { TRAINER_MODES, TrainerModeMeta } from '../modes';
+import { db } from '../../firebase/config.ts';
+import { TRAINER_MODES, TrainerModeMeta } from '../modes.ts';
 
 
 type LeaderboardRow = {
