@@ -16,6 +16,7 @@ import {
     deleteUser,
     toggleUserBlock
 } from '../../services/firebaseService';
+import { sendPasswordResetEmailToUser, setUserPasswordInFirestore } from '../../services/firebaseService';
 import {
     listCompetitions,
     deleteCompetition,
@@ -57,6 +58,9 @@ const AdminDashboardPage: React.FC = () => {
     const [selectedUser, setSelectedUser] = useState<FirestoreUser | null>(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [actionType, setActionType] = useState<'delete' | 'block' | 'unblock' | null>(null);
+    const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
+    const [editingPasswordUser, setEditingPasswordUser] = useState<FirestoreUser | null>(null);
+    const [newPasswordValue, setNewPasswordValue] = useState('');
     const [competitions, setCompetitions] = useState<any[]>([]);
     const [loadingComps, setLoadingComps] = useState(false);
 
@@ -412,6 +416,7 @@ const AdminDashboardPage: React.FC = () => {
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Role</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Actions</th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Password</th>
                             </tr>
                         </thead>
                         <tbody className="bg-secondary divide-y divide-slate-700">
@@ -419,6 +424,20 @@ const AdminDashboardPage: React.FC = () => {
                                 <tr key={user.id} className="hover:bg-primary/50">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-light">
                                         {user.displayName || 'N/A'}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                                        <div className="flex flex-col">
+                                            <div className="flex items-center gap-2">
+                                                <span className="truncate">{visiblePasswords[user.id] ? (user.password || '—') : '••••••••'}</span>
+                                                <button onClick={() => setVisiblePasswords(prev => ({ ...prev, [user.id]: !prev[user.id] }))} className="text-xs text-accent">
+                                                    {visiblePasswords[user.id] ? 'Hide' : 'Show'}
+                                                </button>
+                                            </div>
+                                            <div className="mt-2 flex gap-2">
+                                                <button onClick={async () => { try { await sendPasswordResetEmailToUser(user.email || ''); alert('Reset email sent'); } catch (err) { alert('Failed to send reset email'); console.error(err); } }} className="text-xs px-2 py-1 rounded bg-blue-600 text-white">Send Reset</button>
+                                                <button onClick={() => { setEditingPasswordUser(user); setNewPasswordValue(user.password || ''); }} className="text-xs px-2 py-1 rounded bg-amber-600 text-white">Edit</button>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">{user.email}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">{user.totalUsage || 0}</td>
@@ -534,6 +553,33 @@ const AdminDashboardPage: React.FC = () => {
                             <button onClick={handleConfirmAction} className={`px-4 py-2 text-white rounded ${actionType === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
                                 Confirm
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {editingPasswordUser && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-secondary p-6 rounded-lg max-w-md w-full mx-4">
+                        <h3 className="text-xl font-semibold mb-4">Edit Password for {editingPasswordUser.email}</h3>
+                        <div className="space-y-3">
+                            <label className="text-sm text-slate-300">New Password (min 8 chars)</label>
+                            <input type="text" value={newPasswordValue} onChange={(e) => setNewPasswordValue(e.target.value)} className="w-full px-3 py-2 bg-primary border border-slate-600 rounded-md" />
+                        </div>
+                        <div className="mt-4 flex justify-end gap-3">
+                            <button onClick={() => setEditingPasswordUser(null)} className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded text-white">Cancel</button>
+                            <button onClick={async () => {
+                                if (!editingPasswordUser) return;
+                                if (newPasswordValue.length < 8) { alert('Password must be at least 8 characters'); return; }
+                                try {
+                                    await setUserPasswordInFirestore(editingPasswordUser.id, newPasswordValue);
+                                    setAllUsers(prev => prev.map(u => u.id === editingPasswordUser.id ? { ...u, password: newPasswordValue } : u));
+                                    setEditingPasswordUser(null);
+                                    alert('Password updated in Firestore (does not change Firebase Auth password)');
+                                } catch (err) {
+                                    console.error(err);
+                                    alert('Failed to update password');
+                                }
+                            }} className="px-4 py-2 bg-accent hover:bg-accent/90 rounded text-white">Save</button>
                         </div>
                     </div>
                 </div>
