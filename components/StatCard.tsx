@@ -5,11 +5,11 @@ interface StatCardProps {
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   value: string | number;
-  loading: boolean;
+  loading?: boolean;
   description?: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ icon: Icon, title, value, loading, description }) => {
+const StatCard: React.FC<StatCardProps> = ({ icon: Icon, title, value, loading = false, description }) => {
   return (
     <div className="bg-secondary p-4 rounded-lg shadow-md flex items-start space-x-4">
       <div className="bg-primary p-3 rounded-lg flex-shrink-0">

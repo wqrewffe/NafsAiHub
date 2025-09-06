@@ -3,26 +3,31 @@ import { Badge } from '../types';
 import { TrophyIcon, SparklesIcon, FireIcon, CheckBadgeIcon } from '../tools/Icons';
 
 interface BadgesDisplayProps {
-    badges: Badge[];
+    badges: (Badge | string)[];
     toolBadges?: Badge[];
-    level: string;
+    level?: string;
+    referralLevel?: string;
     nextLevelPoints: number;
     toolLevel?: string;
     nextLevelTools?: number;
     totalUsage?: number;
     categoryBreakdown?: Record<string, number>;
+    isOwnProfile?: boolean;
 }
 
 export const BadgesDisplay: React.FC<BadgesDisplayProps> = ({ 
     badges, 
     toolBadges = [], 
-    level, 
+    level,
+    referralLevel,
     nextLevelPoints,
     toolLevel,
     nextLevelTools = 0,
     totalUsage = 0,
-    categoryBreakdown = {}
+    categoryBreakdown = {},
+    isOwnProfile = false
 }) => {
+    const displayLevel = referralLevel || level || 'Bronze';
     // Helper function to get badge progress
     const getBadgeProgress = () => {
         const progress: Array<{ name: string; description: string; progress: number }> = [];
@@ -77,7 +82,7 @@ export const BadgesDisplay: React.FC<BadgesDisplayProps> = ({
                 </div>
                 <div className="flex items-center justify-between">
                     <div>
-                        <span className="text-2xl font-bold text-primary tracking-wide">{level}</span>
+                        <span className="text-2xl font-bold text-primary tracking-wide">{displayLevel}</span>
                         {nextLevelPoints > 0 && (
                             <p className="text-sm text-slate-400 mt-1">
                                 {nextLevelPoints} more referrals to next level
@@ -166,7 +171,15 @@ export const BadgesDisplay: React.FC<BadgesDisplayProps> = ({
                         <CheckBadgeIcon className="w-5 h-5 text-fuchsia-300" /> Referral Achievement Badges
                     </h2>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {badges.map((badge, index) => (
+                        {badges.map((badgeItem, index) => {
+                            const badge = typeof badgeItem === 'string' ? {
+                                type: badgeItem as any,
+                                name: badgeItem,
+                                description: '',
+                                imageUrl: '/badges/default.png',
+                                unlockedAt: new Date().toISOString()
+                            } as Badge : badgeItem as Badge;
+                            return (
                             <div
                                 key={index}
                                 className="group relative bg-gray-800/70 border border-fuchsia-400/10 p-4 rounded-lg text-center hover:shadow-fuchsia-500/10 hover:shadow transition-transform duration-300 hover:-translate-y-1 hover:scale-[1.02]"
@@ -183,7 +196,8 @@ export const BadgesDisplay: React.FC<BadgesDisplayProps> = ({
                                     Unlocked: <span className="text-slate-200">{new Date(badge.unlockedAt).toLocaleDateString()}</span>
                                 </p>
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             )}

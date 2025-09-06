@@ -99,7 +99,7 @@ const AvatarSelector: React.FC<AvatarSelectorProps> = ({ selectedAvatar, onSelec
           ))}
         </div>
       </div>
-      <style jsx>{`
+  <style>{`
         .avatar-selector {
           padding: 1.5rem;
           background: var(--background-secondary);

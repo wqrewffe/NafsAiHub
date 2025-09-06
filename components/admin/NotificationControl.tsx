@@ -13,7 +13,7 @@ const NotificationControl: React.FC = () => {
   const [templates, setTemplates] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [showNewTemplate, setShowNewTemplate] = useState(false);
-  const [newTemplate, setNewTemplate] = useState({
+  const [newTemplate, setNewTemplate] = useState<Partial<import('../../services/adminNotificationService').NotificationTemplate>>({
     title: '',
     message: '',
     type: 'achievement',
@@ -45,7 +45,8 @@ const NotificationControl: React.FC = () => {
   };
 
   const handleCreateTemplate = async () => {
-    await adminNotificationService.createNotificationTemplate(newTemplate);
+  // cast to any because adminNotificationService accepts a loose shape
+  await adminNotificationService.createNotificationTemplate(newTemplate as any);
     setShowNewTemplate(false);
     loadTemplates();
   };
@@ -99,10 +100,10 @@ const NotificationControl: React.FC = () => {
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h3 className="text-lg font-semibold mb-4">By Type</h3>
               <div className="space-y-2">
-                {Object.entries(stats.byType).map(([type, count]) => (
+        {Object.entries(stats.byType).map(([type, count]) => (
                   <div key={type} className="flex justify-between items-center">
                     <span className="capitalize">{type}</span>
-                    <span className="font-medium">{count}</span>
+          <span className="font-medium">{String(count)}</span>
                   </div>
                 ))}
               </div>
@@ -204,7 +205,7 @@ const NotificationControl: React.FC = () => {
                   <label className="block text-sm font-medium mb-1">Type</label>
                   <select
                     value={newTemplate.type}
-                    onChange={e => setNewTemplate(prev => ({ ...prev, type: e.target.value }))}
+                    onChange={e => setNewTemplate(prev => ({ ...prev, type: e.target.value as any }))}
                     className="w-full p-2 border rounded-lg"
                   >
                     <option value="achievement">Achievement</option>
@@ -219,7 +220,7 @@ const NotificationControl: React.FC = () => {
                   <label className="block text-sm font-medium mb-1">Priority</label>
                   <select
                     value={newTemplate.priority}
-                    onChange={e => setNewTemplate(prev => ({ ...prev, priority: e.target.value }))}
+                    onChange={e => setNewTemplate(prev => ({ ...prev, priority: e.target.value as any }))}
                     className="w-full p-2 border rounded-lg"
                   >
                     <option value="low">Low</option>
@@ -236,7 +237,7 @@ const NotificationControl: React.FC = () => {
                     value={newTemplate.reward.type}
                     onChange={e => setNewTemplate(prev => ({
                       ...prev,
-                      reward: { ...prev.reward, type: e.target.value }
+                      reward: { ...prev.reward, type: e.target.value as any }
                     }))}
                     className="w-full p-2 border rounded-lg"
                   >
@@ -267,7 +268,7 @@ const NotificationControl: React.FC = () => {
                     value={newTemplate.triggerCondition.type}
                     onChange={e => setNewTemplate(prev => ({
                       ...prev,
-                      triggerCondition: { ...prev.triggerCondition, type: e.target.value }
+                      triggerCondition: { ...prev.triggerCondition, type: e.target.value as any }
                     }))}
                     className="w-full p-2 border rounded-lg"
                   >

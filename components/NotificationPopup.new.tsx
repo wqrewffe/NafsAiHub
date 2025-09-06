@@ -25,7 +25,7 @@ const NotificationPopup: React.FC = () => {
   const [currentNotification, setCurrentNotification] = useState<Notification | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [animationState, setAnimationState] = useState<'slide-in' | 'slide-out' | ''>('');
-  const autoDismissTimerRef = useRef<NodeJS.Timeout>();
+  const autoDismissTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
 
   const showNextNotification = useCallback(() => {

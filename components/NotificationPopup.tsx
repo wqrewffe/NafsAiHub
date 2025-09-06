@@ -27,7 +27,7 @@ const NotificationPopup: React.FC = () => {
   const [isExiting, setIsExiting] = useState(false);
   const [progress, setProgress] = useState(100);
   const [showConfetti, setShowConfetti] = useState(false);
-  const autoDismissTimerRef = useRef<NodeJS.Timeout>();
+  const autoDismissTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Debug logging for component state
   useEffect(() => {
