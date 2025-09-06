@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
 import { db } from '../../firebase/config';
-import { TRAINER_MODES } from '../modes';
+import { TRAINER_MODES, TrainerModeMeta } from '../modes';
+
 
 type LeaderboardRow = {
 	id: string;
@@ -32,8 +33,9 @@ const Leaderboard: React.FC = () => {
 	const modeOptions = useMemo(() => {
 		const opts: { slug: string; title: string }[] = [{ slug: 'all', title: 'All Modes' }];
 		Object.entries(TRAINER_MODES).forEach(([slug, meta]) => {
-			opts.push({ slug, title: meta.title });
-		});
+				const m = meta as TrainerModeMeta;
+				opts.push({ slug, title: m.title });
+			});
 		return opts;
 	}, []);
 
