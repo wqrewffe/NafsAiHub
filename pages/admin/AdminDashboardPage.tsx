@@ -47,7 +47,7 @@ const AdminDashboardPage: React.FC = () => {
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [allUsers, setAllUsers] = useState<FirestoreUser[]>([]);
     const [topUsers, setTopUsers] = useState<FirestoreUser[]>([]);
-    const [topTools, setTopTools] = useState<{ toolId: string; toolName: string; useCount: number; category: ToolCategory }[]>([]);
+    const [topTools, setTopTools] = useState<{ toolId: string; toolName: string; useCount: number; category: string }[]>([]);
     const [toolCategories, setToolCategories] = useState<{ name: ToolCategory; count: number }[]>([]);
     const [recentActivity, setRecentActivity] = useState<GlobalHistoryItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -385,7 +385,7 @@ const AdminDashboardPage: React.FC = () => {
                     </p>
                     <div className="flex flex-wrap gap-3">
                          <button onClick={() => showCongratulations('points', { points: 100, message: 'You earned 100 points!' })} className="px-4 py-2 bg-primary hover:bg-primary/80 rounded-md text-sm">Test +100 Points</button>
-                         <button onClick={() => showCongratulations('levelUp', { level: 5 })} className="px-4 py-2 bg-primary hover:bg-primary/80 rounded-md text-sm">Test Level Up (Lv 5)</button>
+                         <button onClick={() => showCongratulations('level', { level: 5 })} className="px-4 py-2 bg-primary hover:bg-primary/80 rounded-md text-sm">Test Level Up (Lv 5)</button>
                          <button onClick={() => showCongratulations('badge', { badgeName: 'Power User' })} className="px-4 py-2 bg-primary hover:bg-primary/80 rounded-md text-sm">Test Badge Earned</button>
                     </div>
                 </div>
@@ -568,7 +568,7 @@ const AdminDashboardPage: React.FC = () => {
                                 <p className="truncate">
                                     <span className="font-semibold">{usersMap.get(activity.userId)?.displayName || 'A user'}</span> used <span className="font-semibold text-accent">{activity.toolName}</span>
                                 </p>
-                                <p className="text-xs text-slate-400">{new Date(activity.timestamp.seconds * 1000).toLocaleString()}</p>
+                                <p className="text-xs text-slate-400">{(activity.timestamp instanceof Date) ? new Date(activity.timestamp).toLocaleString() : ((activity.timestamp as any)?.seconds ? new Date((activity.timestamp as any).seconds * 1000).toLocaleString() : String(activity.timestamp))}</p>
                             </li>
                         ))}
                     </ul>
