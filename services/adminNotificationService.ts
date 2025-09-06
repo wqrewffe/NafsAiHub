@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../firebase/config';
 import { collection, addDoc, query, where, getDocs, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 
-interface NotificationTemplate {
+export interface NotificationTemplate {
   id: string;
   title: string;
   message: string;
@@ -22,7 +22,7 @@ interface NotificationTemplate {
 }
 
 export const adminNotificationService = {
-  async createNotificationTemplate(template: Omit<NotificationTemplate, 'id' | 'createdAt'>) {
+  async createNotificationTemplate(template: Omit<NotificationTemplate, 'id' | 'createdAt'> | any) {
     const templatesRef = collection(db, 'notificationTemplates');
     await addDoc(templatesRef, {
       ...template,
