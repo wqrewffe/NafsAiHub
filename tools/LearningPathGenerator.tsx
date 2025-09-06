@@ -94,7 +94,7 @@ const LearningPathOutputView: React.FC<{ output: LearningPathOutput | string }> 
     );
 };
 
-const LearningPathGenerator: React.FC = () => {
+const LearningPathGenerator: React.FC<{ output?: any }> = ({ output: externalOutput }) => {
     const toolInfo = tools.find(t => t.id === 'learning-path-generator')!;
     
     const optionsConfig: ToolOptionConfig[] = [
@@ -146,7 +146,7 @@ const LearningPathGenerator: React.FC = () => {
             promptSuggestion={toolInfo.promptSuggestion}
             optionsConfig={optionsConfig}
             onGenerate={handleGenerate}
-            renderOutput={(output) => <LearningPathOutputView output={output} />}
+            renderOutput={(out, onUpdate) => <LearningPathOutputView output={externalOutput ?? out} />}
         />
     );
 };
