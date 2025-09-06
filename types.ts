@@ -56,7 +56,7 @@ export interface ReferralInfo {
   referralHistory: Array<{
     referredUserId: string;
     referredUserEmail: string;
-    timestamp: string; // ISO timestamp string
+  timestamp: string | firebase.firestore.Timestamp; // ISO timestamp string or Firestore Timestamp
     rewardClaimed: boolean;
   }>;
 }
@@ -66,6 +66,9 @@ export interface FirestoreUser {
   displayName: string | null;
   email: string | null;
   createdAt: firebase.firestore.Timestamp;
+  uid?: string; // sometimes user records include uid instead of id
+  role?: string;
+  points?: number;
   totalUsage?: number;
   password?: string;
   isBlocked?: boolean;
@@ -84,7 +87,7 @@ export interface FirestoreUser {
     referralHistory: Array<{
       referredUserId: string;
       referredUserEmail: string;
-      timestamp: firebase.firestore.Timestamp;
+  timestamp: firebase.firestore.Timestamp | string;
       rewardClaimed: boolean;
     }>;
   };
@@ -119,7 +122,7 @@ export interface Tool {
   icon: React.ComponentType<{ className?: string }>;
   component?: React.ComponentType;
   promptSuggestion?: string;
-  renderOutput?: (output: any) => React.ReactNode;
+  renderOutput?: (output: any, onUpdateOutput?: (output: any) => void) => React.ReactNode;
   path?: string;
   settings?: ToolSettings;
 }
