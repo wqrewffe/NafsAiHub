@@ -254,10 +254,14 @@ export const getFullUserHistory = async (userId: string): Promise<HistoryItem[]>
 
 // Admin Dashboard Specific Functions
 export interface DashboardStats {
-    totalUsers: number;
-    totalUsage: number;
-    newUsers7Days: number;
-    newUsers30Days: number;
+  totalUsers: number;
+  totalUsage: number;
+  newUsers7Days: number;
+  newUsers30Days: number;
+  // Additional aggregate stats used by the admin UI
+  activeUsers?: number;
+  totalToolsUsed?: number;
+  avgToolsPerUser?: number;
 }
 
 export const getDashboardStats = async (): Promise<DashboardStats> => {
