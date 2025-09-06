@@ -220,7 +220,15 @@ const ReferralPage: React.FC = () => {
 								>
 									<div>
 										<p className="font-medium">{history.referredUserEmail}</p>
-										<p className="text-sm text-slate-400">{new Date(history.timestamp).toLocaleDateString()}</p>
+										<p className="text-sm text-slate-400">{(() => {
+											const ts: any = history.timestamp;
+											if (!ts) return '';
+											if (typeof ts === 'string') return new Date(ts).toLocaleDateString();
+											if (ts.seconds) return new Date(ts.seconds * 1000).toLocaleDateString();
+											if (ts.toDate) return ts.toDate().toLocaleDateString();
+											if (ts instanceof Date) return ts.toLocaleDateString();
+											return String(ts);
+										})()}</p>
 									</div>
 									<div className="text-green-400">+100 points</div>
 								</div>
