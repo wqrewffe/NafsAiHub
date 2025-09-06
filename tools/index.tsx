@@ -764,7 +764,7 @@ export const tools: Tool[] = [
     promptSuggestion: 'Connect "Beekeeping" and "Cryptocurrency".',
     renderOutput: renderConceptWeaverOutput
   },
-  {
+{
   id: 'learning-path-generator',
   name: 'Learning Path Generator',
   description: 'Generates a structured, week-by-week syllabus for learning any new skill.',
@@ -772,7 +772,7 @@ export const tools: Tool[] = [
   icon: MapIcon,
   component: LearningPathGenerator,
   promptSuggestion: 'I want to learn oil painting, starting as a complete beginner.',
-  renderOutput: (output) => <LearningPathGenerator output={output} />
+  renderOutput: (output) => <LearningPathGenerator {...({ output } as any)} />
 },
 
   {
