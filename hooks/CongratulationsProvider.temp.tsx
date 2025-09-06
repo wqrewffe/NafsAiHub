@@ -73,7 +73,19 @@ export const CongratulationsProvider: React.FC<CongratulationsProviderProps> = (
   return (
     <CongratulationsContext.Provider value={value}>
       {children}
-      <CongratulationsModal />
+      <CongratulationsModal
+        isOpen={isOpen}
+        onClose={closeModal}
+        type={currentNotification?.type === 'success' ? 'success' : currentNotification?.type === 'error' ? 'error' : 'success'}
+        data={{
+          message: currentNotification?.message,
+          badge: currentNotification?.badge,
+          points: currentNotification?.points,
+          level: currentNotification?.level,
+          toolId: currentNotification?.action?.toolId,
+          redirectTo: currentNotification?.action?.destination
+        }}
+      />
     </CongratulationsContext.Provider>
   );
 };
