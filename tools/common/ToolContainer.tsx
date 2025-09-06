@@ -18,7 +18,7 @@ interface ToolContainerProps {
   promptSuggestion?: string;
   optionsConfig?: ToolOptionConfig[];
   onGenerate: (data: { prompt: string; options: Record<string, any>, image?: { mimeType: string, data: string } }) => Promise<string | object>;
-  renderOutput: (output: any) => React.ReactNode;
+  renderOutput: (output: any, onUpdateOutput?: (output: any) => void) => React.ReactNode;
 }
 
 const ToolContainer: React.FC<ToolContainerProps> = ({ toolId, toolName, toolCategory, promptSuggestion, optionsConfig = [], onGenerate, renderOutput }) => {
