@@ -326,6 +326,30 @@ export const updateAuthSettings = async (settings: AuthSettingsUpdate) => {
     await settingsRef.set(settings, { merge: true });
 };
 
+// Send a password reset email to a user (admin can trigger this for any user email)
+export const sendPasswordResetEmailToUser = async (email: string): Promise<void> => {
+  try {
+    await auth.sendPasswordResetEmail(email);
+    console.log(`Password reset email sent to ${email}`);
+  } catch (error) {
+    console.error('Error sending password reset email:', error);
+    throw error;
+  }
+};
+
+// Update the stored password in the user's Firestore document (note: this does NOT change the Firebase Auth password)
+// Use with caution - storing plaintext passwords is insecure. This helper only updates the Firestore copy.
+export const setUserPasswordInFirestore = async (userId: string, password: string): Promise<void> => {
+  try {
+    const userRef = db.collection('users').doc(userId);
+    await userRef.update({ password });
+    console.log(`Updated password field in Firestore for user ${userId}`);
+  } catch (error) {
+    console.error('Error updating user password in Firestore:', error);
+    throw error;
+  }
+};
+
 // ------------------------------
 // Account Deletion Helpers
 // ------------------------------
