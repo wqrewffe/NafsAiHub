@@ -65,6 +65,7 @@ export interface ToolAccess {
   toolUsage: { [toolId: string]: ToolUsageStats };
   points?: number;
   previousPoints?: number;
+  totalToolUses?: number;
 }
 
 interface TopTool {
