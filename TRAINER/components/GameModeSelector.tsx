@@ -1,5 +1,5 @@
 import React from 'react';
-import { TRAINER_MODES } from '../modes.ts';
+import { TRAINER_MODES } from '../modes';
 import Leaderboard from './Leaderboard';
 
 interface GameModeSelectorProps {
