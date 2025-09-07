@@ -3,7 +3,7 @@ import { ALL_TOOLS } from '../../constants';
 import { ToolHeader } from '../common/ToolHeader';
 import { Card } from '../common/Card';
 import { ToolContainer } from '../common/ToolContainer';
-import { getTopUsedToolsGlobalByRange } from '../../../services/firebaseService';
+import { getTopUsedToolsGlobal } from '../../../services/firebaseService';
 
 type Range = 'today' | 'week' | 'month' | 'year' | 'all';
 
@@ -14,10 +14,13 @@ export const Welcome: React.FC = () => {
   useEffect(() => {
     let mounted = true;
     const allowedIds = ALL_TOOLS.map(t => t.id);
-    getTopUsedToolsGlobalByRange(range, 7, allowedIds).then(res => {
-      if (mounted) setTopTools(res as any);
+    // Fallback to global aggregated counts (all-time) — server-side range query not available in this build.
+    getTopUsedToolsGlobal(100).then(res => {
+      if (!mounted) return;
+      const filtered = (res as any[]).filter(r => allowedIds.includes(r.toolId)).slice(0, 7).map(r => ({ toolId: r.toolId, toolName: r.toolName || r.toolId, count: r.useCount || r.count || 0 }));
+      setTopTools(filtered as any);
     }).catch(err => {
-      console.warn('Could not load top tools by range', err);
+      console.warn('Could not load top tools', err);
     });
     return () => { mounted = false; };
   }, [range]);
