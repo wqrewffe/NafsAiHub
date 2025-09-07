@@ -13,7 +13,7 @@ import {
 import { BoltIcon } from '../tools/Icons';
 import { KeyIcon } from '../tools/Icons';
 
-import { GlobeAltIcon } from '../tools/Icons';
+import { GlobeAltIcon, MapAnimationIcon } from '../tools/Icons';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useEngagement } from '../hooks/useEngagement';
@@ -199,7 +199,7 @@ const HomePage: React.FC = () => {
     }
   ];
   
-  const categoryDetails: Array<{ name: ToolCategory; icon: React.ComponentType<{ className?: string; }>; count: number; }> = useMemo(() => {
+  const categoryDetails: Array<{ name: string; icon: React.ComponentType<{ className?: string; }>; count: number; }> = useMemo(() => {
     const categoryMap: Partial<Record<ToolCategory, { icon: React.ComponentType<{ className?: string; }>; count: number; }>> = {
       'General': { icon: SparklesIcon, count: 0 },
   'Toolbox': { icon: CpuChipIcon, count: 110 },
@@ -221,10 +221,18 @@ const HomePage: React.FC = () => {
       }
     });
 
-    return (Object.keys(categoryMap) as ToolCategory[]).map(name => ({
+    const base = (Object.keys(categoryMap) as ToolCategory[]).map(name => ({
       name,
       ...categoryMap[name]
-    })).filter(cat => cat.count > 0 || cat.name === 'Trainer' || cat.name === 'Toolbox');
+    }));
+
+    // Append Map Animation as an external category
+    const withMap = [
+      ...base,
+      { name: 'Map Animation', icon: MapAnimationIcon, count: 0 }
+    ];
+
+    return withMap.filter(cat => cat.count > 0 || cat.name === 'Trainer' || cat.name === 'Toolbox' || cat.name === 'Map Animation');
   }, []);
 
   const filteredCategories = useMemo(() => {
@@ -362,10 +370,17 @@ const HomePage: React.FC = () => {
                 filteredCategories.map(cat => (
                   <CategoryCard
                     key={cat.name}
-                    category={cat.name}
+                    category={cat.name as unknown as ToolCategory}
                     icon={cat.icon}
                     toolCount={cat.count}
                     onClick={() => {
+                        // Special handling for external Map Animation
+                        if (cat.name === 'Map Animation') {
+                          // open in new tab
+                          window.open('https://nafsanimatedmap.vercel.app/', '_blank', 'noopener');
+                          return;
+                        }
+
                         // Special handling for Trainer: navigate to trainer route; for Toolbox navigate to the dev-toolbox page
                         if (cat.name === 'Trainer') {
                           navigate('/trainer');
@@ -378,7 +393,7 @@ const HomePage: React.FC = () => {
                           return;
                         }
 
-                        setActiveCategory(cat.name);
+                        setActiveCategory(cat.name as ToolCategory);
                         setSearchTerm('');
                         document.getElementById('tools')?.scrollIntoView();
                     }}
