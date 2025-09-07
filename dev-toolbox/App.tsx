@@ -122,27 +122,45 @@ const Sidebar: React.FC<{
 function App() {
   // All dev-toolbox routes should be namespaced under /toolbox
   const BASE = '/toolbox';
-  const [pathname, setPathname] = useState(window.location.pathname);
+
+  const getLocationPath = () => {
+    // Prefer the hash route if present so host app style is preserved: e.g. /#/toolbox/case-converter
+    if (window.location.hash && window.location.hash.startsWith('#')) {
+      return window.location.hash.slice(1); // drop leading '#'
+    }
+    return window.location.pathname;
+  };
+
+  const [pathname, setPathname] = useState(getLocationPath());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
-    const onPopState = () => {
-      setPathname(window.location.pathname);
+    const onLocationChange = () => {
+      setPathname(getLocationPath());
     };
-    window.addEventListener('popstate', onPopState);
+    window.addEventListener('popstate', onLocationChange);
+    window.addEventListener('hashchange', onLocationChange);
     return () => {
-      window.removeEventListener('popstate', onPopState);
+      window.removeEventListener('popstate', onLocationChange);
+      window.removeEventListener('hashchange', onLocationChange);
     };
   }, []);
 
   const { currentUser } = useAuth();
 
   const handleSelectTool = useCallback((toolId: string) => {
-  const path = toolId === 'welcome' ? `${BASE}/` : (toolId === 'all_tools' ? `${BASE}/all-tools` : `${BASE}/${toolId}`);
-  if (window.location.pathname !== path) {
-    window.history.pushState({ toolId }, '', path);
-  }
-    setPathname(path);
+    const targetPath = toolId === 'welcome' ? `${BASE}/` : (toolId === 'all_tools' ? `${BASE}/all-tools` : `${BASE}/${toolId}`);
+    // Use hash routing so the main app's hash router continues to show the toolbox under /#/toolbox
+    try {
+      // set location.hash to '/toolbox/...' which becomes '#/toolbox/...'
+      window.location.hash = targetPath;
+    } catch (err) {
+      // fallback to pushState
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({ toolId }, '', targetPath);
+      }
+    }
+    setPathname(targetPath);
     setIsSidebarOpen(false);
 
     // Log a lightweight 'open' usage event so global/user tool stats reflect visits.
