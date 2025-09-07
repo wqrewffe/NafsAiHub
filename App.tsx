@@ -18,6 +18,7 @@ import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 const TrainerApp = React.lazy(() => import('./TRAINER/trainerExport'));
+const DevToolboxApp = React.lazy(() => import('./dev-toolbox/App'));
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import SettingsPage from './pages/SettingsPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
@@ -83,6 +84,17 @@ function App() {
                     element={
                       <React.Suspense fallback={<div className="p-8 text-center">Loading Trainer...</div>}>
                         <TrainerWrapper />
+                      </React.Suspense>
+                    }
+                  />
+
+                  {/* Dev-toolbox rendered outside Layout to allow it to be full-screen (no main header/footer) */}
+                  <ReactRouterDOM.Route
+                    path="/toolbox/*"
+                    element={
+                      <React.Suspense fallback={<div className="p-8 text-center">Loading Toolbox...</div>}>
+                        {/* @ts-ignore */}
+                        <DevToolboxApp />
                       </React.Suspense>
                     }
                   />
@@ -159,6 +171,7 @@ function App() {
                             path="/helpchat" 
                             element={<HelpChatPage />} 
                           />
+                          {/* /toolbox is served by the full-screen dev-toolbox route defined above */}
                           
                           {/* Admin Routes */}
                           <ReactRouterDOM.Route 
