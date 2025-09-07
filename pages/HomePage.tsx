@@ -202,6 +202,7 @@ const HomePage: React.FC = () => {
   const categoryDetails: Array<{ name: ToolCategory; icon: React.ComponentType<{ className?: string; }>; count: number; }> = useMemo(() => {
     const categoryMap: Partial<Record<ToolCategory, { icon: React.ComponentType<{ className?: string; }>; count: number; }>> = {
       'General': { icon: SparklesIcon, count: 0 },
+  'Toolbox': { icon: CpuChipIcon, count: 110 },
       'High School': { icon: AcademicCapIcon, count: 0 },
       'Medical': { icon: StethoscopeIcon, count: 0 },
       'Programming': { icon: CodeBracketIcon, count: 0 },
@@ -223,7 +224,7 @@ const HomePage: React.FC = () => {
     return (Object.keys(categoryMap) as ToolCategory[]).map(name => ({
       name,
       ...categoryMap[name]
-    })).filter(cat => cat.count > 0 || cat.name === 'Trainer');
+    })).filter(cat => cat.count > 0 || cat.name === 'Trainer' || cat.name === 'Toolbox');
   }, []);
 
   const filteredCategories = useMemo(() => {
@@ -248,7 +249,7 @@ const HomePage: React.FC = () => {
         <div className="md:w-1/2 text-center md:text-left">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-light">Welcome to Naf's AI Hub</h1>
           <p className="mt-6 text-lg max-w-3xl mx-auto md:mx-0 leading-8 text-slate-300">
-            Unlock your potential with over 110 specialized AI tools designed for students, professionals, and curious minds. Your all-in-one platform for learning, creating, and innovating.
+            Unlock your potential with over 220 specialized AI tools designed for students, professionals, and curious minds. Your all-in-one platform for learning, creating, and innovating.
           </p>
         </div>
         <div className="md:w-1/2">
@@ -365,16 +366,21 @@ const HomePage: React.FC = () => {
                     icon={cat.icon}
                     toolCount={cat.count}
                     onClick={() => {
-                      // Special handling for Trainer category: open the TRAINER folder index.html in a new tab
-                      if (cat.name === 'Trainer') {
-                        // Navigate to in-app Trainer route
-                        navigate('/trainer');
-                        return;
-                      }
+                        // Special handling for Trainer: navigate to trainer route; for Toolbox navigate to the dev-toolbox page
+                        if (cat.name === 'Trainer') {
+                          navigate('/trainer');
+                          return;
+                        }
 
-                      setActiveCategory(cat.name);
-                      setSearchTerm('');
-                      document.getElementById('tools')?.scrollIntoView();
+                        if (cat.name === 'Toolbox') {
+                          // Navigate to the dedicated Toolbox page which loads the dev-toolbox folder
+                          navigate('/toolbox');
+                          return;
+                        }
+
+                        setActiveCategory(cat.name);
+                        setSearchTerm('');
+                        document.getElementById('tools')?.scrollIntoView();
                     }}
                   />
                 ))
