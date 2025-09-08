@@ -56,12 +56,15 @@ const Navbar: React.FC = () => {
     return currentUser.email;
   };
 
+  const isLoggedIn = !!currentUser;
+  const isVerified = !!currentUser?.emailVerified;
+
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   // NavLinks (no To-do & Notes here)
   const navLinks = (
     <>
-      {currentUser ? (
+      {isVerified ? (
         <>
           {currentUser.email === ADMIN_EMAIL && (
             <Link
@@ -177,6 +180,37 @@ const Navbar: React.FC = () => {
             Contact
           </Link>
           )}
+          <button
+            onClick={handleLogout}
+            className="w-full md:w-auto bg-sky-500 text-white px-3 py-2 rounded-md text-sm font-medium btn-animated text-left"
+          >
+            Logout
+          </button>
+        </>
+      ) : isLoggedIn ? (
+        // User is signed in but hasn't verified their email yet.
+        // Show a minimal menu with a link to the verify page and logout.
+        <>
+          <Link
+            onClick={closeMobileMenu}
+            to={currentUser ? `/profile/${currentUser.displayName}-${currentUser.uid}` : '/profile'}
+            className="flex items-center space-x-2 text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+          >
+            <div 
+                className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-primary"
+                data-initials={profile?.displayName?.charAt(0)?.toUpperCase() || 'U'}
+              >
+              {(profile?.displayName?.[0] || currentUser?.displayName?.[0] || currentUser?.email?.[0] || '?').toUpperCase()}
+            </div>
+            <span>{getGreeting()}</span>
+          </Link>
+          <Link
+            onClick={closeMobileMenu}
+            to="/verify-email"
+            className="text-yellow-300 hover:bg-yellow-400/10 border border-yellow-400/50 px-3 py-2 rounded-md text-sm font-medium transition-colors block"
+          >
+            Verify Email
+          </Link>
           <button
             onClick={handleLogout}
             className="w-full md:w-auto bg-sky-500 text-white px-3 py-2 rounded-md text-sm font-medium btn-animated text-left"
