@@ -60,47 +60,66 @@ export const createUserProfileDocument = async (user: firebase.User, password?: 
   if (!user) return;
   const userRef = db.collection('users').doc(user.uid);
   const snapshot = await userRef.get();
-  if (!snapshot.exists) {
-    const { email, displayName } = user;
-    const createdAt = serverTimestamp();
-    try {
-      const referralCode = generateReferralCode(user.uid);
-      const isAdmin = email === 'nafisabdullah424@gmail.com';
-      const userData: any = {
-        displayName,
-        email,
-        createdAt,
-        totalUsage: 0,
-        role: isAdmin ? 'admin' : 'user',
-        points: isAdmin ? Number.MAX_SAFE_INTEGER : 0,
-        referralInfo: {
-          referralCode,
-          referralsCount: 0,
-          rewards: isAdmin ? Number.MAX_SAFE_INTEGER : 0,
-          referralHistory: []
-        }
-      };
+  const { email, displayName } = user;
+  const createdAt = serverTimestamp();
+  try {
+    const referralCode = generateReferralCode(user.uid);
+    const isAdmin = email === 'nafisabdullah424@gmail.com';
 
-      if (password) {
-        userData.password = password;
+    // Base data we want to ensure exists for every user
+    const baseUserData: any = {
+      createdAt,
+      totalUsage: 0,
+      role: isAdmin ? 'admin' : 'user',
+      points: isAdmin ? Number.MAX_SAFE_INTEGER : 0,
+      referralInfo: {
+        referralCode,
+        referralsCount: 0,
+        rewards: isAdmin ? Number.MAX_SAFE_INTEGER : 0,
+        referralHistory: []
       }
+    };
+
+    // If the document doesn't exist, create it with full info
+    if (!snapshot.exists) {
+      const userData: any = {
+        displayName: displayName || null,
+        email: email || null,
+        ...baseUserData
+      };
+      if (password) userData.password = password;
 
       await userRef.set(userData);
-      // Try to persist the user's public IP (best-effort)
-      try {
-        const resp = await fetch('https://api.ipify.org?format=json');
-        const json = await resp.json();
-        const ip = json?.ip;
-        if (ip) {
-          await userRef.set({ lastIp: ip, lastIpUpdated: serverTimestamp() }, { merge: true });
-        }
-      } catch (e) {
-        // Non-fatal: just log and continue
-        console.warn('Failed to fetch or save user IP on profile creation', e);
+    } else {
+      // If doc exists, merge any missing public identity fields (email/displayName/password)
+      const existing = snapshot.data() || {};
+      const updates: any = {};
+      if ((!existing.email || existing.email === null) && email) updates.email = email;
+      if ((!existing.displayName || existing.displayName === null) && displayName) updates.displayName = displayName;
+      if (password) updates.password = password;
+
+      // Also ensure createdAt is set if missing
+      if (!existing.createdAt) updates.createdAt = createdAt;
+
+      if (Object.keys(updates).length > 0) {
+        await userRef.set(updates, { merge: true });
       }
-    } catch (error) {
-      console.error("Error creating user profile", error);
     }
+
+    // Try to persist the user's public IP (best-effort)
+    try {
+      const resp = await fetch('https://api.ipify.org?format=json');
+      const json = await resp.json();
+      const ip = json?.ip;
+      if (ip) {
+        await userRef.set({ lastIp: ip, lastIpUpdated: serverTimestamp() }, { merge: true });
+      }
+    } catch (e) {
+      // Non-fatal: just log and continue
+      console.warn('Failed to fetch or save user IP on profile creation', e);
+    }
+  } catch (error) {
+    console.error("Error creating or updating user profile", error);
   }
 };
 
@@ -378,15 +397,29 @@ export const getAllUsers = async (
     const snapshot = await query.get();
 
     const users = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-            id: doc.id,
-            displayName: data.displayName || 'N/A',
-            email: data.email || 'N/A',
-            createdAt: data.createdAt,
-            totalUsage: data.totalUsage || 0,
-            password: data.password || undefined,
-        } as FirestoreUser
+    const data = doc.data() || {};
+    // Some user docs might not have a server 'createdAt' yet (serverTimestamp). Use snapshot.createTime as a fallback.
+    const fallbackCreatedAt = (doc as any).createTime || null;
+
+    // Normalize email: treat empty string as null
+    const rawEmail = typeof data.email === 'string' ? (data.email.trim() === '' ? null : data.email) : data.email || null;
+    const normalizedDisplayName = data.displayName && data.displayName.trim() !== '' ? data.displayName : null;
+
+    const userObj = {
+      id: doc.id,
+      displayName: normalizedDisplayName,
+      email: rawEmail,
+      createdAt: data.createdAt || fallbackCreatedAt,
+      totalUsage: data.totalUsage || 0,
+      password: data.password || undefined,
+      isBlocked: data.isBlocked || false,
+    } as FirestoreUser;
+
+    if (!userObj.email) {
+      console.debug(`getAllUsers: user ${doc.id} has null/empty email`);
+    }
+
+    return userObj;
     });
 
     return users;
@@ -557,24 +590,59 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
     const toolStatsRef = db.collection('toolStats');
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  // Fetch users and tool stats in parallel, but compute "new users" counts client-side
+  const [usersSnapshot, toolStatsSnapshot] = await Promise.all([
+    usersRef.get(),
+    toolStatsRef.get(),
+  ]);
 
-    const [usersSnapshot, toolStatsSnapshot, newUsers7DaysSnapshot, newUsers30DaysSnapshot] = await Promise.all([
-        usersRef.get(),
-        toolStatsRef.get(),
-        usersRef.where('createdAt', '>=', sevenDaysAgo).get(),
-        usersRef.where('createdAt', '>=', thirtyDaysAgo).get()
-    ]);
+  const totalUsers = usersSnapshot.size;
 
-    const totalUsers = usersSnapshot.size;
-    const newUsers7Days = newUsers7DaysSnapshot.size;
-    const newUsers30Days = newUsers30DaysSnapshot.size;
+  // Helper to obtain a JS Date for a user doc's creation time. Prefer server field `createdAt` (Firestore Timestamp).
+  // Fall back to snapshot.createTime / doc.createTime (may be a string or timestamp-like) when `createdAt` is missing.
+  const getDocCreatedDate = (doc: firebase.firestore.DocumentSnapshot): Date | null => {
+    const data: any = doc.data() || {};
+    if (data.createdAt && typeof data.createdAt.toDate === 'function') {
+      try { return data.createdAt.toDate(); } catch (e) { /* ignore */ }
+    }
+    const ct: any = (doc as any).createTime || (doc as any).createAt || null;
+    if (!ct) return null;
+    // createTime may be an ISO string
+    if (typeof ct === 'string') {
+      const d = new Date(ct);
+      if (!isNaN(d.getTime())) return d;
+    }
+    // createTime may be an object with `seconds`
+    if (ct && typeof ct.seconds === 'number') {
+      return new Date(ct.seconds * 1000);
+    }
+    // as a last resort, try to convert to Date
+    try {
+      const d = new Date(ct as any);
+      if (!isNaN(d.getTime())) return d;
+    } catch (e) {}
+    return null;
+  };
 
-    let totalUsage = 0;
-    toolStatsSnapshot.forEach(doc => {
-        totalUsage += doc.data().useCount || 0;
-    });
+  let newUsers7Days = 0;
+  let newUsers30Days = 0;
 
-    return { totalUsers, totalUsage, newUsers7Days, newUsers30Days };
+  usersSnapshot.forEach(doc => {
+    const createdDate = getDocCreatedDate(doc);
+    if (!createdDate) return;
+    if (createdDate >= sevenDaysAgo) newUsers7Days += 1;
+    if (createdDate >= thirtyDaysAgo) newUsers30Days += 1;
+  });
+
+  let totalUsage = 0;
+  toolStatsSnapshot.forEach(doc => {
+    totalUsage += doc.data().useCount || 0;
+  });
+
+  // Debugging: log when counts appear inconsistent with expectations
+  console.debug('getDashboardStats:', { totalUsers, newUsers7Days, newUsers30Days, totalUsage });
+
+  return { totalUsers, totalUsage, newUsers7Days, newUsers30Days };
 };
 
 
