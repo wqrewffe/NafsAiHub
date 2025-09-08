@@ -58,22 +58,45 @@ export const getToolUsageInfo = async (userId: string): Promise<ToolUsageInfo | 
 
         // Get usage data
         const userData = userDoc.data();
-        const totalUsage = userData?.totalUsage || 0;
 
-        // Calculate category breakdown, max uses, and total unique tools
+        // Compute totals from the user's toolUsage subcollection when possible
         const categoryStats: Record<string, number> = {};
         let maxToolUses = 0;
         let totalTools = 0;
+        let totalUsageFromTools = 0;
 
+        // First gather counts per toolId
+        const countsByToolId: Record<string, number> = {};
         toolUsageSnapshot.forEach(doc => {
-            const data = doc.data() as { category?: string; count?: number };
-            const category = data.category || 'General';
-            const count = data.count || 0;
-            
-            categoryStats[category] = (categoryStats[category] || 0) + count;
+            const data = doc.data() as { count?: number };
+            const count = typeof data.count === 'number' ? data.count : 0;
+            countsByToolId[doc.id] = count;
             maxToolUses = Math.max(maxToolUses, count);
             totalTools++;
+            totalUsageFromTools += count;
         });
+
+        // Look up each tool's global metadata (category) from toolStats collection to build accurate category breakdown
+        const toolIds = Object.keys(countsByToolId);
+        if (toolIds.length > 0) {
+            try {
+                const toolStatPromises = toolIds.map(id => db.collection('toolStats').doc(id).get());
+                const toolStatDocs = await Promise.all(toolStatPromises);
+                toolStatDocs.forEach((tdoc, idx) => {
+                    const tid = toolIds[idx];
+                    const tdata: any = tdoc.exists ? (tdoc.data() || {}) : {};
+                    const category = tdata.category || 'General';
+                    categoryStats[category] = (categoryStats[category] || 0) + (countsByToolId[tid] || 0);
+                });
+            } catch (err) {
+                console.warn('Error fetching toolStats for category breakdown, falling back to General category', err);
+                // Fallback: lump everything into 'General'
+                Object.values(countsByToolId).forEach(c => { categoryStats['General'] = (categoryStats['General'] || 0) + c; });
+            }
+        }
+
+        // Prefer the per-tool counts if available, otherwise fall back to user doc's totalUsage
+        const totalUsage = totalUsageFromTools > 0 ? totalUsageFromTools : (userData?.totalUsage || 0);
 
         const dayStreak = streakData.currentStreak;
 
