@@ -67,18 +67,47 @@ export const useProfile = (usernameOrUid: string) => {
                   displayName: userData.displayName || 'Anonymous User',
                   photoURL: userData.photoURL,
                   avatarUrl: userData.avatarUrl,
+                  avatarBase64: userData.avatarBase64,
+                  bannerBase64: userData.bannerBase64,
+                  location: userData.location || '',
+                  website: userData.website || '',
+                  pronouns: userData.pronouns || '',
+                  socialLinks: userData.socialLinks || {},
                   bio: userData.bio || '',
                   badges: userData.badges || [],
                   joinedDate: userData.createdAt?.toDate?.().toISOString() || new Date().toISOString(),
                   role: userData.role || 'user',
+                  // Will be filled below with actual tool usage info if available
                   toolUsageStats: {
                     totalUsage: 0,
                     favoriteTools: []
                   },
                   privacySettings: userData.privacySettings || defaultPrivacySettings
                 };
-                console.log('Profile updated:', profileData);
-                setProfile(profileData);
+
+                // Attempt to merge tool usage information from the separate `toolUsage` collection.
+                // Fall back to `users.totalUsage` (kept updated by logToolUsage) when present.
+                (async () => {
+                  try {
+                    const toolUsageDoc = await db.collection('toolUsage').doc(uid).get();
+                    const tuData = toolUsageDoc.exists ? toolUsageDoc.data() : {};
+
+                    profileData.toolUsageStats = {
+                      totalUsage: (tuData && (tuData.totalUsage || tuData.totalUses)) || (userData.totalUsage || 0),
+                      favoriteTools: (tuData && tuData.favoriteTools) || []
+                    };
+                  } catch (err) {
+                    console.error('Error loading tool usage for profile:', err);
+                    // still populate with whatever is on the users doc
+                    profileData.toolUsageStats = {
+                      totalUsage: userData.totalUsage || 0,
+                      favoriteTools: []
+                    };
+                  } finally {
+                    console.log('Profile updated:', profileData);
+                    setProfile(profileData);
+                  }
+                })();
               }
             } else {
               setError('Profile not found');
