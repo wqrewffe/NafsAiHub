@@ -12,6 +12,12 @@ export interface PublicUserProfile {
   displayName: string;
   photoURL: string | null;
   avatarUrl?: string;
+  avatarBase64?: string; // optional custom uploaded avatar encoded as base64
+  bannerBase64?: string; // optional uploaded banner encoded as base64
+  location?: string;
+  website?: string;
+  pronouns?: string;
+  socialLinks?: { [key: string]: string };
   bio: string;
   badges: string[];
   joinedDate: string;
@@ -37,8 +43,38 @@ export const getPublicUserProfile = async (uid: string): Promise<PublicUserProfi
     
     if (!userData) return null;
 
-    const toolUsageDoc = await db.collection('toolUsage').doc(uid).get();
-    const toolUsageData = toolUsageDoc.data() || {};
+    // Try to read aggregated toolUsage document (root collection) first
+    let totalUsage = userData.totalUsage || 0;
+    let favoriteTools: string[] = [];
+    try {
+      // Some deployments keep a per-user aggregated doc in `toolUsage/{uid}`
+      const toolUsageDoc = await db.collection('toolUsage').doc(uid).get();
+      const toolUsageData = toolUsageDoc.exists ? (toolUsageDoc.data() || {}) : {};
+      if (toolUsageData && (toolUsageData.totalUsage || toolUsageData.totalUses)) {
+        totalUsage = toolUsageData.totalUsage || toolUsageData.totalUses || totalUsage;
+      }
+      if (toolUsageData && Array.isArray(toolUsageData.favoriteTools)) {
+        favoriteTools = toolUsageData.favoriteTools;
+      }
+    } catch (err) {
+      console.warn('Failed to read root toolUsage doc, falling back to users.totalUsage', err);
+    }
+
+    // Fallback: try to compute totals from the user's subcollection entries if the aggregated doc isn't present
+    try {
+      const userToolUsageRef = db.collection('users').doc(uid).collection('toolUsage');
+      const snapshot = await userToolUsageRef.get();
+      if (!snapshot.empty) {
+        let computedTotal = 0;
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          if (typeof d.count === 'number') computedTotal += d.count;
+        });
+        if (computedTotal > 0) totalUsage = computedTotal;
+      }
+    } catch (err) {
+      // ignore and use existing totals
+    }
 
     // Use avatarUrl exactly as stored
     const avatarUrl = userData.avatarUrl;
@@ -53,8 +89,8 @@ export const getPublicUserProfile = async (uid: string): Promise<PublicUserProfi
       joinedDate: userData.createdAt?.toDate?.().toISOString() || new Date().toISOString(),
       role: userData.role || 'user',
       toolUsageStats: {
-        totalUsage: toolUsageData.totalUsage || 0,
-        favoriteTools: toolUsageData.favoriteTools || []
+        totalUsage: totalUsage || 0,
+        favoriteTools: favoriteTools || []
       },
       privacySettings: userData.privacySettings || defaultPrivacySettings
     };
@@ -73,10 +109,23 @@ export const updateUserProfile = async (uid: string, profile: Partial<PublicUser
     
     if (profile.bio !== undefined) updates.bio = profile.bio;
     if (profile.privacySettings) updates.privacySettings = profile.privacySettings;
+    // Preserve existing behavior for avatarUrl when provided, but allow raw paths
     if (profile.avatarUrl !== undefined) {
-      // Store the exact path from public/avatars
-      updates.avatarUrl = `/avatars/${profile.avatarUrl.split('/').pop()}`; // Get just the filename
+      updates.avatarUrl = profile.avatarUrl;
     }
+
+    // Support storing base64 payloads directly into Firestore (as requested)
+    if (profile.avatarBase64 !== undefined) {
+      updates.avatarBase64 = profile.avatarBase64;
+    }
+    if (profile.bannerBase64 !== undefined) {
+      updates.bannerBase64 = profile.bannerBase64;
+    }
+
+    if (profile.location !== undefined) updates.location = profile.location;
+    if (profile.website !== undefined) updates.website = profile.website;
+    if (profile.pronouns !== undefined) updates.pronouns = profile.pronouns;
+    if (profile.socialLinks !== undefined) updates.socialLinks = profile.socialLinks;
     
     console.log('Updating profile with:', updates);
     await userRef.update(updates);
