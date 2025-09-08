@@ -115,7 +115,7 @@ function App() {
                           {/* Private User Routes */}
                           <ReactRouterDOM.Route 
                             path="/tool/:toolId" 
-                            element={<PrivateRoute><ToolPage /></PrivateRoute>} 
+                            element={<ToolPage />} 
                           />
                           <ReactRouterDOM.Route 
                             path="/competition/:id"
