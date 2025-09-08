@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { useToolAccess } from '../../hooks/useToolAccess';
 import { logToolUsage } from '../../services/firebaseService';
 import { toolAccessService, ToolAccess } from '../../services/toolAccessService';
 import { useCongratulations } from '../../hooks/CongratulationsProvider';
@@ -29,6 +30,7 @@ const ToolContainer: React.FC<ToolContainerProps> = ({ toolId, toolName, toolCat
   const [image, setImage] = useState<ImageFile | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { currentUser } = useAuth();
+  const { canUseAnonymously, recordAnonymousUse } = useToolAccess();
   const { checkForAchievements, showCongratulations } = useCongratulations();
 
   const initialOptions = useMemo(() => {
@@ -69,6 +71,17 @@ const ToolContainer: React.FC<ToolContainerProps> = ({ toolId, toolName, toolCat
       setError('Input or an image is required.');
       return;
     }
+    // For anonymous users, ensure they haven't exceeded the per-tool limit
+    if (!currentUser) {
+      try {
+        if (!canUseAnonymously(toolId)) {
+          setError('Please create an account or log in to continue using tools after 2 free uses.');
+          return;
+        }
+      } catch (e) {
+        console.error('Error checking anonymous usage:', e);
+      }
+    }
     setError('');
     setLoading(true);
     setOutput(null);
@@ -76,6 +89,14 @@ const ToolContainer: React.FC<ToolContainerProps> = ({ toolId, toolName, toolCat
     try {
       const result = await onGenerate({ prompt, options, image: image ? { mimeType: image.type, data: image.base64 } : undefined });
       setOutput(result);
+      // If anonymous user, record local usage count
+      if (!currentUser) {
+        try {
+          recordAnonymousUse(toolId);
+        } catch (e) {
+          console.error('Error recording anonymous use:', e);
+        }
+      }
       if (currentUser) {
         console.log('[DEBUG] Recording tool usage and unlocking progress');
         
