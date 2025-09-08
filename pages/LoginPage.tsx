@@ -31,8 +31,9 @@ const LoginPage: React.FC = () => {
       await setAuthPersistence();
       const userCredential = await auth.signInWithEmailAndPassword(email, password);
       if (userCredential.user && !userCredential.user.emailVerified) {
-        await auth.signOut();
-        setError('Please verify your email to log in. Check your inbox (and spam folder).');
+        // Keep the user signed-in so they can trigger resend from /verify-email
+        // but navigate them to the verify page with a message
+        navigate('/verify-email');
         setLoading(false);
         return;
       }
