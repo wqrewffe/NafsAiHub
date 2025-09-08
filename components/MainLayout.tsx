@@ -34,12 +34,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     });
     return <NotificationPopup />;
   };
+  const isVerified = !!currentUser?.emailVerified;
 
   return (
     <div className="min-h-screen bg-gray-50">
       <NotificationComponent />
       <div className="container mx-auto px-4 py-8">
-        {currentUser && userData && (
+        {isVerified && userData && (
           <EngagementBar
             streak={0}
             dailyReward={null}
@@ -48,10 +49,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             isAdmin={userData.role === 'admin'}
           />
         )}
-        
+
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Sidebar - Progress Panel */}
-          {currentUser && (
+          {isVerified && (
             <div className="lg:w-1/4">
               <ProgressPanel />
             </div>
@@ -63,7 +64,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </div>
 
           {/* Right Sidebar - Social Feed */}
-          {currentUser && (
+          {isVerified && (
             <div className="lg:w-1/3">
               <SocialFeed />
             </div>
@@ -72,6 +73,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       </div>
     </div>
   );
+
 };
 
 export default MainLayout;
