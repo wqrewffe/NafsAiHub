@@ -195,6 +195,56 @@ export const getTopUsedToolsGlobal = async (limit?: number) => {
   return tools as { toolId: string, useCount: number, toolName: string, category: string }[];
 };
 
+export const getTopUsedToolsGlobalByRange = async (
+  range: 'today' | 'week' | 'month' | 'year' | 'all',
+  limit: number = 7,
+  allowedToolIds?: string[]
+) => {
+  const historyRef = db.collection('globalHistory');
+
+  let startDate: Date | null = null;
+  const now = new Date();
+  switch (range) {
+    case 'today':
+      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      break;
+    case 'week':
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case 'month':
+      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30);
+      break;
+    case 'year':
+      startDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+      break;
+    case 'all':
+    default:
+      startDate = null;
+  }
+
+  let query: firebase.firestore.Query = historyRef;
+  if (startDate) {
+    query = query.where('timestamp', '>=', startDate);
+  }
+
+  // Limit to a reasonable window to keep reads bounded; we will aggregate client-side
+  const snapshot = await query.orderBy('timestamp', 'desc').limit(1000).get();
+
+  const counts: Record<string, { toolId: string; toolName: string; count: number }> = {};
+  snapshot.forEach(doc => {
+    const data: any = doc.data();
+    const tid = data.toolId || data.tool;
+    const tname = data.toolName || (data.tool && data.tool.name) || 'unknown';
+    if (!tid) return;
+    if (allowedToolIds && allowedToolIds.length > 0 && !allowedToolIds.includes(tid)) return;
+    if (!counts[tid]) counts[tid] = { toolId: tid, toolName: tname, count: 0 };
+    counts[tid].count += 1;
+  });
+
+  const arr = Object.values(counts).sort((a, b) => b.count - a.count).slice(0, limit);
+  return arr;
+};
+
 export const getTopUsedToolsForUser = async (userId: string, limit: number = 7) => {
   const userToolUsageRef = db.collection('users').doc(userId).collection('toolUsage');
   const snapshot = await userToolUsageRef.orderBy('count', 'desc').limit(limit).get();
@@ -205,6 +255,38 @@ export const getTopUsedToolsForUser = async (userId: string, limit: number = 7) 
   }));
 
   return tools as { toolId: string, count: number, toolName: string }[];
+};
+
+// Anonymous IP-based usage helpers
+export const getAnonIpUsage = async (ip: string): Promise<Record<string, number>> => {
+  try {
+    const doc = await db.collection('anonIpUsage').doc(ip).get();
+    if (!doc.exists) return {};
+    const data = doc.data() || {};
+    // Remove Firestore metadata fields
+    const res: Record<string, number> = {};
+    Object.keys(data).forEach(k => {
+      if (k === 'lastUpdated') return;
+      const v = (data as any)[k];
+      if (typeof v === 'number') res[k] = v;
+    });
+    return res;
+  } catch (error) {
+    console.error('Error fetching anon IP usage:', error);
+    return {};
+  }
+};
+
+export const incrementAnonIpUsage = async (ip: string, toolId: string, increment: number = 1) => {
+  try {
+    const ref = db.collection('anonIpUsage').doc(ip);
+    await ref.set({
+      [toolId]: firebase.firestore.FieldValue.increment(increment),
+      lastUpdated: serverTimestamp(),
+    }, { merge: true });
+  } catch (error) {
+    console.error('Error incrementing anon IP usage:', error);
+  }
 };
 
 export const getAllUsers = async (
