@@ -86,6 +86,18 @@ export const createUserProfileDocument = async (user: firebase.User, password?: 
       }
 
       await userRef.set(userData);
+      // Try to persist the user's public IP (best-effort)
+      try {
+        const resp = await fetch('https://api.ipify.org?format=json');
+        const json = await resp.json();
+        const ip = json?.ip;
+        if (ip) {
+          await userRef.set({ lastIp: ip, lastIpUpdated: serverTimestamp() }, { merge: true });
+        }
+      } catch (e) {
+        // Non-fatal: just log and continue
+        console.warn('Failed to fetch or save user IP on profile creation', e);
+      }
     } catch (error) {
       console.error("Error creating user profile", error);
     }
@@ -380,6 +392,75 @@ export const getAllUsers = async (
     return users;
 };
 
+// User IP helpers and IP blocking
+export const getUserIp = async (userId: string): Promise<string | null> => {
+  try {
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (!userDoc.exists) return null;
+    const data = userDoc.data() || {};
+    // Try common field names for IP stored on user document
+    const ip = data.lastIp || data.ip || data.ipAddress || data.lastLoginIp || null;
+    return ip || null;
+  } catch (err) {
+    console.error('Error fetching user IP:', err);
+    return null;
+  }
+};
+
+// Fetch client's public IP (best-effort). Returns null on failure.
+export const fetchPublicIp = async (): Promise<string | null> => {
+  try {
+    const resp = await fetch('https://api.ipify.org?format=json');
+    const json = await resp.json();
+    return json?.ip || null;
+  } catch (err) {
+    console.warn('fetchPublicIp failed', err);
+    return null;
+  }
+};
+
+export const setUserIp = async (userId: string, ip: string | null): Promise<void> => {
+  if (!userId || !ip) return;
+  try {
+    await db.collection('users').doc(userId).set({ lastIp: ip, lastIpUpdated: serverTimestamp() }, { merge: true });
+  } catch (err) {
+    console.error('Error setting user IP:', err);
+  }
+};
+
+export const blockIp = async (ip: string): Promise<void> => {
+  try {
+    if (!ip) throw new Error('Invalid IP');
+    await db.collection('blockedIps').doc(ip).set({ blockedAt: serverTimestamp() });
+    console.log(`Blocked IP ${ip}`);
+  } catch (err) {
+    console.error('Error blocking IP:', err);
+    throw err;
+  }
+};
+
+export const unblockIp = async (ip: string): Promise<void> => {
+  try {
+    if (!ip) throw new Error('Invalid IP');
+    await db.collection('blockedIps').doc(ip).delete();
+    console.log(`Unblocked IP ${ip}`);
+  } catch (err) {
+    console.error('Error unblocking IP:', err);
+    throw err;
+  }
+};
+
+export const isIpBlocked = async (ip: string): Promise<boolean> => {
+  try {
+    if (!ip) return false;
+    const doc = await db.collection('blockedIps').doc(ip).get();
+    return doc.exists;
+  } catch (err) {
+    console.error('Error checking IP blocked status:', err);
+    return false;
+  }
+};
+
 export const getFullUserHistory = async (userId: string): Promise<HistoryItem[]> => {
     const historyRef = db.collection('users').doc(userId).collection('history');
     const snapshot = await historyRef.orderBy('timestamp', 'desc').get();
@@ -397,6 +478,66 @@ export const getFullUserHistory = async (userId: string): Promise<HistoryItem[]>
     });
 
     return history;
+};
+
+// Access logs (per-user). Records of when a user or a client at an IP accessed the app.
+export interface AccessLogItem {
+  id?: string;
+  ip?: string | null;
+  userAgent?: string | null;
+  platform?: string | null;
+  locale?: string | null;
+  path?: string | null;
+  location?: string | null; // optional geolocation / place string if available
+  timestamp?: firebase.firestore.Timestamp | Date | null;
+}
+
+export const logUserAccess = async (
+  userId: string | null | undefined,
+  data: Partial<Omit<AccessLogItem, 'id' | 'timestamp'>>
+): Promise<void> => {
+  try {
+    if (!userId) return;
+    await db.collection('users').doc(userId).collection('accessLogs').add({ ...data, timestamp: serverTimestamp() });
+  } catch (err) {
+    console.error('Failed to log user access', err);
+  }
+};
+
+// Log a page view or generic event to a top-level collection useful for time-series charts
+export const logPageView = async (
+  data: { userId?: string | null; ip?: string | null; path?: string | null; userAgent?: string | null; timestamp?: any }
+): Promise<void> => {
+  try {
+    await db.collection('globalPageViews').add({ ...data, timestamp: serverTimestamp() });
+  } catch (err) {
+    console.error('Failed to log page view', err);
+  }
+};
+
+export const getUserAccessLogs = async (userId: string, limit: number = 200): Promise<AccessLogItem[]> => {
+  try {
+    if (!userId) return [];
+    const snapshot = await db.collection('users').doc(userId).collection('accessLogs').orderBy('timestamp', 'desc').limit(limit).get();
+    const items: AccessLogItem[] = [];
+    snapshot.forEach(doc => {
+      items.push({ id: doc.id, ...(doc.data() as any) } as AccessLogItem);
+    });
+    return items;
+  } catch (err) {
+    console.error('Failed to fetch access logs', err);
+    return [];
+  }
+};
+
+export const onUserAccessLogsSnapshot = (userId: string, onUpdate: (logs: AccessLogItem[]) => void): (() => void) => {
+  const ref = db.collection('users').doc(userId).collection('accessLogs').orderBy('timestamp', 'desc').limit(500);
+  const unsub = ref.onSnapshot(snapshot => {
+    const arr: AccessLogItem[] = [];
+    snapshot.forEach(doc => arr.push({ id: doc.id, ...(doc.data() as any) } as AccessLogItem));
+    onUpdate(arr);
+  }, err => console.error('access logs subscription error', err));
+  return unsub;
 };
 
 // Admin Dashboard Specific Functions
@@ -461,6 +602,223 @@ export const getRecentActivity = async (limit: number = 5): Promise<GlobalHistor
         }
     });
     return activity;
+};
+
+// Compute event counts and unique user counts for various time ranges
+export const getActivityCounts = async (
+  range: 'online' | 'second' | 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year' | 'all',
+  limit: number = 10000
+): Promise<{ events: number; uniqueUsers: number }> => {
+  try {
+    const historyRef = db.collection('globalHistory');
+    let startDate: Date | null = null;
+    const now = new Date();
+    switch (range) {
+      case 'online':
+        // define 'online' as users active within last 5 minutes
+        startDate = new Date(now.getTime() - 5 * 60 * 1000);
+        break;
+      case 'second':
+        startDate = new Date(now.getTime() - 1 * 1000);
+        break;
+      case 'minute':
+        startDate = new Date(now.getTime() - 60 * 1000);
+        break;
+      case 'hour':
+        startDate = new Date(now.getTime() - 60 * 60 * 1000);
+        break;
+      case 'day':
+        startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        break;
+      case 'week':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case 'month':
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case 'year':
+        startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+        break;
+      case 'all':
+      default:
+        startDate = null;
+    }
+
+    let query: firebase.firestore.Query = historyRef;
+    if (startDate) query = query.where('timestamp', '>=', startDate);
+
+    const snapshot = await query.orderBy('timestamp', 'desc').limit(limit).get();
+    const events = snapshot.size;
+    const users = new Set<string>();
+    snapshot.forEach(doc => {
+      const d: any = doc.data();
+      if (d.userId) users.add(d.userId);
+    });
+
+    return { events, uniqueUsers: users.size };
+  } catch (err) {
+    console.error('Failed to compute activity counts', err);
+    return { events: 0, uniqueUsers: 0 };
+  }
+};
+
+// Build a time-series of events and unique users per bucket for a given number of points (days/hours)
+export const getActivityTimeSeries = async (
+  points: number = 30, // number of buckets
+  unit: 'day' | 'hour' = 'day',
+  source: 'globalHistory' | 'globalPageViews' = 'globalHistory'
+): Promise<{ label: string; timestamp: number; events: number; uniqueUsers: number }[]> => {
+  try {
+    const now = new Date();
+    const buckets: { start: number; end: number; label: string }[] = [];
+    for (let i = points - 1; i >= 0; i--) {
+      if (unit === 'day') {
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+        const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0).getTime();
+        const end = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999).getTime();
+        const label = d.toLocaleDateString();
+        buckets.push({ start, end, label });
+      } else {
+        const base = new Date(now.getTime() - i * 60 * 60 * 1000);
+        const start = new Date(base.getFullYear(), base.getMonth(), base.getDate(), base.getHours(), 0, 0).getTime();
+        const end = new Date(base.getFullYear(), base.getMonth(), base.getDate(), base.getHours(), 59, 59, 999).getTime();
+        const label = `${base.getHours()}:00 ${base.toLocaleDateString()}`;
+        buckets.push({ start, end, label });
+      }
+    }
+
+    const earliest = new Date(buckets[0].start);
+    // fetch events since earliest
+  const collectionName = source || 'globalHistory';
+  const snapshot = await db.collection(collectionName).where('timestamp', '>=', earliest).orderBy('timestamp', 'asc').limit(10000).get();
+
+    // initialize results
+    const results = buckets.map(b => ({ label: b.label, timestamp: b.start, events: 0, uniqueUsers: 0 }));
+    const usersPerBucket: Set<string>[] = results.map(() => new Set<string>());
+
+    snapshot.forEach(doc => {
+      const data: any = doc.data();
+      if (!data.timestamp) return;
+      const ts = data.timestamp.toDate ? data.timestamp.toDate().getTime() : (data.timestamp.seconds ? data.timestamp.seconds * 1000 : Date.now());
+      // find bucket index
+      for (let i = 0; i < buckets.length; i++) {
+        if (ts >= buckets[i].start && ts <= buckets[i].end) {
+          results[i].events += 1;
+          if (data.userId) usersPerBucket[i].add(data.userId);
+          break;
+        }
+      }
+    });
+
+    // assign uniqueUsers
+    for (let i = 0; i < results.length; i++) {
+      results[i].uniqueUsers = usersPerBucket[i].size;
+    }
+
+    return results;
+  } catch (err) {
+    console.error('Failed to build activity time series', err);
+    return [];
+  }
+};
+
+// Presence helpers: store lastSeen timestamps in a 'presence' collection under users for simple online tracking
+export const setUserPresenceHeartbeat = async (userId: string): Promise<void> => {
+  try {
+    if (!userId) return;
+    await db.collection('presence').doc(userId).set({ lastSeen: serverTimestamp() }, { merge: true });
+  } catch (err) {
+    console.error('Failed to set presence heartbeat', err);
+  }
+};
+
+export const setUserOffline = async (userId: string): Promise<void> => {
+  try {
+    if (!userId) return;
+    await db.collection('presence').doc(userId).set({ lastSeen: null }, { merge: true });
+  } catch (err) {
+    console.error('Failed to mark user offline', err);
+  }
+};
+
+export const getOnlineUsersCount = async (thresholdSeconds: number = 120): Promise<number> => {
+  try {
+    const cutoff = new Date(Date.now() - thresholdSeconds * 1000);
+    const snapshot = await db.collection('presence').where('lastSeen', '>=', cutoff).get();
+    return snapshot.size;
+  } catch (err) {
+    console.error('Failed to query online users count', err);
+    return 0;
+  }
+};
+
+// Alerts helpers for admin
+export interface AlertItem {
+  id?: string;
+  type: string;
+  severity: 'info' | 'warning' | 'critical';
+  message: string;
+  createdAt?: firebase.firestore.Timestamp;
+  resolved?: boolean;
+  metadata?: Record<string, any>;
+}
+
+export const createAlert = async (alert: Omit<AlertItem, 'id' | 'createdAt' | 'resolved'>): Promise<string> => {
+  try {
+    const ref = await db.collection('alerts').add({ ...alert, createdAt: serverTimestamp(), resolved: false });
+    return ref.id;
+  } catch (err) {
+    console.error('Error creating alert:', err);
+    throw err;
+  }
+};
+
+export const getAlerts = async (limit: number = 50): Promise<AlertItem[]> => {
+  try {
+    const snapshot = await db.collection('alerts').orderBy('createdAt', 'desc').limit(limit).get();
+    const items: AlertItem[] = [];
+    snapshot.forEach(doc => {
+      items.push({ id: doc.id, ...(doc.data() as any) } as AlertItem);
+    });
+    return items;
+  } catch (err) {
+    console.error('Error fetching alerts:', err);
+    return [];
+  }
+};
+
+export const resolveAlert = async (alertId: string): Promise<void> => {
+  try {
+    if (!alertId) throw new Error('Invalid alert id');
+    await db.collection('alerts').doc(alertId).set({ resolved: true, resolvedAt: serverTimestamp() }, { merge: true });
+  } catch (err) {
+    console.error('Failed to resolve alert', err);
+    throw err;
+  }
+};
+
+export const getAllBlockedIps = async (): Promise<string[]> => {
+  try {
+    const snapshot = await db.collection('blockedIps').get();
+    const ips: string[] = [];
+    snapshot.forEach(doc => ips.push(doc.id));
+    return ips;
+  } catch (err) {
+    console.error('Error fetching blocked IPs:', err);
+    return [];
+  }
+};
+
+// Soft-revoke user sessions: set a timestamp on the user doc; clients should check this and sign out if their token issuedAt < sessionRevokedAt
+export const revokeUserSessions = async (userId: string): Promise<void> => {
+  try {
+    if (!userId) throw new Error('Invalid userId');
+    await db.collection('users').doc(userId).set({ sessionRevokedAt: serverTimestamp() }, { merge: true });
+    console.log(`Revoked sessions for user ${userId}`);
+  } catch (err) {
+    console.error('Error revoking user sessions:', err);
+    throw err;
+  }
 };
 
 interface AuthSettingsUpdate {
