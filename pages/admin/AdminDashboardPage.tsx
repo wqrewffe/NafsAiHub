@@ -10,11 +10,15 @@ import {
     getDashboardStats,
     getTopUsedToolsGlobal,
     getRecentActivity,
+    createAlert,
+    getAlerts,
+    revokeUserSessions,
     DashboardStats,
     GlobalHistoryItem,
     updateAuthSettings,
     deleteUser,
     toggleUserBlock
+    , getUserIp, blockIp, unblockIp, isIpBlocked
 } from '../../services/firebaseService';
 import { sendPasswordResetEmailToUser, setUserPasswordInFirestore } from '../../services/firebaseService';
 import {
@@ -41,16 +45,33 @@ import {
 } from '@heroicons/react/24/outline';
 import { useSettings } from '../../hooks/useSettings';
 import { useCongratulations } from '../../hooks/CongratulationsProvider';
+import { db } from '../../firebase/config';
+import { getAllBlockedIps, resolveAlert, getUserAccessLogs, getActivityCounts, getOnlineUsersCount, getActivityTimeSeries } from '../../services/firebaseService';
+import {
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    Tooltip,
+    ResponsiveContainer,
+    Legend,
+    CartesianGrid
+} from 'recharts';
 
 const USERS_PER_PAGE = 10;
 
 const AdminDashboardPage: React.FC = () => {
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [allUsers, setAllUsers] = useState<FirestoreUser[]>([]);
+    const [blockedIps, setBlockedIps] = useState<Record<string, boolean>>({});
     const [topUsers, setTopUsers] = useState<FirestoreUser[]>([]);
     const [topTools, setTopTools] = useState<{ toolId: string; toolName: string; useCount: number; category: string }[]>([]);
     const [toolCategories, setToolCategories] = useState<{ name: ToolCategory; count: number }[]>([]);
     const [recentActivity, setRecentActivity] = useState<GlobalHistoryItem[]>([]);
+    const [liveActivity, setLiveActivity] = useState<GlobalHistoryItem[]>([]);
+    const [activityStats, setActivityStats] = useState<{ label: string; events: number; uniqueUsers: number }[]>([]);
+    const [onlineCount, setOnlineCount] = useState<number | null>(null);
+    const [alerts, setAlerts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
@@ -59,13 +80,85 @@ const AdminDashboardPage: React.FC = () => {
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [actionType, setActionType] = useState<'delete' | 'block' | 'unblock' | null>(null);
     const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
+    const [historyModalUser, setHistoryModalUser] = useState<FirestoreUser | null>(null);
+    const [historyLogs, setHistoryLogs] = useState<any[]>([]);
+    const [loadingHistory, setLoadingHistory] = useState(false);
     const [editingPasswordUser, setEditingPasswordUser] = useState<FirestoreUser | null>(null);
     const [newPasswordValue, setNewPasswordValue] = useState('');
     const [competitions, setCompetitions] = useState<any[]>([]);
     const [loadingComps, setLoadingComps] = useState(false);
+    const [activitySeries, setActivitySeries] = useState<any[]>([]);
+    const [seriesUnit, setSeriesUnit] = useState<'day' | 'hour'>('day');
+    const [seriesPoints, setSeriesPoints] = useState<number>(30);
+    const [seriesSource, setSeriesSource] = useState<'globalHistory' | 'globalPageViews'>('globalHistory');
+
+    // helper to create a manual alert from admin
+    const handleCreateAlert = async (type: string, severity: 'info' | 'warning' | 'critical', message: string) => {
+        try {
+            await createAlert({ type, severity, message });
+        } catch (err) {
+            console.error('Failed to create alert', err);
+        }
+    };
+
+    const handleForceLogout = async (userId: string) => {
+        try {
+            await revokeUserSessions(userId);
+            showCongratulations('points', { message: 'User sessions revoked', points: 0 });
+        } catch (err) {
+            console.error('Failed to revoke sessions', err);
+        }
+    };
 
     const { authSettings, loading: settingsLoading } = useSettings();
     const { showCongratulations } = useCongratulations();
+
+    // Small cell component to display user IP and block/unblock actions
+    const IpCell: React.FC<{
+        user: FirestoreUser;
+        blockedIps: Record<string, boolean>;
+        onBlock: (ip: string | null, user?: FirestoreUser) => void;
+        onUnblock: (ip: string | null) => void;
+    }> = ({ user, blockedIps, onBlock, onUnblock }) => {
+        const [ip, setIp] = useState<string | null>(user['ip'] || user['lastIp'] || null);
+        const [loadingIp, setLoadingIp] = useState(false);
+
+        useEffect(() => {
+            let mounted = true;
+            const fetch = async () => {
+                if (ip) return; // already have
+                setLoadingIp(true);
+                try {
+                    const fetched = await getUserIp(user.id);
+                    if (mounted) setIp(fetched);
+                } catch (err) {
+                    console.error('Failed to fetch user IP', err);
+                } finally {
+                    if (mounted) setLoadingIp(false);
+                }
+            };
+            fetch();
+            return () => { mounted = false; };
+        }, [user.id]);
+
+        const isBlocked = ip ? (blockedIps[ip] ?? false) : false;
+
+        return (
+            <div className="flex flex-col">
+                <div className="text-sm text-slate-300 truncate">{loadingIp ? 'Loading...' : (ip || '—')}</div>
+                <div className="mt-2 flex gap-2">
+                    {ip && (
+                        isBlocked ? (
+                            <button onClick={() => onUnblock(ip)} className="text-xs px-2 py-1 rounded bg-green-600 text-white">Unblock IP</button>
+                        ) : (
+                            <button onClick={() => onBlock(ip, user)} className="text-xs px-2 py-1 rounded bg-red-600 text-white">Block IP</button>
+                        )
+                    )}
+                    <button onClick={() => { setHistoryModalUser(user); }} className="text-xs px-2 py-1 rounded bg-blue-600 text-white">View History</button>
+                </div>
+            </div>
+        );
+    };
 
     const usersMap = useMemo(() => new Map(allUsers.map(user => [user.id, user])), [allUsers]);
 
@@ -85,6 +178,24 @@ const AdminDashboardPage: React.FC = () => {
             setTopUsers(topUsersData);
             setTopTools(allToolsData.slice(0, 5));
             setRecentActivity(activityData);
+
+            // Load alerts (initial)
+            try {
+                const al = await getAlerts(50);
+                setAlerts(al);
+            } catch (e) {
+                console.warn('Failed to load alerts', e);
+            }
+
+            // Preload blocked IPs map for quick checks (best-effort)
+            try {
+                const ips = await getAllBlockedIps();
+                const map: Record<string, boolean> = {};
+                ips.forEach(i => map[i] = true);
+                setBlockedIps(map);
+            } catch (e) {
+                console.warn('Failed to preload blocked IPs', e);
+            }
 
             const categoryCounts = allToolsData.reduce((acc, tool) => {
                 acc[tool.category] = (acc[tool.category] || 0) + tool.useCount;
@@ -109,6 +220,103 @@ const AdminDashboardPage: React.FC = () => {
     useEffect(() => {
         fetchDashboardData();
     }, [fetchDashboardData]);
+
+    // Load activity series for chart
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const data = await getActivityTimeSeries(seriesPoints, seriesUnit, seriesSource);
+                if (mounted) setActivitySeries(data);
+            } catch (err) {
+                console.error('Failed to load activity series', err);
+            }
+        })();
+        return () => { mounted = false; };
+    }, [seriesUnit, seriesPoints]);
+
+    // Load activity stats (counts for different ranges)
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const ranges: { key: any; label: string }[] = [
+                    { key: 'online', label: 'Currently Online (last 5m)' },
+                    { key: 'second', label: 'Last 1s' },
+                    { key: 'minute', label: 'Last 1m' },
+                    { key: 'hour', label: 'Last 1h' },
+                    { key: 'day', label: 'Last 24h' },
+                    { key: 'week', label: 'Last 7d' },
+                    { key: 'month', label: 'Last 30d' },
+                    { key: 'year', label: 'Last 365d' },
+                    { key: 'all', label: 'All time' },
+                ];
+                const results: { label: string; events: number; uniqueUsers: number }[] = [];
+                for (const r of ranges) {
+                    const res = await getActivityCounts(r.key, 2000);
+                    results.push({ label: r.label, events: res.events, uniqueUsers: res.uniqueUsers });
+                }
+                if (mounted) setActivityStats(results);
+            } catch (err) {
+                console.error('Failed to load activity stats', err);
+            }
+        })();
+        return () => { mounted = false; };
+    }, []);
+
+    // Poll online users count using presence collection for accuracy
+    useEffect(() => {
+        let mounted = true;
+        let timer: any = null;
+        const load = async () => {
+            try {
+                const cnt = await getOnlineUsersCount(120);
+                if (mounted) setOnlineCount(cnt);
+            } catch (err) {
+                console.error('Failed to fetch online count', err);
+            }
+        };
+        load();
+        timer = setInterval(load, 30 * 1000);
+        return () => { mounted = false; if (timer) clearInterval(timer); };
+    }, []);
+
+    // Real-time subscription to globalHistory for live feed
+    useEffect(() => {
+        const unsub = db.collection('globalHistory').orderBy('timestamp', 'desc').limit(50).onSnapshot(snapshot => {
+            const items: GlobalHistoryItem[] = [];
+            snapshot.docChanges().forEach(change => {
+                if (change.type === 'added') {
+                    const data = change.doc.data();
+                    if (data.timestamp) {
+                        items.push({ id: change.doc.id, ...data, timestamp: data.timestamp.toDate() } as GlobalHistoryItem);
+                    }
+                }
+            });
+            if (items.length) setLiveActivity(prev => [...items, ...prev].slice(0, 100));
+        }, err => console.error('live feed error', err));
+
+        return () => unsub();
+    }, []);
+
+    // Realtime subscription for alerts
+    useEffect(() => {
+        const unsub = db.collection('alerts').orderBy('createdAt', 'desc').limit(100).onSnapshot(snapshot => {
+            const arr: any[] = [];
+            snapshot.forEach(doc => arr.push({ id: doc.id, ...(doc.data() as any) }));
+            setAlerts(arr);
+        }, err => console.error('alerts subscription error', err));
+
+        return () => unsub();
+    }, []);
+
+    const handleResolveAlert = async (alertId: string) => {
+        try {
+            await resolveAlert(alertId);
+        } catch (err) {
+            console.error('Failed to resolve alert', err);
+        }
+    };
 
     useEffect(() => {
         loadCompetitions();
@@ -168,6 +376,81 @@ const AdminDashboardPage: React.FC = () => {
             setSelectedUser(null);
             setActionType(null);
         }
+    };
+
+    const handleBlockIp = async (ip: string | null, user?: FirestoreUser) => {
+        if (!ip) { alert('No IP available for this user'); return; }
+        if (!confirm(`Block IP ${ip}? This will prevent anonymous access from this IP.`)) return;
+        try {
+            await blockIp(ip);
+            setBlockedIps(prev => ({ ...prev, [ip]: true }));
+            if (user) setAllUsers(prev => prev.map(u => u.id === user.id ? { ...u } : u));
+            alert(`IP ${ip} blocked`);
+        } catch (err) {
+            console.error(err);
+            alert('Failed to block IP');
+        }
+    };
+
+    const handleUnblockIp = async (ip: string | null) => {
+        if (!ip) { alert('No IP'); return; }
+        if (!confirm(`Unblock IP ${ip}?`)) return;
+        try {
+            await unblockIp(ip);
+            setBlockedIps(prev => ({ ...prev, [ip]: false }));
+            alert(`IP ${ip} unblocked`);
+        } catch (err) {
+            console.error(err);
+            alert('Failed to unblock IP');
+        }
+    };
+
+    const closeHistoryModal = () => {
+        setHistoryModalUser(null);
+        setHistoryLogs([]);
+    };
+
+    useEffect(() => {
+        let mounted = true;
+        if (!historyModalUser) return;
+        (async () => {
+            setLoadingHistory(true);
+            try {
+                const logs = await getUserAccessLogs(historyModalUser.id, 500);
+                if (mounted) setHistoryLogs(logs.map(l => ({
+                    ...l,
+                    timestamp: l.timestamp && (typeof (l.timestamp as any).toDate === 'function') ? (l.timestamp as any).toDate() : (l.timestamp instanceof Date ? l.timestamp : null)
+                })));
+            } catch (err) {
+                console.error('Failed to load access logs', err);
+                if (mounted) setHistoryLogs([]);
+            } finally {
+                if (mounted) setLoadingHistory(false);
+            }
+        })();
+        return () => { mounted = false; };
+    }, [historyModalUser]);
+
+    const exportHistoryCsv = (user: FirestoreUser, logs: any[]) => {
+        if (!logs || logs.length === 0) return alert('No logs to export');
+        const header = ['Time', 'IP', 'User Agent', 'Platform', 'Locale', 'Path', 'Location'];
+        const rows = logs.map((r: any) => [
+            r.timestamp ? new Date(r.timestamp).toLocaleString() : '',
+            r.ip || '',
+            r.userAgent || '',
+            r.platform || '',
+            r.locale || '',
+            r.path || '',
+            r.location || ''
+        ]);
+        const csv = [header.join(','), ...rows.map(r => r.map((c: any) => '"' + String(c).replace(/"/g, '""') + '"').join(','))].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `access_logs_${user.id}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
     };
 
     const confirmAction = (user: FirestoreUser, action: 'delete' | 'block' | 'unblock') => {
@@ -335,6 +618,92 @@ const AdminDashboardPage: React.FC = () => {
                 </div>
             </DashboardSection>
 
+            <DashboardSection title="Online Users & Activity Stats">
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-primary rounded-md">
+                        <div>
+                            <div className="text-sm text-slate-300">Currently online (accurate):</div>
+                            <div className="text-2xl font-bold">{onlineCount !== null ? onlineCount : '—'}</div>
+                        </div>
+                        <div className="text-sm text-slate-400">
+                            <div>Unique active users (last 5m): {activityStats.find(s => s.label.includes('5m'))?.uniqueUsers ?? activityStats.find(s => s.label.includes('Online'))?.uniqueUsers ?? '-'}</div>
+                            <div className="text-xs mt-1">Events in last 1h: {activityStats.find(s => s.label.includes('1h'))?.events ?? '-'}</div>
+                        </div>
+                        <div className="ml-4">
+                            <button onClick={async () => { try { const c = await getOnlineUsersCount(120); setOnlineCount(c); } catch (e) { console.error(e); } }} className="px-2 py-1 bg-accent rounded text-sm">Refresh</button>
+                        </div>
+                    </div>
+
+                    <div className="overflow-auto max-h-48 bg-primary p-2 rounded">
+                        <table className="min-w-full text-sm text-slate-300">
+                            <thead>
+                                <tr className="text-xs text-slate-400">
+                                    <th className="px-3 py-2 text-left">Range</th>
+                                    <th className="px-3 py-2 text-left">Events</th>
+                                    <th className="px-3 py-2 text-left">Unique Users</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {activityStats.map(s => (
+                                    <tr key={s.label} className="odd:bg-secondary/20">
+                                        <td className="px-3 py-2">{s.label}</td>
+                                        <td className="px-3 py-2">{s.events}</td>
+                                        <td className="px-3 py-2">{s.uniqueUsers}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </DashboardSection>
+
+            <DashboardSection title="Activity Trends">
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="text-sm text-slate-300">Range:</div>
+                        <button onClick={() => { setSeriesUnit('day'); setSeriesPoints(30); }} className={`px-2 py-1 rounded text-sm ${seriesUnit==='day' ? 'bg-accent text-white' : 'bg-primary'}`}>30 days</button>
+                        <button onClick={() => { setSeriesUnit('day'); setSeriesPoints(90); }} className={`px-2 py-1 rounded text-sm ${seriesUnit==='day' && seriesPoints===90 ? 'bg-accent text-white' : 'bg-primary'}`}>90 days</button>
+                        <button onClick={() => { setSeriesUnit('hour'); setSeriesPoints(24); }} className={`px-2 py-1 rounded text-sm ${seriesUnit==='hour' ? 'bg-accent text-white' : 'bg-primary'}`}>24 hours</button>
+                        <button onClick={() => { setSeriesUnit('hour'); setSeriesPoints(72); }} className={`px-2 py-1 rounded text-sm ${seriesUnit==='hour' && seriesPoints===72 ? 'bg-accent text-white' : 'bg-primary'}`}>72 hours</button>
+                    </div>
+
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="text-sm text-slate-300">Source:</div>
+                        <button onClick={() => setSeriesSource('globalHistory')} className={`px-2 py-1 rounded text-sm ${seriesSource==='globalHistory' ? 'bg-accent text-white' : 'bg-primary'}`}>Global Events</button>
+                        <button onClick={() => setSeriesSource('globalPageViews')} className={`px-2 py-1 rounded text-sm ${seriesSource==='globalPageViews' ? 'bg-accent text-white' : 'bg-primary'}`}>Page Views</button>
+                        <div className="ml-auto">
+                            <button onClick={() => {
+                                if (!activitySeries || activitySeries.length === 0) return alert('No series to export');
+                                const header = ['label', 'timestamp', 'events', 'uniqueUsers'];
+                                const rows = activitySeries.map(s => [s.label, s.timestamp, s.events, s.uniqueUsers]);
+                                const csv = [header.join(','), ...rows.map(r => r.join(','))].join('\n');
+                                const blob = new Blob([csv], { type: 'text/csv' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a'); a.href = url; a.download = `activity_series_${seriesSource}_${seriesPoints}_${seriesUnit}.csv`; a.click(); URL.revokeObjectURL(url);
+                            }} className="px-2 py-1 rounded bg-blue-600 text-white text-sm">Export CSV</button>
+                        </div>
+                    </div>
+
+                    <div className="h-64 bg-primary p-3 rounded">
+                        {activitySeries.length === 0 ? (
+                            <div className="text-slate-400">No data for selected range.</div>
+                        ) : (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={activitySeries} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
+                                    <XAxis dataKey="label" tick={{ fontSize: 10 }} />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Legend />
+                                    <Line type="monotone" dataKey="events" stroke="#8884d8" strokeWidth={2} name="Events" dot={false} />
+                                    <Line type="monotone" dataKey="uniqueUsers" stroke="#82ca9d" strokeWidth={2} name="Unique Users" dot={false} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        )}
+                    </div>
+                </div>
+            </DashboardSection>
+
             <DashboardSection title="Feature Visibility">
                 <div className="space-y-3">
                     {[
@@ -412,6 +781,7 @@ const AdminDashboardPage: React.FC = () => {
                             <tr>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Name</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Email</th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">IP Address</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Usage</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Role</th>
@@ -424,6 +794,12 @@ const AdminDashboardPage: React.FC = () => {
                                 <tr key={user.id} className="hover:bg-primary/50">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-light">
                                         {user.displayName || 'N/A'}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                                        {user.email}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                                        <IpCell user={user} blockedIps={blockedIps} onBlock={handleBlockIp} onUnblock={handleUnblockIp} />
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
                                         <div className="flex flex-col">
@@ -584,6 +960,57 @@ const AdminDashboardPage: React.FC = () => {
                     </div>
                 </div>
             )}
+            {historyModalUser && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-secondary p-6 rounded-lg max-w-4xl w-full mx-4">
+                        <div className="flex items-start justify-between mb-4">
+                            <div>
+                                <h3 className="text-xl font-semibold">Access History for {historyModalUser.displayName || historyModalUser.email || historyModalUser.id}</h3>
+                                <p className="text-sm text-slate-400">Showing latest access events (IP, time, browser, location, path)</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => exportHistoryCsv(historyModalUser, historyLogs)} className="px-3 py-1 rounded bg-blue-600 text-white text-sm">Export CSV</button>
+                                <button onClick={closeHistoryModal} className="px-3 py-1 rounded bg-gray-600 text-white text-sm">Close</button>
+                            </div>
+                        </div>
+
+                        <div className="max-h-96 overflow-auto border border-slate-700 rounded p-2 bg-primary">
+                            {loadingHistory ? (
+                                <div className="p-4 text-center text-slate-300">Loading history...</div>
+                            ) : historyLogs.length === 0 ? (
+                                <div className="p-4 text-center text-slate-400">No access logs found for this user.</div>
+                            ) : (
+                                <table className="min-w-full text-sm text-slate-300">
+                                    <thead>
+                                        <tr className="text-xs text-slate-400">
+                                            <th className="px-3 py-2 text-left">Time</th>
+                                            <th className="px-3 py-2 text-left">IP</th>
+                                            <th className="px-3 py-2 text-left">User Agent</th>
+                                            <th className="px-3 py-2 text-left">Platform</th>
+                                            <th className="px-3 py-2 text-left">Locale</th>
+                                            <th className="px-3 py-2 text-left">Path</th>
+                                            <th className="px-3 py-2 text-left">Location</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {historyLogs.map((r: any, idx: number) => (
+                                            <tr key={r.id || idx} className="odd:bg-primary/50">
+                                                <td className="px-3 py-2">{r.timestamp ? (r.timestamp instanceof Date ? r.timestamp.toLocaleString() : new Date(r.timestamp).toLocaleString()) : '-'}</td>
+                                                <td className="px-3 py-2">{r.ip || '-'}</td>
+                                                <td className="px-3 py-2 truncate" title={r.userAgent || ''}>{r.userAgent || '-'}</td>
+                                                <td className="px-3 py-2">{r.platform || '-'}</td>
+                                                <td className="px-3 py-2">{r.locale || '-'}</td>
+                                                <td className="px-3 py-2 truncate" title={r.path || ''}>{r.path || '-'}</td>
+                                                <td className="px-3 py-2 truncate" title={r.location || ''}>{r.location || '-'}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Other Dashboard Sections can be added here */}
@@ -607,17 +1034,41 @@ const AdminDashboardPage: React.FC = () => {
                         ))}
                     </ul>
                 </DashboardSection>
-                <DashboardSection title="Recent Activity">
-                     <ul className="space-y-3">
-                        {recentActivity.map(activity => (
+                <DashboardSection title="Live Activity (Real-time)">
+                     <ul className="space-y-3 max-h-48 overflow-auto">
+                        {liveActivity.map(activity => (
                             <li key={activity.id} className="text-sm">
                                 <p className="truncate">
-                                    <span className="font-semibold">{usersMap.get(activity.userId)?.displayName || 'A user'}</span> used <span className="font-semibold text-accent">{activity.toolName}</span>
+                                    <span className="font-semibold">{usersMap.get(activity.userId)?.displayName || 'A user'}</span> → <span className="font-semibold text-accent">{activity.toolName}</span>
                                 </p>
                                 <p className="text-xs text-slate-400">{(activity.timestamp instanceof Date) ? new Date(activity.timestamp).toLocaleString() : ((activity.timestamp as any)?.seconds ? new Date((activity.timestamp as any).seconds * 1000).toLocaleString() : String(activity.timestamp))}</p>
                             </li>
                         ))}
                     </ul>
+                </DashboardSection>
+
+                <DashboardSection title="Alerts">
+                     <div className="space-y-3">
+                        <div className="flex gap-2">
+                            <button onClick={() => handleCreateAlert('manual', 'warning', 'Manual alert created by admin')} className="px-3 py-1 rounded bg-yellow-500 text-white text-sm">Create Test Alert</button>
+                        </div>
+                        <ul className="space-y-2 max-h-48 overflow-auto">
+                            {alerts.map(a => (
+                                <li key={a.id} className={`p-2 rounded border ${a.severity==='critical'?'border-red-600 bg-red-800/20':''} ${a.severity==='warning'?'border-yellow-600 bg-yellow-800/10':''}`}>
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <div className="font-semibold">{a.type} <span className="text-xs text-slate-400">{a.severity}</span></div>
+                                            <div className="text-sm text-slate-300">{a.message}</div>
+                                            <div className="text-xs text-slate-400">{a.createdAt ? new Date((a.createdAt as any).seconds * 1000).toLocaleString() : ''}</div>
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            {!a.resolved && <button className="text-xs px-2 py-1 rounded bg-green-600 text-white">Acknowledge</button>}
+                                        </div>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                     </div>
                 </DashboardSection>
             </div>
         </div>
