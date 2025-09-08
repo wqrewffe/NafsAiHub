@@ -91,6 +91,7 @@ const AdminDashboardPage: React.FC = () => {
     const [seriesUnit, setSeriesUnit] = useState<'day' | 'hour'>('day');
     const [seriesPoints, setSeriesPoints] = useState<number>(30);
     const [seriesSource, setSeriesSource] = useState<'globalHistory' | 'globalPageViews'>('globalHistory');
+    const [diagnostic, setDiagnostic] = useState<{ totalCount?: number; missingFieldsUsers?: any[] }>({});
 
     // helper to create a manual alert from admin
     const handleCreateAlert = async (type: string, severity: 'info' | 'warning' | 'critical', message: string) => {
@@ -175,6 +176,7 @@ const AdminDashboardPage: React.FC = () => {
 
             setStats(statsData);
             setAllUsers(allUsersData);
+            console.debug('fetchDashboardData: stats.totalUsers=', statsData?.totalUsers, 'allUsersData.length=', allUsersData?.length);
             setTopUsers(topUsersData);
             setTopTools(allToolsData.slice(0, 5));
             setRecentActivity(activityData);
@@ -297,6 +299,28 @@ const AdminDashboardPage: React.FC = () => {
         }, err => console.error('live feed error', err));
 
         return () => unsub();
+    }, []);
+
+    // Real-time subscription to users collection so admin sees new users immediately
+    useEffect(() => {
+        const usersUnsub = db.collection('users').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+            const users = snapshot.docs.map(doc => {
+                const data: any = doc.data();
+                return {
+                    id: doc.id,
+                    displayName: data.displayName || 'N/A',
+                    email: data.email || 'N/A',
+                    createdAt: data.createdAt,
+                    totalUsage: data.totalUsage || 0,
+                    password: data.password || undefined,
+                    isBlocked: data.isBlocked || false
+                } as any;
+            });
+            setAllUsers(users);
+            console.debug('users onSnapshot: snapshot.size=', snapshot.size, 'mapped users length=', users.length);
+        }, err => console.error('users subscription error', err));
+
+        return () => usersUnsub();
     }, []);
 
     // Realtime subscription for alerts
@@ -617,6 +641,75 @@ const AdminDashboardPage: React.FC = () => {
                     </label>
                 </div>
             </DashboardSection>
+            <DashboardSection title="User Diagnostics">
+                <div className="space-y-3">
+                    <p className="text-sm text-slate-400">Run diagnostics against Firestore to compare counts and find user docs missing email/displayName.</p>
+                    <div className="flex gap-2">
+                        <button onClick={async () => {
+                            try {
+                                const snapshot = await db.collection('users').get();
+                                const total = snapshot.size;
+                                const missing: any[] = [];
+                                snapshot.forEach(doc => {
+                                    const d: any = doc.data() || {};
+                                    if (!d.email || !d.displayName) missing.push({ id: doc.id, email: d.email || null, displayName: d.displayName || null });
+                                });
+                                setDiagnostic({ totalCount: total, missingFieldsUsers: missing });
+                                console.debug('Diagnostic: total users=', total, 'missing count=', missing.length);
+                                alert(`Diagnostic run: total users=${total}, missing fields=${missing.length}`);
+                            } catch (err) {
+                                console.error('Diagnostic failed', err);
+                                alert('Diagnostic failed - see console');
+                            }
+                        }} className="px-3 py-2 rounded bg-accent text-white">Run Diagnostic</button>
+                        <button onClick={async () => {
+                            if (!confirm('This will write placeholder emails for users missing email/displayName. Proceed?')) return;
+                            try {
+                                const snapshot = await db.collection('users').get();
+                                const updated: string[] = [];
+                                for (const doc of snapshot.docs) {
+                                    const d: any = doc.data() || {};
+                                    if (!d.email || d.email === '' || !d.displayName) {
+                                        const placeholder = d.email && d.email !== '' ? d.email : `${doc.id}@missing.local`;
+                                        await db.collection('users').doc(doc.id).set({ email: placeholder, emailPlaceholder: true, displayName: d.displayName || null }, { merge: true });
+                                        updated.push(doc.id);
+                                    }
+                                }
+                                alert(`Updated ${updated.length} users with placeholder emails.`);
+                                // refresh diagnostic
+                                const total = snapshot.size;
+                                const missing = updated.length;
+                                setDiagnostic({ totalCount: total, missingFieldsUsers: [] });
+                                // refresh UI users
+                                fetchDashboardData();
+                            } catch (err) {
+                                console.error('Failed to apply placeholders', err);
+                                alert('Failed to apply placeholders - see console');
+                            }
+                        }} className="px-3 py-2 rounded bg-yellow-600 text-white">Fix missing emails</button>
+                        <button onClick={() => setDiagnostic({})} className="px-3 py-2 rounded bg-primary text-white">Clear</button>
+                    </div>
+
+                    {diagnostic.totalCount !== undefined && (
+                        <div className="mt-2">
+                            <div className="text-sm text-slate-300">Total users in Firestore: <span className="font-semibold">{diagnostic.totalCount}</span></div>
+                            <div className="text-sm text-slate-300">Users missing email/displayName: <span className="font-semibold">{diagnostic.missingFieldsUsers?.length ?? 0}</span></div>
+                            <div className="max-h-44 overflow-auto mt-2 bg-primary p-2 rounded">
+                                <table className="min-w-full text-sm text-slate-300">
+                                    <thead>
+                                        <tr className="text-xs text-slate-400"><th className="px-2 py-1">ID</th><th className="px-2 py-1">Email</th><th className="px-2 py-1">DisplayName</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        {(diagnostic.missingFieldsUsers || []).map(u => (
+                                            <tr key={u.id}><td className="px-2 py-1">{u.id}</td><td className="px-2 py-1">{String(u.email)}</td><td className="px-2 py-1">{String(u.displayName)}</td></tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </DashboardSection>
 
             <DashboardSection title="Online Users & Activity Stats">
                 <div className="space-y-3">
@@ -765,16 +858,19 @@ const AdminDashboardPage: React.FC = () => {
             </DashboardSection>
 
             <DashboardSection title="User Management">
-                <input
-                    type="text"
-                    placeholder="Search by name or email..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                        setSearchTerm(e.target.value);
-                        setCurrentPage(1);
-                    }}
-                    className="w-full px-4 py-2 mb-4 rounded-md bg-primary border border-slate-600 focus:ring-2 focus:ring-accent focus:outline-none"
-                />
+                <div className="mb-4 flex gap-2 items-center">
+                    <input
+                        type="text"
+                        placeholder="Search by name or email..."
+                        value={searchTerm}
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            setCurrentPage(1);
+                        }}
+                        className="flex-1 px-4 py-2 rounded-md bg-primary border border-slate-600 focus:ring-2 focus:ring-accent focus:outline-none"
+                    />
+                    <button onClick={fetchDashboardData} className="px-3 py-2 rounded bg-blue-600 text-white text-sm">Refresh Users</button>
+                </div>
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-slate-700">
                         <thead className="bg-primary/50">
