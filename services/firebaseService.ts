@@ -92,6 +92,71 @@ export const createUserProfileDocument = async (user: firebase.User, password?: 
   }
 };
 
+// Follow/unfollow helpers
+export const followUser = async (currentUserId: string, targetUserId: string) => {
+  if (!currentUserId || !targetUserId) return;
+  try {
+    const batch = db.batch();
+    const followerRef = db.collection('users').doc(targetUserId).collection('followers').doc(currentUserId);
+    const followingRef = db.collection('users').doc(currentUserId).collection('following').doc(targetUserId);
+
+    batch.set(followerRef, { userId: currentUserId, followedAt: serverTimestamp() });
+    batch.set(followingRef, { userId: targetUserId, followedAt: serverTimestamp() });
+
+    // Increment counters on user docs for quick display
+    batch.set(db.collection('users').doc(targetUserId), { followersCount: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+    batch.set(db.collection('users').doc(currentUserId), { followingCount: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+
+    await batch.commit();
+  } catch (err) {
+    console.error('Error following user:', err);
+    throw err;
+  }
+};
+
+export const unfollowUser = async (currentUserId: string, targetUserId: string) => {
+  if (!currentUserId || !targetUserId) return;
+  try {
+    const batch = db.batch();
+    const followerRef = db.collection('users').doc(targetUserId).collection('followers').doc(currentUserId);
+    const followingRef = db.collection('users').doc(currentUserId).collection('following').doc(targetUserId);
+
+    batch.delete(followerRef);
+    batch.delete(followingRef);
+
+    // Decrement counters on user docs for quick display
+    batch.set(db.collection('users').doc(targetUserId), { followersCount: firebase.firestore.FieldValue.increment(-1) }, { merge: true });
+    batch.set(db.collection('users').doc(currentUserId), { followingCount: firebase.firestore.FieldValue.increment(-1) }, { merge: true });
+
+    await batch.commit();
+  } catch (err) {
+    console.error('Error unfollowing user:', err);
+    throw err;
+  }
+};
+
+export const getFollowersCount = async (userId: string): Promise<number> => {
+  try {
+    const userDoc = await db.collection('users').doc(userId).get();
+    const data = userDoc.data() || {};
+    return data.followersCount || 0;
+  } catch (err) {
+    console.error('Error getting followers count:', err);
+    return 0;
+  }
+};
+
+export const checkIsFollowing = async (currentUserId: string, targetUserId: string): Promise<boolean> => {
+  if (!currentUserId || !targetUserId) return false;
+  try {
+    const doc = await db.collection('users').doc(targetUserId).collection('followers').doc(currentUserId).get();
+    return doc.exists;
+  } catch (err) {
+    console.error('Error checking follow relationship:', err);
+    return false;
+  }
+};
+
 export const logToolUsage = async (
   userId: string,
   tool: { id: string; name: string; category: string; },
