@@ -146,10 +146,14 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [theme, setThemeState] = useState<Theme>(() => {
     try {
       const storedTheme = localStorage.getItem('app-theme');
-      return storedTheme ? JSON.parse(storedTheme) : themes[0];
+      if (storedTheme) return JSON.parse(storedTheme);
+      // Prefer the 'Hacker' theme as the default when no stored theme exists
+      const hacker = themes.find(t => t.name.toLowerCase() === 'hacker');
+      return hacker || themes[0];
     } catch (error) {
       console.error("Failed to parse theme from localStorage", error);
-      return themes[0];
+      const hacker = themes.find(t => t.name.toLowerCase() === 'hacker');
+      return hacker || themes[0];
     }
   });
 
