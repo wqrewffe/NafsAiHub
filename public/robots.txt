@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://nafsaihub.vercel.app/sitemap.xml
+Sitemap: https://nafsaihub.vercel.app/sitemap.xml?redirect=falsestart-index=16max-results=500
