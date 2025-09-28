@@ -25,6 +25,6 @@ export default defineConfig(({ mode }) => {
       },
       // base: 'https://nafsaihub.onrender.com/'
    // Primary base used for production assets. Alternate deploy URL: https://nafsaihub.onrender.com/
-   base: 'https://nafsaihub.vercel.app/'
+   base: '/'
     };
 });
