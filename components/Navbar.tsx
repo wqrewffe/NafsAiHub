@@ -314,6 +314,14 @@ const Navbar: React.FC = () => {
               </div>
             )}
             {navLinks}
+            {/* Link to AI Tools Showcase */}
+            <Link
+              to="/showcase"
+              onClick={closeMobileMenu}
+              className="text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+            >
+              Tools
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}

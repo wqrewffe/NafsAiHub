@@ -19,6 +19,7 @@ import AdminRoute from './components/AdminRoute';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 const TrainerApp = React.lazy(() => import('./TRAINER/trainerExport'));
 const DevToolboxApp = React.lazy(() => import('./dev-toolbox/App'));
+const ToolsShowcaseApp = React.lazy(() => import('./ai-tools-showcase/App'));
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import SettingsPage from './pages/SettingsPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
@@ -95,6 +96,17 @@ function App() {
                       <React.Suspense fallback={<div className="p-8 text-center">Loading Toolbox...</div>}>
                         {/* @ts-ignore */}
                         <DevToolboxApp />
+                      </React.Suspense>
+                    }
+                  />
+
+                  {/* AI Tools Showcase rendered outside Layout so it can manage its own hash routing and full-screen UI */}
+                  <ReactRouterDOM.Route
+                    path="/showcase/*"
+                    element={
+                      <React.Suspense fallback={<div className="p-8 text-center">Loading Tools Showcase...</div>}>
+                        {/* @ts-ignore */}
+                        <ToolsShowcaseApp />
                       </React.Suspense>
                     }
                   />
