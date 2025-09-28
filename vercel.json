@@ -2,6 +2,7 @@
   "name": "nafs-ai-hub",
   "version": 2,
   "builds": [
+    
     {
       "src": "package.json",
       "use": "@vercel/static-build",
