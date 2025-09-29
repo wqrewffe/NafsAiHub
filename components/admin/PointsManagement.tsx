@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { givePointsToUser } from '../../services/adminService';
+import { givePointsToUser, deductPointsFromUser } from '../../services/adminService';
 import { FirestoreUser } from '../../types';
 import { auth, db } from '../../firebase/config';
 import { useCongratulations } from '../../hooks/CongratulationsProvider';
@@ -79,6 +79,48 @@ const PointsManagement: React.FC<PointsManagementProps> = ({ user, onPointsUpdat
     }
   };
 
+  const handleDeductPoints = async () => {
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    const numPoints = parseInt(points);
+    if (isNaN(numPoints)) {
+      setError('Please enter a valid number');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        setError('Admin not authenticated');
+        return;
+      }
+
+      const targetUserId = user.uid || user.id;
+      if (!targetUserId) {
+        setError('Invalid user ID');
+        setLoading(false);
+        return;
+      }
+
+      const result = await deductPointsFromUser(currentUser.uid, targetUserId, numPoints);
+      if (result.success) {
+        const message = `Successfully deducted ${numPoints} points from ${user.displayName || user.email}. New total: ${result.newTotal} points`;
+        setSuccess(message);
+        setPoints('');
+        onPointsUpdated();
+      } else {
+        setError(result.error || 'Failed to deduct points');
+      }
+    } catch (err) {
+      setError('An error occurred while deducting points');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="mt-4 p-4 bg-gray-800 rounded-lg">
       <h3 className="text-lg font-semibold mb-4">Manage Points</h3>
@@ -106,6 +148,17 @@ const PointsManagement: React.FC<PointsManagementProps> = ({ user, onPointsUpdat
           }`}
         >
           {loading ? 'Giving...' : 'Give Points'}
+        </button>
+        <button
+          onClick={handleDeductPoints}
+          disabled={loading || !points}
+          className={`mt-6 px-4 py-2 rounded-md ${
+            loading || !points
+              ? 'bg-gray-600 cursor-not-allowed'
+              : 'bg-red-600 hover:bg-red-700'
+          }`}
+        >
+          {loading ? 'Deducting...' : 'Deduct Points'}
         </button>
       </div>
       {error && (
