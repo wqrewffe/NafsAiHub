@@ -4,6 +4,7 @@ import * as ReactRouterDOM from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { Tool } from '../types';
 import { useToolAccess } from '../hooks/useToolAccess';
+import toast from 'react-hot-toast';
 import { LockClosedIcon, LockOpenIcon } from '@heroicons/react/24/solid';
 import { useAuth } from '../hooks/useAuth';
 
@@ -41,10 +42,15 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
           const allowed = canUseAnonymously(tool.id);
           if (!allowed) {
             e.preventDefault();
-            // redirect to login so they can create account for unlimited use
+            // notify and redirect to login so they can create account for unlimited use
+            toast("Please login or create an account to continue using tools", { icon: 'ℹ️', duration: 4000 });
             navigate('/login');
+            return;
           }
-          // otherwise allow navigation through to tool page where generation will be blocked if limit reached
+          // We require login to actually use tools; show a friendly message then redirect.
+          e.preventDefault();
+          toast("Please login or create an account to use tools", { icon: 'ℹ️', duration: 4000 });
+          navigate('/login');
         } catch (err) {
           // If check fails for any reason, be conservative and block navigation
           e.preventDefault();
