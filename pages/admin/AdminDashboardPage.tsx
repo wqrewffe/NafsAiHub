@@ -304,13 +304,14 @@ const AdminDashboardPage: React.FC = () => {
     // Real-time subscription to users collection so admin sees new users immediately
     useEffect(() => {
         const usersUnsub = db.collection('users').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-            const users = snapshot.docs.map(doc => {
+                const users = snapshot.docs.map(doc => {
                 const data: any = doc.data();
                 return {
                     id: doc.id,
                     displayName: data.displayName || 'N/A',
                     email: data.email || 'N/A',
                     createdAt: data.createdAt,
+                        points: data.points || 0,
                     totalUsage: data.totalUsage || 0,
                     password: data.password || undefined,
                     isBlocked: data.isBlocked || false
@@ -878,6 +879,7 @@ const AdminDashboardPage: React.FC = () => {
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Name</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Email</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">IP Address</th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Points</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Usage</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Role</th>
@@ -911,7 +913,8 @@ const AdminDashboardPage: React.FC = () => {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">{user.email}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">{(user as any).points === Infinity ? '∞' : ((user as any).points || 0)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">{user.totalUsage || 0}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">{user.totalUsage || 0}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                                         <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${user.isBlocked ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}`}>
