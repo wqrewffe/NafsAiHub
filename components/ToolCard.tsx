@@ -7,6 +7,8 @@ import { useToolAccess } from '../hooks/useToolAccess';
 import toast from 'react-hot-toast';
 import { LockClosedIcon, LockOpenIcon } from '@heroicons/react/24/solid';
 import { useAuth } from '../hooks/useAuth';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
 
 interface ToolCardProps {
   tool: Tool;
@@ -25,6 +27,30 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
   // Visual lock should be hidden for anonymous users who still have allowance; show lock when their quota is exhausted
   const visuallyUnlocked = isAdmin || isUnlocked || (!!currentUser) || anonAllowed;
   const navigate = useNavigate();
+
+  const [perToolCost, setPerToolCost] = React.useState<number | null>(null);
+
+  React.useEffect(() => {
+    let mounted = true;
+    const fetchCost = async () => {
+      try {
+        const ref = doc(db, 'tools', tool.id);
+        const snap = await getDoc(ref);
+        if (!mounted) return;
+        if (snap.exists()) {
+          const data = snap.data() as any;
+          if (data && data.unlockCost !== undefined && data.unlockCost !== null) {
+            const parsed = Number(data.unlockCost);
+            if (isFinite(parsed)) setPerToolCost(parsed);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load per-tool unlockCost for', tool.id, e);
+      }
+    };
+    fetchCost();
+    return () => { mounted = false; };
+  }, [tool.id]);
 
   const handleClick = async (e: React.MouseEvent) => {
     if (!isUnlocked && !isAdmin) {
@@ -91,7 +117,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
           {/* Show unlock CTA text to logged-in users who haven't unlocked; for anonymous users show login CTA when exhausted */}
           {currentUser && !isUnlocked && (
             <span className="text-xs text-gray-400">
-              Unlock for 1000 points
+              Unlock for {perToolCost ?? 1000} points
             </span>
           )}
           {!currentUser && !anonAllowed && (
