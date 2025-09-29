@@ -7,7 +7,7 @@ import { tools } from '../tools';
 import { Tool } from '../types';
 
 const USES_TO_UNLOCK = 4;
-const TOOL_UNLOCK_COST = 1000; // points
+const TOOL_UNLOCK_COST = 1000; // default points if tool doc doesn't specify unlockCost
 
 // Initial tools that are automatically unlocked for new users
 const STARTER_TOOLS = {
@@ -320,9 +320,23 @@ export const toolAccessService = {
       }
       
       const currentPoints = userData?.points || 0;
-      const pointsNeeded = TOOL_UNLOCK_COST - currentPoints;
+      // Read per-tool unlock cost from Firestore if present
+      let perToolCost = TOOL_UNLOCK_COST;
+      try {
+        const toolRef = doc(db, 'tools', toolId);
+        const toolDoc = await getDoc(toolRef);
+        const td = toolDoc.exists() ? toolDoc.data() as any : null;
+        if (td && (td.unlockCost !== undefined && td.unlockCost !== null)) {
+          const parsed = Number(td.unlockCost);
+          if (isFinite(parsed) && parsed >= 0) perToolCost = parsed;
+        }
+      } catch (e) {
+        console.warn('Could not read per-tool unlockCost, falling back to default', e);
+      }
+
+      const pointsNeeded = perToolCost - currentPoints;
       
-      if (!userData || currentPoints < TOOL_UNLOCK_COST) {
+  if (!userData || currentPoints < perToolCost) {
         console.log('Insufficient points, creating event...');
         
         // Create an insufficient points event
@@ -333,7 +347,7 @@ export const toolAccessService = {
             title: '⚠️ Not Enough Points',
             message: `You need ${pointsNeeded} more points to unlock this tool!\n\n` +
                     `🔸 Your Balance: ${currentPoints} points\n` +
-                    `🔸 Tool Cost: ${TOOL_UNLOCK_COST} points\n` +
+                `🔸 Tool Cost: ${perToolCost} points\n` +
                     `🔸 Points Needed: ${pointsNeeded} points\n\n` +
                     'Click OK to visit the referral page and earn more points!',
             redirectTo: '/referral'
@@ -346,7 +360,7 @@ export const toolAccessService = {
       }
       
       // Deduct points and unlock tool (only for non-admin users)
-      const newPoints = currentPoints - TOOL_UNLOCK_COST;
+      const newPoints = currentPoints - perToolCost;
       await updateDoc(userRef, {
         points: newPoints
       });
@@ -363,9 +377,9 @@ export const toolAccessService = {
         type: 'success',
         data: {
           title: '🎉 Tool Unlocked Successfully!',
-          message: `You have unlocked ${toolName}!\n${TOOL_UNLOCK_COST} points have been deducted.\nYour new balance: ${newPoints} points\n\nClick below to try your new tool!`,
+          message: `You have unlocked ${toolName}!\n${perToolCost} points have been deducted.\nYour new balance: ${newPoints} points\n\nClick below to try your new tool!`,
           toolId,
-          points: -TOOL_UNLOCK_COST,
+          points: -perToolCost,
           newBalance: newPoints
         },
         createdAt: new Date(),
