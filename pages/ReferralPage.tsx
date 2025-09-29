@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../hooks/useAuth';
 import { getReferralInfo, getReferralUrl } from '../services/referralService';
 import { useCongratulations } from '../hooks/CongratulationsProvider';
@@ -75,6 +77,65 @@ const ReferralPage: React.FC = () => {
 	};
 
 	const openShare = (url: string) => window.open(url, '_blank', 'noopener,noreferrer');
+
+	const navigate = useNavigate();
+
+	const handleBuy = (points: number, price: number) => {
+		// navigate to checkout page for this pack
+		try {
+			navigate(`/buy/${points}-${price}`);
+		} catch (e) {
+			console.log('navigate error', e);
+			// fallback: alert
+			try { alert(`Proceed to buy ${points} for ${price}`); } catch {}
+		}
+	};
+
+	// Theme-aware avatar colors
+	const { theme } = useTheme();
+
+	// Helper to create rgba from hex (for ring/background with alpha)
+	const hexToRgba = (hex: string, alpha = 0.15) => {
+		const clean = hex.replace('#', '');
+		const bigint = parseInt(clean, 16);
+		const r = (bigint >> 16) & 255;
+		const g = (bigint >> 8) & 255;
+		const b = bigint & 255;
+		return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+	};
+
+	// Helper to compute relative luminance (used to pick readable text colors)
+	const hexToLuminance = (hex: string) => {
+		try {
+			const clean = hex.replace('#', '');
+			const bigint = parseInt(clean, 16);
+			const r = (bigint >> 16) & 255;
+			const g = (bigint >> 8) & 255;
+			const b = bigint & 255;
+			const srgb = [r, g, b].map((v) => {
+				const c = v / 255;
+				return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+			});
+			return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+		} catch (e) {
+			return 0;
+		}
+	};
+
+	// Choose a readable text color for buttons that use the theme accent as background
+	const accentLum = hexToLuminance(theme.colors.accent);
+	const buyButtonTextColor = accentLum > 0.6 ? '#111827' : '#ffffff';
+
+	const avatarCombos = [
+		{ key: 'a', color: theme.colors.accent },
+		{ key: 'b', color: theme.colors.primary },
+		{ key: 'c', color: theme.colors.secondary },
+		{ key: 'd', color: theme.colors.light },
+		{ key: 'e', color: '#FFB86B' },
+		{ key: 'f', color: '#8BE9FD' },
+		{ key: 'g', color: '#FFD1DC' },
+		{ key: 'h', color: '#C8FACC' },
+	];
 
 	const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
 	const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
@@ -179,34 +240,67 @@ const ReferralPage: React.FC = () => {
 					</div>
 				</div>
 
-				{/* Share Your Link */}
-				<div className="bg-secondary p-6 rounded-lg">
-					<h2 className="text-xl font-semibold mb-4">Share Your Referral Link</h2>
-					<div className="flex flex-col md:flex-row gap-4">
-						<input
-							type="text"
-							readOnly
-							value={shareUrl}
-							className="flex-1 bg-gray-700 rounded px-4 py-2 font-mono text-sm"
-						/>
-						<div className="flex flex-wrap gap-2">
-							<button onClick={handleWebShare} className="bg-primary/90 text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors flex items-center gap-2">
-								<UserPlusIcon className="w-5 h-5" /> Share
-							</button>
-							<button onClick={() => openShare(whatsappUrl)} className="bg-green-600/90 text-white px-3 py-2 rounded hover:opacity-90 transition">WhatsApp</button>
-							<button onClick={() => openShare(twitterUrl)} className="bg-sky-600/90 text-white px-3 py-2 rounded hover:opacity-90 transition">X</button>
-							<button onClick={() => openShare(facebookUrl)} className="bg-blue-700/90 text-white px-3 py-2 rounded hover:opacity-90 transition">Facebook</button>
-							<button onClick={() => openShare(mailtoUrl)} className="bg-gray-600/90 text-white px-3 py-2 rounded hover:opacity-90 transition">Email</button>
-							<button
-								onClick={handleCopyLink}
-								className="flex items-center gap-2 bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors"
-							>
-								{copied ? (<><CheckCircleIcon className="w-5 h-5" /> Copied</>) : (<><ShareIcon className="w-5 h-5" /> Copy</>)}
-							</button>
-						</div>
+			{/* Share Your Link */}
+			<div className="bg-secondary p-6 rounded-lg">
+				<h2 className="text-xl font-semibold mb-4">Share Your Referral Link</h2>
+				<div className="flex flex-col md:flex-row gap-4">
+					<input
+						type="text"
+						readOnly
+						value={shareUrl}
+						className="flex-1 bg-gray-700 rounded px-4 py-2 font-mono text-sm"
+					/>
+					<div className="flex flex-wrap gap-2">
+						<button onClick={handleWebShare} className="bg-primary/90 text-white px-4 py-2 rounded hover:bg-primary-dark transition-colors flex items-center gap-2">
+							<UserPlusIcon className="w-5 h-5" /> Share
+						</button>
+						<button onClick={() => openShare(whatsappUrl)} className="bg-green-600/90 text-white px-3 py-2 rounded hover:opacity-90 transition">WhatsApp</button>
+						<button onClick={() => openShare(twitterUrl)} className="bg-sky-600/90 text-white px-3 py-2 rounded hover:opacity-90 transition">X</button>
+						<button onClick={() => openShare(facebookUrl)} className="bg-blue-700/90 text-white px-3 py-2 rounded hover:opacity-90 transition">Facebook</button>
+						<button onClick={() => openShare(mailtoUrl)} className="bg-gray-600/90 text-white px-3 py-2 rounded hover:opacity-90 transition">Email</button>
+						<button
+							onClick={handleCopyLink}
+							className="flex items-center gap-2 bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors"
+						>
+							{copied ? (<><CheckCircleIcon className="w-5 h-5" /> Copied</>) : (<><ShareIcon className="w-5 h-5" /> Copy</>)}
+						</button>
 					</div>
-					<p className="text-xs text-slate-400 mt-2">Tip: A short personal note works best. Try: "This helped me get organized. Join with my link and we both get rewards!"</p>
 				</div>
+				<p className="text-xs text-slate-400 mt-2">Tip: A short personal note works best. Try: "This helped me get organized. Join with my link and we both get rewards!"</p>
+			</div>
+
+			{/* Buy Coins Section */}
+			<div className="p-6 rounded-lg mt-8" style={{ background: `linear-gradient(90deg, ${hexToRgba(theme.colors.primary,0.14)}, ${hexToRgba(theme.colors.secondary,0.06)})`, border: `1px solid ${hexToRgba(theme.colors.accent,0.12)}` }}>
+				<h2 className="text-xl font-semibold mb-4">Buy Coins</h2>
+				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+					{[
+						{ points: 1000, price: 100, img: '/avatars/coin1.svg', comboIdx: 0 },
+						{ points: 2000, price: 200, img: '/avatars/coin2.svg', comboIdx: 1 },
+						{ points: 3000, price: 300, img: '/avatars/coin3.svg', comboIdx: 2 },
+						{ points: 5000, price: 500, img: '/avatars/coin4.svg', comboIdx: 3 },
+						{ points: 10000, price: 1000, img: '/avatars/coin5.svg', comboIdx: 4 },
+						{ points: 20000, price: 2000, img: '/avatars/coin6.svg', comboIdx: 5 },
+						{ points: 50000, price: 5000, img: '/avatars/coin7.svg', comboIdx: 6 },
+						{ points: 100000, price: 10000, img: '/avatars/coin8.svg', comboIdx: 7 },
+					].map(option => {
+						const combo = avatarCombos[option.comboIdx % avatarCombos.length];
+						const bg = hexToRgba(combo.color, 0.12);
+						return (
+							<div key={option.points} className="flex flex-col items-center rounded-lg p-4" style={{ background: hexToRgba(theme.colors.secondary, 0.04), border: `1px solid ${hexToRgba(theme.colors.accent, 0.06)}` }}>
+								<div style={{ background: bg, boxShadow: `0 6px 18px ${hexToRgba(combo.color, 0.06)}` }} className={`w-16 h-16 rounded-full flex items-center justify-center mb-3 overflow-hidden`}> 
+									<img src={option.img} alt={`${option.points} avatar`} className="w-14 h-14 object-contain" />
+								</div>
+								<div className="text-2xl font-bold text-light mb-2">{option.points} points</div>
+								<div className="text-lg text-light mb-4">{option.price} tk</div>
+								<button onClick={() => handleBuy(option.points, option.price)} style={{ background: theme.colors.accent, color: buyButtonTextColor }} className="px-6 py-2 rounded font-semibold transition">
+									Buy
+								</button>
+							</div>
+						);
+					})}
+				</div>
+				<p className="text-xs text-slate-400 mt-2">Buy more coins to unlock more features and rewards!</p>
+			</div>
 
 				{/* Referral History */}
 				{referralInfo.referralHistory.length > 0 && (
