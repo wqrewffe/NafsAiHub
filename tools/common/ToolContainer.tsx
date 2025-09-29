@@ -1,4 +1,6 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import { useToolAccess } from '../../hooks/useToolAccess';
 import { logToolUsage } from '../../services/firebaseService';
@@ -32,6 +34,7 @@ const ToolContainer: React.FC<ToolContainerProps> = ({ toolId, toolName, toolCat
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { currentUser } = useAuth();
   const { canUseAnonymously, recordAnonymousUse } = useToolAccess();
+  const navigate = useNavigate();
   const { checkForAchievements, showCongratulations } = useCongratulations();
 
   const initialOptions = useMemo(() => {
@@ -72,16 +75,11 @@ const ToolContainer: React.FC<ToolContainerProps> = ({ toolId, toolName, toolCat
       setError('Input or an image is required.');
       return;
     }
-    // For anonymous users, ensure they haven't exceeded the per-tool limit
+    // Require login for all tool usage. If not logged in, redirect to login.
     if (!currentUser) {
-      try {
-        if (!canUseAnonymously(toolId)) {
-          setError('Please create an account or log in to continue using tools after 2 free uses.');
-          return;
-        }
-      } catch (e) {
-        console.error('Error checking anonymous usage:', e);
-      }
+  toast("Please login or create an account to use tools", { icon: 'ℹ️', duration: 4000 });
+      navigate('/login');
+      return;
     }
     setError('');
     setLoading(true);
@@ -90,14 +88,7 @@ const ToolContainer: React.FC<ToolContainerProps> = ({ toolId, toolName, toolCat
     try {
       const result = await onGenerate({ prompt, options, image: image ? { mimeType: image.type, data: image.base64 } : undefined });
       setOutput(result);
-      // If anonymous user, record local usage count
-      if (!currentUser) {
-        try {
-          recordAnonymousUse(toolId);
-        } catch (e) {
-          console.error('Error recording anonymous use:', e);
-        }
-      }
+      // All usage from anonymous users is blocked earlier; only logged-in users reach here.
       if (currentUser) {
         console.log('[DEBUG] Recording tool usage and unlocking progress');
         
