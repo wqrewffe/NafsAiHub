@@ -207,6 +207,105 @@ export const getUserPoints = async (userId: string): Promise<number> => {
   }
 };
 
+export const deductPointsFromUser = async (adminId: string, userIdOrEmail: string, points: number): Promise<{
+  success: boolean;
+  error?: string;
+  newTotal?: number;
+}> => {
+  try {
+    const isAdmin = await isUserAdmin(adminId);
+    if (!isAdmin) {
+      return { success: false, error: 'Unauthorized: Only admins can deduct points' };
+    }
+
+    const deduction = Math.abs(points);
+    if (!userIdOrEmail || deduction === 0) {
+      return { success: false, error: 'User identifier and a non-zero point value are required.' };
+    }
+
+    let userRef: firebase.firestore.DocumentReference | undefined;
+    let userSnapshot: firebase.firestore.DocumentSnapshot | undefined;
+
+    const byIdRef = db.collection('users').doc(userIdOrEmail);
+    const byIdSnap = await byIdRef.get();
+    if (byIdSnap.exists) {
+      userRef = byIdRef;
+      userSnapshot = byIdSnap;
+    } else if (userIdOrEmail.includes('@')) {
+      const q = await db.collection('users').where('email', '==', userIdOrEmail.toLowerCase()).limit(1).get();
+      if (!q.empty) {
+        userSnapshot = q.docs[0];
+        userRef = userSnapshot.ref;
+      }
+    }
+
+    if (!userRef || !userSnapshot || !userSnapshot.exists) {
+      return { success: false, error: 'User not found' };
+    }
+
+    const targetUserId = userSnapshot.id;
+    const userData: any = userSnapshot.data() || {};
+
+    if (userData?.role === 'admin' || userData?.isAdmin === true) {
+      return { success: false, error: 'Cannot modify points for admin users' };
+    }
+
+    const batch = db.batch();
+    const timestamp = firebase.firestore.Timestamp.now();
+
+    const currentUserPoints = userData?.points || 0;
+    const currentReferralPoints = userData?.referralRewards || 0;
+    const newUserPoints = Math.max(0, currentUserPoints - deduction);
+
+    const historyEntry = {
+      amount: -deduction,
+      source: 'admin',
+      adminId: adminId,
+      timestamp: timestamp,
+      message: 'Points deducted by admin',
+    };
+
+    await notificationService.createPointsNotification(targetUserId, -deduction, 'admin');
+
+    batch.update(userRef, {
+      points: newUserPoints,
+      pointsHistory: firebase.firestore.FieldValue.arrayUnion(historyEntry),
+      lastPointsUpdate: timestamp,
+    });
+
+    const toolAccessRef = db.collection('toolAccess').doc(targetUserId);
+    const toolAccessDoc = await toolAccessRef.get();
+    if (toolAccessDoc.exists) {
+      const toolAccessData = toolAccessDoc.data();
+      const currentToolPoints = toolAccessData?.points || 0;
+      const newToolPoints = Math.max(0, currentToolPoints - deduction);
+      batch.update(toolAccessRef, { points: newToolPoints });
+    }
+
+    await logPointsTransaction(adminId, targetUserId, -deduction, batch);
+    await batch.commit();
+
+    const finalTotalPoints = newUserPoints + currentReferralPoints;
+
+    await db.collection('userEvents').add({
+      userId: targetUserId,
+      type: 'points',
+      data: {
+        points: -deduction,
+        message: `An admin has deducted ${deduction} points. Current total: ${finalTotalPoints} points`,
+      },
+      createdAt: new Date(),
+      read: false,
+    });
+
+    return { success: true, newTotal: finalTotalPoints };
+  } catch (error) {
+    console.error('Error in deductPointsFromUser function:', error);
+    return { success: false, error: 'An internal error occurred while deducting points.' };
+  }
+};
+
+
 /**
  * Deletes a user's data from Firestore collections.
  * @param userId The ID of the user to delete
