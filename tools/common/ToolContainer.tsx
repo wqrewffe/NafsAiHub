@@ -19,7 +19,8 @@ interface ToolContainerProps {
   promptSuggestion?: string;
   optionsConfig?: ToolOptionConfig[];
   onGenerate: (data: { prompt: string; options: Record<string, any>, image?: { mimeType: string, data: string } }) => Promise<string | object>;
-  renderOutput: (output: any, onUpdateOutput?: (output: any) => void) => React.ReactNode;
+  // renderOutput now receives the current options as a third (optional) argument and the raw prompt as a fourth argument.
+  renderOutput: (output: any, onUpdateOutput?: (output: any) => void, options?: Record<string, any>, prompt?: string) => React.ReactNode;
 }
 
 const ToolContainer: React.FC<ToolContainerProps> = ({ toolId, toolName, toolCategory, promptSuggestion, optionsConfig = [], onGenerate, renderOutput }) => {
@@ -257,7 +258,7 @@ const ToolContainer: React.FC<ToolContainerProps> = ({ toolId, toolName, toolCat
         <div className="mt-4">
           <h3 className="text-xl font-bold text-light mb-2">Result</h3>
           <div className="p-4 bg-primary rounded-md border border-slate-700">
-            {renderOutput(output)}
+            {renderOutput(output, undefined, options, prompt)}
           </div>
         </div>
       )}
