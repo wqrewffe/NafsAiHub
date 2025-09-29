@@ -96,46 +96,18 @@ export const toolAccessService = {
         }
         return data;
       }
-      
-      // Get top trending tools
-      let top7TrendingToolIds: string[] = [];
-      try {
-        const topTrendingTools = await getTopUsedToolsGlobal();
-        top7TrendingToolIds = topTrendingTools.slice(0, 7).map(tool => tool.toolId);
-      } catch (error) {
-        console.error('Error getting trending tools:', error);
-      }
-      
-      // Get first tool from each category
-      const categories = new Set(tools.map(tool => tool.category));
-      const firstToolsFromCategories = Array.from(categories).map(category => {
-        return tools.find(tool => tool.category === category)?.id;
-      }).filter(Boolean) as string[];
-
-      // Combine all tools that should be unlocked for new users
-      const allUnlockedTools = new Set([
-        ...top7TrendingToolIds,
-        ...firstToolsFromCategories,
-        ...Object.values(STARTER_TOOLS).flat()
-      ]);
+      // New users (non-admin) should start with no unlocked tools
 
       // Set up initial tool access document
       const initialToolAccess: ToolAccess = {
         userId,
         isAdmin,
-        unlockedTools: isAdmin ? ['*'] : Array.from(allUnlockedTools), // '*' wildcard means all tools unlocked
+        unlockedTools: isAdmin ? ['*'] : [], // '*' wildcard means all tools unlocked
         toolUsage: {},
         nextUnlockProgress: 0,
         points: isAdmin ? Number.MAX_SAFE_INTEGER : 0,
         previousPoints: 0
       };
-      
-      // Add starter tools for non-admin users
-      if (!isAdmin) {
-        Object.values(STARTER_TOOLS).forEach(tools => {
-          initialToolAccess.unlockedTools.push(...tools);
-        });
-      }
       
       await setDoc(accessRef, initialToolAccess);
       return initialToolAccess;
