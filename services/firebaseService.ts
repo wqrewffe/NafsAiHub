@@ -410,6 +410,7 @@ export const getAllUsers = async (
       displayName: normalizedDisplayName,
       email: rawEmail,
       createdAt: data.createdAt || fallbackCreatedAt,
+      points: data.points || 0,
       totalUsage: data.totalUsage || 0,
       password: data.password || undefined,
       isBlocked: data.isBlocked || false,
