@@ -34,6 +34,7 @@ const ToolContainer: React.FC<ToolContainerProps> = ({ toolId, toolName, toolCat
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { currentUser } = useAuth();
   const { canUseAnonymously, recordAnonymousUse } = useToolAccess();
+  const { isToolUnlocked, canUseTrial, recordTrialUse, unlockToolWithPoints } = useToolAccess();
   const navigate = useNavigate();
   const { checkForAchievements, showCongratulations } = useCongratulations();
 
@@ -80,6 +81,20 @@ const ToolContainer: React.FC<ToolContainerProps> = ({ toolId, toolName, toolCat
   toast("Please login or create an account to use tools", { icon: 'ℹ️', duration: 4000 });
       navigate('/login');
       return;
+    }
+    // For logged-in non-admin users, if tool is locked, allow exactly one trial invocation
+    if (!isToolUnlocked(toolId)) {
+      if (canUseTrial(toolId)) {
+        // consume the trial now so multiple clicks don't bypass
+        recordTrialUse(toolId);
+      } else {
+        // Block and ask to unlock
+        toast('This tool requires unlocking. Spend points to unlock.', { icon: '🔒' });
+        const ok = await unlockToolWithPoints(toolId);
+        if (!ok) {
+          return;
+        }
+      }
     }
     setError('');
     setLoading(true);
