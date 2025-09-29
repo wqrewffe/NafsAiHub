@@ -1092,3 +1092,79 @@ export const deleteNote = async (userId: string, noteId: string) => {
   const noteRef = db.collection('users').doc(userId).collection('notes').doc(noteId);
   await noteRef.delete();
 };
+
+// ------------------------------
+// Purchase Requests (Buy Coins) Helpers
+// ------------------------------
+
+export interface PurchaseRequest {
+  id?: string;
+  userId: string;
+  name?: string | null;
+  phone?: string | null;
+  provider?: string | null;
+  transactionId?: string | null;
+  points: number;
+  price: number;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt?: any;
+  approvedBy?: string | null;
+  approvedAt?: any;
+}
+
+export const createPurchaseRequest = async (req: Omit<PurchaseRequest, 'id' | 'createdAt' | 'approvedAt'>) => {
+  const doc = await db.collection('purchaseRequests').add({
+    ...req,
+    status: req.status || 'pending',
+    createdAt: serverTimestamp(),
+  });
+  return doc.id;
+};
+
+export const getPendingPurchaseRequests = async (): Promise<PurchaseRequest[]> => {
+  const snapshot = await db.collection('purchaseRequests').where('status', '==', 'pending').orderBy('createdAt', 'asc').get();
+  return snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) } as PurchaseRequest));
+};
+
+export const approvePurchaseRequest = async (requestId: string, approverId?: string) => {
+  const reqRef = db.collection('purchaseRequests').doc(requestId);
+  try {
+    await db.runTransaction(async (tx) => {
+      const reqSnap = await tx.get(reqRef);
+      if (!reqSnap.exists) throw new Error('Request not found');
+      const data: any = reqSnap.data();
+      if (!data || !data.userId) throw new Error('Invalid request data: missing userId');
+
+      const points = Number(data.points);
+      if (!isFinite(points) || points <= 0) throw new Error(`Invalid points value on request: ${data.points}`);
+
+      const userRef = db.collection('users').doc(data.userId);
+      const userSnap = await tx.get(userRef);
+      if (!userSnap.exists) {
+        throw new Error(`Target user document does not exist: ${data.userId}`);
+      }
+
+      // Use update to perform an increment transform (user doc exists)
+      tx.update(userRef, { points: firebase.firestore.FieldValue.increment(points) });
+
+      // Mark request approved
+      tx.update(reqRef, { status: 'approved', approvedBy: approverId || null, approvedAt: serverTimestamp() });
+    });
+  } catch (err) {
+    console.error('approvePurchaseRequest transaction failed', err);
+    try {
+      // Try to surface common firestore error fields
+      const e: any = err as any;
+      const code = e.code || e.status || (e && e._code) || 'UNKNOWN';
+      const msg = e.message || e.details || String(e);
+      throw new Error(`Firestore transaction failed (${code}): ${msg}`);
+    } catch (re) {
+      throw err;
+    }
+  }
+};
+
+export const rejectPurchaseRequest = async (requestId: string, approverId?: string) => {
+  const reqRef = db.collection('purchaseRequests').doc(requestId);
+  await reqRef.set({ status: 'rejected', approvedBy: approverId || null, approvedAt: serverTimestamp() }, { merge: true });
+};
