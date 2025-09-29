@@ -17,6 +17,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
   const path = tool.path || `/tool/${tool.id}`;
   const { isToolUnlocked, unlockProgress, unlockToolWithPoints, isAdmin } = useToolAccess();
   const { canUseAnonymously } = useToolAccess();
+  const { canUseTrial } = useToolAccess();
   const { currentUser } = useAuth();
   const isUnlocked = isAdmin || isToolUnlocked(tool.id);
   // For anonymous users, compute whether they're allowed to use this tool anymore
@@ -29,6 +30,11 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
     if (!isUnlocked && !isAdmin) {
       // If user is logged in, keep existing unlock flow
       if (currentUser) {
+        // Allow one free trial navigation into the tool if available
+        if (canUseTrial(tool.id)) {
+          // Let navigation proceed to the tool page; trial will be enforced on generate
+          return;
+        }
         e.preventDefault();
         // Try to unlock - will succeed automatically for admins
         const unlocked = await unlockToolWithPoints(tool.id);
