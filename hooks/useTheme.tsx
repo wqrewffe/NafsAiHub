@@ -181,6 +181,37 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       root.style.setProperty('--color-light-rgb', hexToRgb(theme.colors.light));
     } catch {}
 
+    // Compute contrast-aware text colors so some themes don't end up with invisible text
+    const hexToLuminance = (hex: string) => {
+      const clean = hex.replace('#', '');
+      const bigint = parseInt(clean, 16);
+      const r = (bigint >> 16) & 255;
+      const g = (bigint >> 8) & 255;
+      const b = bigint & 255;
+      // convert to sRGB
+      const srgb = [r, g, b].map((v) => {
+        const c = v / 255;
+        return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+      });
+      // relative luminance
+      return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+    };
+
+    // If the primary color is light (high luminance), prefer a dark text color; otherwise prefer theme.light
+    try {
+      const primaryLum = hexToLuminance(theme.colors.primary);
+      const textPrimary = primaryLum > 0.6 ? '#111827' : theme.colors.light; // dark fallback for very light backgrounds
+      const textSecondary = primaryLum > 0.6 ? '#4b5563' : hexToRgb(theme.colors.light) ? theme.colors.light : '#94a3b8';
+      root.style.setProperty('--color-text-primary', textPrimary);
+      // Also set an RGB variant for utilities that use rgb(...) with alpha
+      root.style.setProperty('--color-text-primary-rgb', hexToRgb(textPrimary));
+      root.style.setProperty('--color-text-secondary', textSecondary);
+      // secondary rgb (best-effort)
+      try { root.style.setProperty('--color-text-secondary-rgb', hexToRgb(textSecondary)); } catch {}
+    } catch (e) {
+      // ignore failures
+    }
+
     try {
       localStorage.setItem('app-theme', JSON.stringify(theme));
     } catch (error) {
