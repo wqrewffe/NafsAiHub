@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import ToolContainer from './common/ToolContainer';
 import type { ToolOptionConfig } from '../types';
 import { generateJson, GenAiType } from '../services/geminiService';
@@ -386,7 +388,8 @@ const QuizSessionManager: React.FC<{
     sessionData: Mcq[] | QuizResult;
     onFullRestart: () => void;
     onSaveResult: (result: QuizResult) => void;
-}> = ({ sessionData, onFullRestart, onSaveResult }) => {
+    timePerQuestion?: number | undefined;
+}> = ({ sessionData, onFullRestart, onSaveResult, timePerQuestion }) => {
     const [quizState, setQuizState] = useState<'playing' | 'finished'>(
         isQuizResult(sessionData) ? 'finished' : 'playing'
     );
@@ -428,7 +431,7 @@ const QuizSessionManager: React.FC<{
     };
 
     if (quizState === 'playing') {
-        return <QuizComponent mcqs={mcqsForQuiz} onComplete={handleQuizComplete} />;
+        return <QuizComponent mcqs={mcqsForQuiz} onComplete={handleQuizComplete} timePerQuestion={timePerQuestion} />;
     }
 
     if (quizState === 'finished' && currentResult) {
@@ -443,7 +446,9 @@ const QuizSessionManager: React.FC<{
 export const renderMcqOutput = (
     output: Mcq[] | QuizResult | string,
     onFullRestart: () => void,
-    onSaveResult: (result: QuizResult) => void
+    onSaveResult: (result: QuizResult) => void,
+    options?: Record<string, any>,
+    promptText?: string
 ) => {
     let sessionData: any;
     
@@ -465,12 +470,115 @@ export const renderMcqOutput = (
         return <p className="text-red-400">Could not generate a valid quiz. Please try a different prompt.</p>;
     }
     
+    const timePerQuestion = options?.timePerQuestion ?? undefined;
+
+    const buildPrintableHtml = (mcqsToPrint: Mcq[], includeAnswers = false) => {
+        const title = includeAnswers ? 'MCQs with Answers and Explanations' : 'MCQs';
+        const rows = mcqsToPrint.map((q, idx) => {
+            const optionsHtml = q.options.map((opt, i) => `<li style="margin-bottom:4px;">${String.fromCharCode(65 + i)}. ${opt}</li>`).join('');
+            const answerHtml = includeAnswers ? `<p style="margin:6px 0 0 0;"><strong>Answer:</strong> ${q.correctAnswer}</p><p style="margin:6px 0 0 0;"><strong>Explanation:</strong> ${q.explanation}</p>` : '';
+            return `<div class="mcq-item" style="margin-bottom:18px; word-break:break-word; white-space:pre-wrap;"><h3 style="margin:0 0 6px 0; font-size:15px;">${idx + 1}. ${q.question}</h3><ul style="margin:6px 0 6px 18px;">${optionsHtml}</ul>${answerHtml}</div>`;
+        }).join('\n');
+
+                const optionsSummary = options ? Object.entries(options).map(([k,v]) => `${k}: ${v}`).join(' | ') : '';
+                const headerHtml = `
+                    <div style="margin-bottom:8px;">
+                        <div style="font-weight:700; font-size:18px;">Nafs AI Hub — MCQ Generator</div>
+                        <div style="font-size:12px; color:#334155; margin-top:4px;">${promptText ? `Input: ${promptText}` : ''}</div>
+                        <div style="font-size:12px; color:#475569; margin-top:4px;">${optionsSummary}</div>
+                        <hr style="margin:10px 0 14px 0; border:none; border-top:1px solid #e2e8f0;" />
+                    </div>`;
+
+                return `
+<div class="mcq-print-root" style="padding:24px; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color:#0f172a; max-width:760px;">
+    ${headerHtml}
+    <h1 style="font-size:20px; margin-bottom:12px;">${title}</h1>
+    ${rows}
+</div>`;
+    };
+
+    const downloadAsPdf = async (mcqsToPrint: Mcq[], includeAnswers = false) => {
+        const html = buildPrintableHtml(mcqsToPrint, includeAnswers);
+        // create a hidden container in the document
+        const container = document.createElement('div');
+        container.style.position = 'fixed';
+        container.style.left = '-9999px';
+        container.style.top = '0';
+        container.innerHTML = html;
+        document.body.appendChild(container);
+
+        try {
+            // Use html2canvas to capture the container
+            const canvas = await html2canvas(container as HTMLElement, { scale: 2, useCORS: true });
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+
+            // Convert canvas size (px) to PDF points (pt)
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+            const pxPerPt = canvasWidth / pageWidth; // pixels per point
+            const pageHeightPx = Math.floor(pageHeight * pxPerPt);
+
+            let renderedHeight = 0;
+            let pageIndex = 0;
+
+            while (renderedHeight < canvasHeight) {
+                const sliceHeight = Math.min(pageHeightPx, canvasHeight - renderedHeight);
+                // create a temporary canvas to hold the slice
+                const pageCanvas = document.createElement('canvas');
+                pageCanvas.width = canvasWidth;
+                pageCanvas.height = sliceHeight;
+                const pageCtx = pageCanvas.getContext('2d')!;
+                pageCtx.fillStyle = '#ffffff';
+                pageCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+                // draw slice from main canvas
+                pageCtx.drawImage(canvas, 0, renderedHeight, canvasWidth, sliceHeight, 0, 0, canvasWidth, sliceHeight);
+
+                const pageData = pageCanvas.toDataURL('image/png');
+                const imgProps = (pdf as any).getImageProperties(pageData);
+                const imgWidth = pageWidth - 40; // left/right margins (20pt)
+                const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+                if (pageIndex > 0) pdf.addPage();
+                pdf.addImage(pageData, 'PNG', 20, 40, imgWidth, imgHeight);
+
+                // Add footer with page number
+                const footerText = `Page ${pageIndex + 1}`;
+                pdf.setFontSize(10);
+                pdf.setTextColor(100);
+                pdf.text(footerText, pageWidth / 2, pageHeight - 10, { align: 'center' });
+
+                renderedHeight += sliceHeight;
+                pageIndex += 1;
+            }
+
+            pdf.save(includeAnswers ? 'mcqs-with-answers.pdf' : 'mcqs.pdf');
+        } catch (e) {
+            console.error('PDF generation failed', e);
+            alert('Failed to generate PDF. Please try again.');
+        } finally {
+            // clean up
+            document.body.removeChild(container);
+        }
+    };
+
+    const mcqsArray: Mcq[] = isQuizResult(sessionData) ? sessionData.mcqs : sessionData;
+
     return (
-        <QuizSessionManager
-            sessionData={sessionData}
-            onFullRestart={onFullRestart}
-            onSaveResult={onSaveResult}
-        />
+        <div>
+            <div className="flex flex-col sm:flex-row gap-2 mb-3">
+                <button onClick={() => downloadAsPdf(mcqsArray, false)} className="w-full sm:w-auto py-2 px-3 bg-sky-600 text-white rounded-md">Download Questions (PDF)</button>
+                <button onClick={() => downloadAsPdf(mcqsArray, true)} className="w-full sm:w-auto py-2 px-3 bg-green-600 text-white rounded-md">Download with Answers & Explanations (PDF)</button>
+            </div>
+            <QuizSessionManager
+                sessionData={sessionData}
+                onFullRestart={onFullRestart}
+                onSaveResult={onSaveResult}
+                timePerQuestion={timePerQuestion}
+            />
+        </div>
     );
 };
 
@@ -527,12 +635,12 @@ const McqGenerator: React.FC = () => {
             promptSuggestion={currentPromptSuggestion}
             optionsConfig={optionsConfig}
             onGenerate={handleGenerate}
-            renderOutput={(output, onUpdateOutput) => 
+            renderOutput={(output, onUpdateOutput, options) => 
                 renderMcqOutput(output, handleFullRestart, (result) => {
                     if (onUpdateOutput) {
                         onUpdateOutput(result);
                     }
-                })
+                }, options)
             }
         />
     );
