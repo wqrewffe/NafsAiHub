@@ -57,9 +57,13 @@ a:not([class*="text-"]):hover {
 /* Theme-only color enforcement: map common Tailwind slate/white utilities to theme tokens */
 /* Text colors */
 .text-white { color: var(--color-light) !important; }
-.text-slate-200 { color: rgb(var(--color-light-rgb) / 0.95) !important; }
-.text-slate-300 { color: rgb(var(--color-light-rgb) / 0.85) !important; }
-.text-slate-400 { color: rgb(var(--color-light-rgb) / 0.70) !important; }
+/* Use contrast-aware primary text variable so themes with inverted "light" tokens don't hide text */
+.text-light { color: var(--color-text-primary) !important; }
+.text-primary { color: var(--color-primary) !important; }
+.text-accent { color: var(--color-accent) !important; }
+.text-slate-200 { color: rgb(var(--color-text-primary-rgb, var(--color-light-rgb)) / 0.95) !important; }
+.text-slate-300 { color: rgb(var(--color-text-primary-rgb, var(--color-light-rgb)) / 0.85) !important; }
+.text-slate-400 { color: rgb(var(--color-text-primary-rgb, var(--color-light-rgb)) / 0.70) !important; }
 
 /* Border colors */
 .border-slate-600 { border-color: rgb(var(--color-secondary-rgb) / 0.80) !important; }
