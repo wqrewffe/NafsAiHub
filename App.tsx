@@ -25,6 +25,9 @@ import VerifyEmailPage from './pages/VerifyEmailPage';
 import SettingsPage from './pages/SettingsPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import UserHistoryPage from './pages/admin/UserHistoryPage';
+import BuyCheckoutPage from './pages/BuyCheckoutPage';
+import PaymentVerificationPage from './pages/admin/PaymentVerificationPage';
+import ChangeProductPricePage from './pages/admin/ChangeProductPricePage';
 import TodoListPage from './pages/TodoListPage';
 import NoteTakingPage from './pages/NoteTakingPage';
 import ReferralPage from './pages/ReferralPage';
@@ -153,6 +156,10 @@ function App() {
                             element={<PrivateRoute><ReferralPage /></PrivateRoute>} 
                           />
                           <ReactRouterDOM.Route 
+                            path="/buy/:pack"
+                            element={<PrivateRoute><BuyCheckoutPage /></PrivateRoute>}
+                          />
+                          <ReactRouterDOM.Route 
                             path="/todo" 
                             element={<PrivateRoute><TodoListPage /></PrivateRoute>} 
                           />
@@ -194,6 +201,14 @@ function App() {
                           <ReactRouterDOM.Route 
                             path="/admin/user/:userId" 
                             element={<AdminRoute><UserHistoryPage /></AdminRoute>}
+                          />
+                          <ReactRouterDOM.Route 
+                            path="/admin/purchase-requests"
+                            element={<AdminRoute><PaymentVerificationPage /></AdminRoute>}
+                          />
+                          <ReactRouterDOM.Route
+                            path="/admin/change-product-price"
+                            element={<AdminRoute><ChangeProductPricePage /></AdminRoute>}
                           />
                         </ReactRouterDOM.Routes>
                       </Layout>
