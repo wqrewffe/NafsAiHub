@@ -321,32 +321,7 @@ const HomePage: React.FC = () => {
         </div>
       </div>
       
-      {/* How It Works Section */}
-       {!currentUser && (
-         <div className="space-y-8 bg-secondary/50 p-6 sm:p-8 rounded-lg">
-            <div className="text-center">
-                <h2 className="text-3xl font-bold tracking-tight text-light sm:text-4xl">How It Works</h2>
-                <p className="mt-4 text-slate-400">Get results in three simple steps.</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-                <div className="p-4">
-                    <div className="flex items-center justify-center h-12 w-12 rounded-full bg-accent text-primary font-bold text-xl mx-auto mb-4">1</div>
-                    <h3 className="text-lg font-semibold text-light">Create an Account</h3>
-                    <p className="mt-2 text-sm text-slate-400">Sign up for free to unlock all tools and save your work history.</p>
-                </div>
-                 <div className="p-4">
-                    <div className="flex items-center justify-center h-12 w-12 rounded-full bg-accent text-primary font-bold text-xl mx-auto mb-4">2</div>
-                    <h3 className="text-lg font-semibold text-light">Select a Tool</h3>
-                    <p className="mt-2 text-sm text-slate-400">Browse our categorized library or search to find the exact tool you need.</p>
-                </div>
-                 <div className="p-4">
-                    <div className="flex items-center justify-center h-12 w-12 rounded-full bg-accent text-primary font-bold text-xl mx-auto mb-4">3</div>
-                    <h3 className="text-lg font-semibold text-light">Generate & Innovate</h3>
-                    <p className="mt-2 text-sm text-slate-400">Enter your input, get instant AI-powered results, and accelerate your learning.</p>
-                </div>
-            </div>
-          </div>
-        )}
+    {/* How It Works section removed per request */}
 
       {/* Tools Section */}
       <div id="tools" className="space-y-8 scroll-mt-20">
