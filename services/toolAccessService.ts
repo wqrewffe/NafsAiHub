@@ -110,6 +110,23 @@ export const toolAccessService = {
       };
       
       await setDoc(accessRef, initialToolAccess);
+      // Notify brand-new non-admin users about trial rules
+      if (!isAdmin) {
+        try {
+          await notificationService.createNotification(userId, {
+            type: 'milestone',
+            title: 'Welcome! 🎉',
+            message: 'You can try each tool once for free. After your trial, unlock the tool with points to continue using it.',
+            priority: 'high',
+            action: {
+              type: 'navigate',
+              destination: '/home'
+            }
+          });
+        } catch (e) {
+          console.warn('Failed to create welcome/trial notification:', e);
+        }
+      }
       return initialToolAccess;
     } catch (error) {
       console.error('Error in getToolAccess:', error);
@@ -165,64 +182,9 @@ export const toolAccessService = {
         progress: toolAccess.nextUnlockProgress
       });
       
-      // Check if the user has enough uses to unlock a new tool
-      if (toolAccess.nextUnlockProgress >= USES_TO_UNLOCK) {
-        console.log('[DEBUG] Progress threshold reached, fetching top tools');
-        
-        // Get most used tool that isn't already unlocked
-        console.log('[DEBUG] Fetching top tools...');
-        const topTools = await getTopUsedToolsGlobal();
-        console.log('[DEBUG] Top tools:', {
-          count: topTools.length,
-          tools: topTools.map(t => ({
-            id: t.toolId,
-            name: t.toolName,
-            category: t.category,
-            useCount: t.useCount
-          }))
-        });
-        
-        // Check if user already has all tools
-        const userUnlockedSet = new Set(toolAccess.unlockedTools || []);
-        console.log('[DEBUG] User unlocked tools:', {
-          count: userUnlockedSet.size,
-          tools: Array.from(userUnlockedSet)
-        });
-        
-        const availableTool = topTools.find(tool => !userUnlockedSet.has(tool.toolId));
-        console.log('[DEBUG] Available tool to unlock:', availableTool ? {
-          id: availableTool.toolId,
-          name: availableTool.toolName,
-          category: availableTool.category
-        } : 'No tools available');
-        
-        if (availableTool) {
-          unlockedToolId = availableTool.toolId;
-          toolAccess.unlockedTools.push(unlockedToolId);
-          toolAccess.nextUnlockProgress = 0;
-
-          console.log('[DEBUG] Unlocking tool:', {
-            toolId: unlockedToolId,
-            toolName: availableTool.toolName,
-            totalUnlocked: toolAccess.unlockedTools.length
-          });
-
-          // Notify user of the free unlocked tool with celebratory emoji
-          await notificationService.createNotification(userId, {
-            type: 'milestone',
-            title: '🎁 Tool Unlocked by Usage!',
-            message: `Congratulations! You've earned ${availableTool.toolName} for free through frequent usage!`,
-            priority: 'high',
-            action: {
-              type: 'try_tool',
-              toolId: unlockedToolId
-            }
-          });
-        }
-      } else {
-        toolAccess.nextUnlockProgress++;
-        console.log('[DEBUG] Incremented progress:', toolAccess.nextUnlockProgress);
-      }
+      // No auto-unlock by usage anymore; just track progress counter
+      toolAccess.nextUnlockProgress = (toolAccess.nextUnlockProgress || 0) + 1;
+      console.log('[DEBUG] Incremented progress (no auto-unlock):', toolAccess.nextUnlockProgress);
       
       console.log('[DEBUG] Updating Firestore with:', {
         toolUsage: toolAccess.toolUsage[toolId],
