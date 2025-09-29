@@ -90,43 +90,17 @@ const ToolContainer: React.FC<ToolContainerProps> = ({ toolId, toolName, toolCat
       setOutput(result);
       // All usage from anonymous users is blocked earlier; only logged-in users reach here.
       if (currentUser) {
-        console.log('[DEBUG] Recording tool usage and unlocking progress');
-        
-        // Record the tool usage in history
+        // Record the tool usage in history. We no longer auto-unlock tools based on repeated usage.
+        console.log('[DEBUG] Recording tool usage (unlock-by-usage removed)');
         await logToolUsage(
           currentUser.uid,
           { id: toolId, name: toolName, category: toolCategory },
           prompt,
           typeof result === 'string' ? result : JSON.stringify(result, null, 2)
         );
-        
-        // Record the tool use for unlocking progress
-        const { unlockedToolId, currentProgress } = await toolAccessService.recordToolUse(currentUser.uid, toolId);
-        
-        console.log('[DEBUG] Tool usage recorded:', {
-          toolId,
-          currentProgress,
-          unlockedToolId: unlockedToolId || 'none'
-        });
 
-        if (unlockedToolId) {
-          // Show congratulations modal immediately for the unlocked tool
-          const unlockedTool = tools.find(t => t.id === unlockedToolId);
-          checkForAchievements(); // This will trigger the notification
-          if (unlockedTool) {
-            showCongratulations('success', {
-              title: '🎁 New Tool Unlocked!',
-              message: `You've unlocked ${unlockedTool.name}!`,
-              toolId: unlockedToolId,
-              redirectTo: `/tool/${unlockedToolId}`
-            });
-          }
-        } else {
-          // Check for other achievements after a delay
-          setTimeout(() => {
-            checkForAchievements();
-          }, 1000);
-        }
+        // Keep triggering achievement checks (if any) but do not manage unlocks here.
+        checkForAchievements();
       }
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred.');
