@@ -6,7 +6,7 @@ import { notificationService } from './notificationService';
 import { tools } from '../tools';
 import { Tool } from '../types';
 
-const USES_TO_UNLOCK = 100000;
+const USES_TO_UNLOCK = 40000000;
 const TOOL_UNLOCK_COST = 1000; // points
 
 // Initial tools that are automatically unlocked for new users
@@ -427,4 +427,3 @@ export const toolAccessService = {
     }
   }
 };
-
