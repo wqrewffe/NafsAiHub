@@ -16,6 +16,7 @@ import ProfilePage from './pages/ProfilePage';
 import { Routes, Route } from 'react-router-dom';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
+import { Toaster } from 'react-hot-toast';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 const TrainerApp = React.lazy(() => import('./TRAINER/trainerExport'));
 const DevToolboxApp = React.lazy(() => import('./dev-toolbox/App'));
@@ -199,6 +200,8 @@ function App() {
                     }
                   />
                 </ReactRouterDOM.Routes>
+                {/* Global Toaster for react-hot-toast */}
+                <Toaster position="top-right" />
                 {/* CongratulationsModal is rendered by the CongratulationsProvider */}
               </ReactRouterDOM.HashRouter>
             </ToolAccessProvider>
