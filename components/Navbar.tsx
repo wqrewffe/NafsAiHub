@@ -298,6 +298,53 @@ const Navbar: React.FC = () => {
             >
               Naf's AI Hub
             </Link>
+
+            {/* Mobile quick actions: show Login/Sign Up when logged out, or profile avatar when logged in */}
+            <div className="md:hidden ml-3 flex items-center gap-2">
+              {currentUser ? (
+                <Link
+                  to={currentUser ? `/profile/${currentUser.displayName}-${currentUser.uid}` : '/profile'}
+                  onClick={closeMobileMenu}
+                  className="flex items-center space-x-2 text-slate-300 hover:bg-slate-700 hover:text-white px-2 py-1 rounded-md text-sm font-medium"
+                  title="Profile"
+                >
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-primary">
+                    {profile?.avatarUrl ? (
+                      <img
+                        key={profile.avatarUrl}
+                        src={profile.avatarUrl.startsWith('/') ? profile.avatarUrl : `/avatars/${profile.avatarUrl}`}
+                        alt={profile.displayName}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.style.display = 'none'; }}
+                      />
+                    ) : currentUser?.photoURL ? (
+                      <img src={currentUser.photoURL} alt={currentUser.displayName || 'User'} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-primary flex items-center justify-center text-white text-sm">
+                        {(profile?.displayName?.[0] || currentUser?.displayName?.[0] || currentUser?.email?.[0] || '?').toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    onClick={closeMobileMenu}
+                    className="text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-1 rounded-md text-sm font-medium"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/signup"
+                    onClick={closeMobileMenu}
+                    className="bg-sky-500 text-white px-3 py-1 rounded-md text-sm font-medium"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Desktop Menu */}
