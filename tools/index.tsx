@@ -69,11 +69,7 @@ import FlashcardGenerator, { renderFlashcardGeneratorOutput } from './FlashcardG
 import ArrangeQuizCompetition from '../components/ArrangeQuizCompetition';
 import ParticipateQuizCompetition from '../components/ParticipateQuizCompetition';
 import CollaborativeStudyRoom from '../components/CollaborativeStudyRoom';
-import PasswordGenerator from './PasswordGenerator';
-import PhotoResizer from './PhotoResizer';
-import FileConverter from './FileConverter';
-import FileCompressor from './FileCompressor';
-import QRCodeGenerator from './QRCodeGenerator';
+// Utility tools removed: PasswordGenerator, PhotoResizer, FileConverter, FileCompressor, QRCodeGenerator
 
 import AIEthicsAdvisor, { renderAIEthicsAdvisorOutput } from './robotics/AIEthicsAdvisor';
 import RobotSpecGenerator, { renderRobotSpecGeneratorOutput } from './robotics/RobotSpecGenerator';
@@ -102,12 +98,12 @@ import {
 } from './Icons';
 
 export const tools: Tool[] = [
-  // Productivity
+  // Productivity -> moved to Toolbox
   {
     id: 'todo-list',
     name: 'Todo List',
     description: 'Organize your tasks with a simple and effective todo list manager.',
-    category: 'Productivity',
+    category: 'Toolbox',
     icon: ClipboardDocumentCheckIcon,
     path: '/todo'
   },
@@ -115,7 +111,7 @@ export const tools: Tool[] = [
     id: 'note-taking',
     name: 'Note Taking',
     description: 'Jot down your thoughts and ideas with a markdown-enabled notes app.',
-    category: 'Productivity',
+    category: 'Toolbox',
     icon: PencilIcon,
     path: '/notes'
   },
@@ -922,85 +918,6 @@ export const tools: Tool[] = [
   renderOutput: (output: any) => <pre className="whitespace-pre-wrap">{typeof output === 'string' ? output : JSON.stringify(output, null, 2)}</pre>
   },
 
-  // Utility (non-AI) - Python-backed tools
-  {
-    id: 'password-generator',
-    name: 'Password Generator',
-    description: 'Generate strong, random passwords with configurable options.',
-    category: 'Utility',
-    icon: KeyIcon,
-    component: PasswordGenerator,
-    promptSuggestion: 'Leave prompt empty. Configure options to generate a password.'
-    ,
-    renderOutput: (output: any) => {
-      if (!output) return <p className="text-slate-400">No output</p>;
-      if (typeof output === 'string') return <pre className="whitespace-pre-wrap">{output}</pre>;
-      if (output.password) return <div className="text-center"><p className="text-2xl font-mono text-light">{output.password}</p></div>;
-      return <pre className="whitespace-pre-wrap">{JSON.stringify(output, null, 2)}</pre>;
-    }
-  },
-  {
-    id: 'photo-resizer',
-    name: 'Photo Resizer',
-    description: 'Resize images (provide base64 image as prompt).',
-    category: 'Utility',
-    icon: ArrowsRightLeftIcon,
-    component: PhotoResizer,
-    promptSuggestion: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==.',
-    renderOutput: (output: any) => {
-      if (!output) return <p className="text-slate-400">No output</p>;
-      if (typeof output === 'string') return <pre className="whitespace-pre-wrap">{output}</pre>;
-      if (output.image_base64) return <div className="text-center"><img src={output.image_base64} alt="resized" className="mx-auto" /></div>;
-      return <pre className="whitespace-pre-wrap">{JSON.stringify(output, null, 2)}</pre>;
-    }
-  },
-  {
-    id: 'file-converter',
-    name: 'File Converter',
-    description: 'Convert plain text into a downloadable PDF.',
-    category: 'Utility',
-    icon: DocumentDuplicateIcon,
-    component: FileConverter,
-    promptSuggestion: 'Paste the text you want converted to PDF.'
-    ,
-    renderOutput: (output: any) => {
-      if (!output) return <p className="text-slate-400">No output</p>;
-      if (typeof output === 'string') return <pre className="whitespace-pre-wrap">{output}</pre>;
-      if (output.pdf_base64) return <a className="text-accent font-semibold" href={output.pdf_base64} target="_blank" rel="noreferrer">Download PDF</a>;
-      return <pre className="whitespace-pre-wrap">{JSON.stringify(output, null, 2)}</pre>;
-    }
-  },
-  {
-    id: 'file-compressor',
-    name: 'File Compressor',
-    description: 'Compress multiple files into a ZIP archive. Prompt must be a JSON array of {name, data_base64}.',
-    category: 'Utility',
-    icon: CubeTransparentIcon,
-    component: FileCompressor,
-    promptSuggestion: '[{"name":"file.txt","data_base64":"data:text/plain;base64,SGVsbG8="}]'
-    ,
-    renderOutput: (output: any) => {
-      if (!output) return <p className="text-slate-400">No output</p>;
-      if (typeof output === 'string') return <pre className="whitespace-pre-wrap">{output}</pre>;
-      if (output.zip_base64) return <a className="text-accent font-semibold" href={output.zip_base64} target="_blank" rel="noreferrer">Download ZIP</a>;
-      return <pre className="whitespace-pre-wrap">{JSON.stringify(output, null, 2)}</pre>;
-    }
-  },
-  {
-    id: 'qrcode-generator',
-    name: 'QR Code Generator',
-    description: 'Generate a QR code image from text.',
-    category: 'Utility',
-    icon: CubeTransparentIcon,
-    component: QRCodeGenerator,
-    promptSuggestion: 'Text or URL to encode into a QR code.'
-    ,
-    renderOutput: (output: any) => {
-      if (!output) return <p className="text-slate-400">No output</p>;
-      if (typeof output === 'string') return <pre className="whitespace-pre-wrap">{output}</pre>;
-      if (output.qrcode_base64) return <div className="text-center"><img src={output.qrcode_base64} alt="qrcode" className="mx-auto" /></div>;
-      return <pre className="whitespace-pre-wrap">{JSON.stringify(output, null, 2)}</pre>;
-    }
-  },
+  // Utility tools removed
 
 ];
