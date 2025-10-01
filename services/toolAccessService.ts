@@ -45,11 +45,7 @@ const STARTER_TOOLS = {
     'character-creator',
     'plot-twist-generator'
   ],
-  'Productivity': [
-    'task-organizer',
-    'time-tracker',
-    'project-planner'
-  ]
+  // 'Productivity' starter tools removed - moved to Toolbox
 };
 
 export interface ToolUsageStats {
