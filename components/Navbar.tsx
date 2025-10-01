@@ -66,7 +66,7 @@ const Navbar: React.FC = () => {
     <>
       {isVerified ? (
         <>
-          {currentUser.email === ADMIN_EMAIL && (
+          {currentUser && currentUser.email === ADMIN_EMAIL && (
             <Link
               onClick={closeMobileMenu}
               to="/admin"
@@ -78,7 +78,7 @@ const Navbar: React.FC = () => {
           <Link
             onClick={closeMobileMenu}
             to={currentUser ? `/profile/${currentUser.displayName}-${currentUser.uid}` : '/profile'}
-            className="flex items-center space-x-2 text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+            className="hidden md:flex items-center space-x-2 text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
           >
             <div 
                 className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-primary"
@@ -299,52 +299,7 @@ const Navbar: React.FC = () => {
               Naf's AI Hub
             </Link>
 
-            {/* Mobile quick actions: show Login/Sign Up when logged out, or profile avatar when logged in */}
-            <div className="md:hidden ml-3 flex items-center gap-2">
-              {currentUser ? (
-                <Link
-                  to={currentUser ? `/profile/${currentUser.displayName}-${currentUser.uid}` : '/profile'}
-                  onClick={closeMobileMenu}
-                  className="flex items-center space-x-2 text-slate-300 hover:bg-slate-700 hover:text-white px-2 py-1 rounded-md text-sm font-medium"
-                  title="Profile"
-                >
-                  <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-primary">
-                    {profile?.avatarUrl ? (
-                      <img
-                        key={profile.avatarUrl}
-                        src={profile.avatarUrl.startsWith('/') ? profile.avatarUrl : `/avatars/${profile.avatarUrl}`}
-                        alt={profile.displayName}
-                        className="w-full h-full object-cover"
-                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.style.display = 'none'; }}
-                      />
-                    ) : currentUser?.photoURL ? (
-                      <img src={currentUser.photoURL} alt={currentUser.displayName || 'User'} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full bg-primary flex items-center justify-center text-white text-sm">
-                        {(profile?.displayName?.[0] || currentUser?.displayName?.[0] || currentUser?.email?.[0] || '?').toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                </Link>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    onClick={closeMobileMenu}
-                    className="text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-1 rounded-md text-sm font-medium"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    to="/signup"
-                    onClick={closeMobileMenu}
-                    className="bg-sky-500 text-white px-3 py-1 rounded-md text-sm font-medium"
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              )}
-            </div>
+            {/* left side: brand only on mobile; quick actions are rendered on the right beside the menu button */}
           </div>
 
           {/* Desktop Menu */}
@@ -371,15 +326,59 @@ const Navbar: React.FC = () => {
             </Link>
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-md text-slate-300 hover:text-white hover:bg-slate-700"
-            >
-              <span className="sr-only">Open main menu</span>
-              {mobileMenuOpen ? <XIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
-            </button>
+          {/* Mobile right-side: if logged in show avatar + menu button, else show Login/Sign Up buttons */}
+          <div className="md:hidden flex items-center gap-2">
+            {currentUser ? (
+              <>
+                <Link
+                  to={currentUser ? `/profile/${currentUser.displayName}-${currentUser.uid}` : '/profile'}
+                  onClick={closeMobileMenu}
+                  className="flex items-center"
+                >
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-primary">
+                    {profile?.avatarUrl ? (
+                      <img
+                        key={profile.avatarUrl}
+                        src={profile.avatarUrl.startsWith('/') ? profile.avatarUrl : `/avatars/${profile.avatarUrl}`}
+                        alt={profile.displayName}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.style.display = 'none'; }}
+                      />
+                    ) : currentUser?.photoURL ? (
+                      <img src={currentUser.photoURL} alt={currentUser.displayName || 'User'} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-primary flex items-center justify-center text-white text-sm">
+                        {(profile?.displayName?.[0] || currentUser?.displayName?.[0] || currentUser?.email?.[0] || '?').toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                </Link>
+                <button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="p-2 rounded-md text-slate-300 hover:text-white hover:bg-slate-700"
+                >
+                  <span className="sr-only">Open main menu</span>
+                  {mobileMenuOpen ? <XIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
+                </button>
+              </>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/login"
+                  onClick={closeMobileMenu}
+                  className="text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-1 rounded-md text-sm font-medium"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  onClick={closeMobileMenu}
+                  className="bg-sky-500 text-white px-3 py-1 rounded-md text-sm font-medium"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>
