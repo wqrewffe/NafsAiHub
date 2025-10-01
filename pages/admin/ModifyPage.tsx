@@ -11,6 +11,7 @@ type BannerConfig = {
   textColor: string;
   linkUrl: string;
   openInNewTab: boolean;
+  public?: boolean;
 };
 
 const DEFAULT: BannerConfig = {
@@ -21,6 +22,7 @@ const DEFAULT: BannerConfig = {
   textColor: '#ffe7e6',
   linkUrl: '',
   openInNewTab: true,
+  public: true,
 };
 
 const STORAGE_KEY = 'nafs_admin_banner_config_v1';
@@ -108,6 +110,10 @@ const ModifyPage: React.FC = () => {
             <div className="mt-6 flex gap-3">
               <button onClick={save} className="px-4 py-2 bg-sky-600 rounded text-white">Save</button>
               <button onClick={reset} className="px-4 py-2 bg-gray-600 rounded text-white">Reset</button>
+            </div>
+            <div className="mt-4">
+              <label className="mr-2">Make banner public (visible to all users)</label>
+              <input type="checkbox" checked={!!cfg.public} onChange={(e) => setCfg({ ...cfg, public: e.target.checked })} />
             </div>
           </div>
 
