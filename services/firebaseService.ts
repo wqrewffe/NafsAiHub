@@ -1126,6 +1126,29 @@ export const getPendingPurchaseRequests = async (): Promise<PurchaseRequest[]> =
   return snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) } as PurchaseRequest));
 };
 
+// Real-time listener for pending purchase requests.
+// Returns an unsubscribe function. The callback receives a deduplicated array of PurchaseRequest.
+export const listenPendingPurchaseRequests = (onUpdate: (reqs: PurchaseRequest[]) => void, onError?: (err: any) => void) => {
+  try {
+    const q = db.collection('purchaseRequests').where('status', '==', 'pending').orderBy('createdAt', 'asc');
+    const unsubscribe = q.onSnapshot((snapshot) => {
+      const items = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) } as PurchaseRequest));
+      // Deduplicate by id to be extra-safe against duplicate events
+      const map = new Map<string, PurchaseRequest>();
+      items.forEach(i => { if (i.id) map.set(i.id, i); });
+      onUpdate(Array.from(map.values()));
+    }, (err) => {
+      console.error('listenPendingPurchaseRequests error', err);
+      if (onError) onError(err);
+    });
+    return unsubscribe;
+  } catch (err) {
+    console.error('listenPendingPurchaseRequests failed to initialize', err);
+    if (onError) onError(err);
+    return () => {};
+  }
+};
+
 export const approvePurchaseRequest = async (requestId: string, approverId?: string) => {
   const reqRef = db.collection('purchaseRequests').doc(requestId);
   try {
