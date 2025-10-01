@@ -44,10 +44,7 @@ const HomePage: React.FC = () => {
     return new Map(tools.map(tool => [tool.id, tool]));
   }, []);
   
-  const productivityTools = useMemo(() => {
-      const toolIds = ['flashcard-generator', 'todo-list', 'note-taking'];
-      return toolIds.map(id => tools.find(tool => tool.id === id)).filter((t): t is Tool => !!t);
-  }, []);
+  // Productivity category removed: productivity tools are now part of the Toolbox
 
 
   useEffect(() => {
@@ -209,9 +206,9 @@ const HomePage: React.FC = () => {
       'Robotics & AI': { icon: CpuChipIcon, count: 0 },
       'GameDev': { icon: LightBulbIcon, count: 0 },
       'Games & Entertainment': { icon: RocketLaunchIcon, count: 0 },
-  'Productivity': { icon: ClipboardDocumentCheckIcon, count: 0 },
+  // 'Productivity' removed
   'Online': { icon: GlobeAltIcon, count: 0 },
-  'Utility': { icon: KeyIcon, count: 0 },
+  // 'Utility' removed
   'Trainer': { icon: BoltIcon, count: 12 },
     };
 
@@ -427,18 +424,7 @@ const HomePage: React.FC = () => {
         )}
       </div>
       
-      {/* NEW Productivity Hub Section */}
-      <div className="space-y-8">
-        <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-light sm:text-4xl">Productivity Hub</h2>
-            <p className="mt-4 text-slate-400">Quick tools to boost your workflow.</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {productivityTools.map(tool => (
-                <ToolCard key={tool.id} tool={tool} />
-            ))}
-        </div>
-      </div>
+    {/* Productivity Hub removed - productivity tools moved into Toolbox */}
 
       {/* Why Us Section */}
       <div className="space-y-8">
