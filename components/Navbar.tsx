@@ -61,6 +61,29 @@ const Navbar: React.FC = () => {
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
+  // Load optional admin banner configuration from localStorage (prototype)
+  const [bannerCfg, setBannerCfg] = useState<null | {
+    visible: boolean;
+    text: string;
+    imageUrl: string;
+    bgColor: string;
+    textColor: string;
+    linkUrl: string;
+    openInNewTab: boolean;
+  }>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('nafs_admin_banner_config_v1');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setBannerCfg(parsed);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
   // NavLinks (no To-do & Notes here)
   const navLinks = (
     <>
@@ -288,23 +311,60 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="bg-secondary shadow-lg sticky top-0 z-50">
-      {/* Palestine support banner - small, elegant, and responsive */}
-      <div className="palestine-banner" role="region" aria-label="Stand with Palestine banner">
-        <span className="palestine-flag" aria-hidden>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 36" className="palestine-flag-svg" role="img" aria-label="Palestinian flag">
-            <defs>
-              <clipPath id="pflag-clip"><rect width="60" height="36" rx="2" ry="2"/></clipPath>
-            </defs>
-            <g clipPath="url(#pflag-clip)">
-              <rect width="60" height="12" y="0" fill="#000" />
-              <rect width="60" height="12" y="12" fill="#fff" />
-              <rect width="60" height="12" y="24" fill="#007a3d" />
-              <polygon points="0,0 24,18 0,36" fill="#ce1126" />
-            </g>
-          </svg>
-        </span>
-        <span className="palestine-text">Stand with Palestine</span>
-      </div>
+      {/* Top banner: can be overridden by admin config saved in localStorage */}
+      {bannerCfg ? (
+        bannerCfg.visible && (
+          <div
+            className="palestine-banner"
+            role="region"
+            aria-label={bannerCfg.text || 'Top banner'}
+            style={{ background: bannerCfg.bgColor || 'transparent', color: bannerCfg.textColor || undefined }}
+          >
+            {bannerCfg.imageUrl ? (
+              // eslint-disable-next-line jsx-a11y/alt-text
+              <img src={bannerCfg.imageUrl} className="palestine-flag-svg" style={{ width: 38, height: 23, borderRadius: 3 }} />
+            ) : (
+              <span className="palestine-flag" aria-hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 36" className="palestine-flag-svg" role="img" aria-label="Palestinian flag">
+                  <defs>
+                    <clipPath id="pflag-clip"><rect width="60" height="36" rx="2" ry="2"/></clipPath>
+                  </defs>
+                  <g clipPath="url(#pflag-clip)">
+                    <rect width="60" height="12" y="0" fill="#000" />
+                    <rect width="60" height="12" y="12" fill="#fff" />
+                    <rect width="60" height="12" y="24" fill="#007a3d" />
+                    <polygon points="0,0 24,18 0,36" fill="#ce1126" />
+                  </g>
+                </svg>
+              </span>
+            )}
+
+            {bannerCfg.linkUrl ? (
+              <a href={bannerCfg.linkUrl} target={bannerCfg.openInNewTab ? '_blank' : '_self'} rel="noreferrer" className="palestine-text" style={{ color: bannerCfg.textColor }}>{bannerCfg.text}</a>
+            ) : (
+              <span className="palestine-text" style={{ color: bannerCfg.textColor }}>{bannerCfg.text}</span>
+            )}
+          </div>
+        )
+      ) : (
+        /* Default static banner shown when no admin config exists */
+        <div className="palestine-banner" role="region" aria-label="Stand with Palestine banner">
+          <span className="palestine-flag" aria-hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 36" className="palestine-flag-svg" role="img" aria-label="Palestinian flag">
+              <defs>
+                <clipPath id="pflag-clip"><rect width="60" height="36" rx="2" ry="2"/></clipPath>
+              </defs>
+              <g clipPath="url(#pflag-clip)">
+                <rect width="60" height="12" y="0" fill="#000" />
+                <rect width="60" height="12" y="12" fill="#fff" />
+                <rect width="60" height="12" y="24" fill="#007a3d" />
+                <polygon points="0,0 24,18 0,36" fill="#ce1126" />
+              </g>
+            </svg>
+          </span>
+          <span className="palestine-text">Stand with Palestine</span>
+        </div>
+      )}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
