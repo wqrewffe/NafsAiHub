@@ -25,6 +25,7 @@ import VerifyEmailPage from './pages/VerifyEmailPage';
 import SettingsPage from './pages/SettingsPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import UserHistoryPage from './pages/admin/UserHistoryPage';
+import ModifyPage from './pages/admin/ModifyPage';
 import BuyCheckoutPage from './pages/BuyCheckoutPage';
 import PaymentVerificationPage from './pages/admin/PaymentVerificationPage';
 import ChangeProductPricePage from './pages/admin/ChangeProductPricePage';
@@ -197,6 +198,10 @@ function App() {
                           <ReactRouterDOM.Route 
                             path="/admin" 
                             element={<AdminRoute><AdminDashboardPage /></AdminRoute>}
+                          />
+                          <ReactRouterDOM.Route
+                            path="/modify"
+                            element={<AdminRoute><ModifyPage /></AdminRoute>}
                           />
                           <ReactRouterDOM.Route 
                             path="/admin/user/:userId" 
