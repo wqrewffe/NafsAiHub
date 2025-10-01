@@ -1,17 +1,32 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { getPendingPurchaseRequests, approvePurchaseRequest, rejectPurchaseRequest } from '../../services/firebaseService';
+import { getPendingPurchaseRequests, listenPendingPurchaseRequests, approvePurchaseRequest, rejectPurchaseRequest } from '../../services/firebaseService';
 
 const PaymentVerificationPage: React.FC = () => {
   const { currentUser } = useAuth();
   const [requests, setRequests] = useState<any[]>([]);
 
   useEffect(() => {
-    const load = async () => {
-      const res = await getPendingPurchaseRequests();
+    // Use a real-time listener to keep the admin UI in sync and avoid duplication loops
+    const unsubscribe = listenPendingPurchaseRequests((res) => {
       setRequests(res);
+    }, (err) => {
+      console.error('Failed to listen to pending purchase requests:', err);
+    });
+
+    // initial load fallback in case the listener doesn't fire immediately
+    (async () => {
+      try {
+        const res = await getPendingPurchaseRequests();
+        setRequests(res);
+      } catch (e) {
+        console.error('Initial load pending requests failed', e);
+      }
+    })();
+
+    return () => {
+      try { unsubscribe && unsubscribe(); } catch {}
     };
-    load();
   }, []);
 
   if (!currentUser || currentUser.email !== 'nafisabdullah424@gmail.com') {
@@ -24,6 +39,7 @@ const PaymentVerificationPage: React.FC = () => {
     if (!ok) return;
     try {
       await approvePurchaseRequest(r.id, currentUser.uid);
+      // Optimistically remove the request locally. The listener will keep UI in sync.
       setRequests(prev => prev.filter(x => x.id !== r.id));
     } catch (err: any) {
       console.error('approve error', err);
