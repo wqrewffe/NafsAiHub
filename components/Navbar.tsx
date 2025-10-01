@@ -7,6 +7,7 @@ import { useProfile } from '../hooks/useProfile';
 import { auth } from '../firebase/config';
 import { Cog6ToothIcon, ClipboardDocumentCheckIcon, PencilIcon, UserGroupIcon, SparklesIcon } from '../tools/Icons';
 import { ExtendedUser } from '../types/auth';
+import { db } from '../firebase/config';
 import './Navbar.css';
 
 const ADMIN_EMAIL = 'nafisabdullah424@gmail.com';
@@ -83,6 +84,36 @@ const Navbar: React.FC = () => {
       // ignore
     }
   }, []);
+
+  // Subscribe to Firestore admin/bannerConfig so changes are visible to all users.
+  useEffect(() => {
+    let unsub: (() => void) | null = null;
+    try {
+      unsub = db.collection('admin').doc('bannerConfig').onSnapshot((doc) => {
+        const data = doc.exists ? doc.data() : null;
+        if (data) {
+          // If config is meant to be private, only set it for admin users
+          const isPublic = !!data.public;
+          if (isPublic) {
+            setBannerCfg(data as any);
+            localStorage.setItem('nafs_admin_banner_config_v1', JSON.stringify(data));
+          } else {
+            // private: show only to admin
+            if (currentUser && currentUser.email === ADMIN_EMAIL) {
+              setBannerCfg(data as any);
+              localStorage.setItem('nafs_admin_banner_config_v1', JSON.stringify(data));
+            } else {
+              // Clear banner for non-admins
+              setBannerCfg(null);
+            }
+          }
+        }
+      });
+    } catch (e) {
+      // ignore subscription errors
+    }
+    return () => { if (unsub) unsub(); };
+  }, [currentUser]);
 
   // NavLinks (no To-do & Notes here)
   const navLinks = (
