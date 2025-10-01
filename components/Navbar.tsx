@@ -129,7 +129,7 @@ const Navbar: React.FC = () => {
             to="/referral"
             className="text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2"
           >
-            <UserGroupIcon className="h-5 w-5 md:hidden" /> Refer & Earn
+            <UserGroupIcon className="h-5 w-5 md:hidden" /> Earn & Buy
           </Link>
           )}
           {!authSettings.featureFlags?.hideNavbarLeaderboard && (
