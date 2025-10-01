@@ -288,6 +288,23 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="bg-secondary shadow-lg sticky top-0 z-50">
+      {/* Palestine support banner - small, elegant, and responsive */}
+      <div className="palestine-banner" role="region" aria-label="Stand with Palestine banner">
+        <span className="palestine-flag" aria-hidden>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 36" className="palestine-flag-svg" role="img" aria-label="Palestinian flag">
+            <defs>
+              <clipPath id="pflag-clip"><rect width="60" height="36" rx="2" ry="2"/></clipPath>
+            </defs>
+            <g clipPath="url(#pflag-clip)">
+              <rect width="60" height="12" y="0" fill="#000" />
+              <rect width="60" height="12" y="12" fill="#fff" />
+              <rect width="60" height="12" y="24" fill="#007a3d" />
+              <polygon points="0,0 24,18 0,36" fill="#ce1126" />
+            </g>
+          </svg>
+        </span>
+        <span className="palestine-text">Stand with Palestine</span>
+      </div>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
