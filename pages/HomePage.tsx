@@ -18,6 +18,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useEngagement } from '../hooks/useEngagement';
 import { getTopUsedToolsGlobal, getTopUsedToolsForUser } from '../services/firebaseService';
+import { getDashboardStats, getActivityCounts } from '../services/firebaseService';
 import { getTrainerMeta } from '../TRAINER/modes';
 import { toolAccessService } from '../services/toolAccessService';
 import ToolRow from '../components/ToolRow';
@@ -35,7 +36,6 @@ const HomePage: React.FC = () => {
   const [trendingTools, setTrendingTools] = useState<Tool[] | null>(null);
   const [userTopTools, setUserTopTools] = useState<Tool[] | null>(null);
   const [recommendedTools, setRecommendedTools] = useState<Tool[] | null>(null);
-  const [activeUsers, setActiveUsers] = useState<number>(0);
   
   const [loadingTrending, setLoadingTrending] = useState(true);
   const [loadingUser, setLoadingUser] = useState(true);
@@ -250,6 +250,56 @@ const HomePage: React.FC = () => {
     });
   }, [searchTerm, activeCategory]);
 
+  // Group tools by category for per-category showcases
+  const toolsByCategory = useMemo(() => {
+    const map = new Map<string, Tool[]>();
+    tools.forEach(t => {
+      const key = t.category || 'Other';
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(t);
+    });
+    // Sort categories alphabetically but put Trainer and Toolbox first
+    const ordered = Array.from(map.entries()).sort((a, b) => {
+      const special = ['Trainer', 'Toolbox'];
+      const ai = special.indexOf(a[0]) !== -1;
+      const bi = special.indexOf(b[0]) !== -1;
+      if (ai && !bi) return -1;
+      if (!ai && bi) return 1;
+      return a[0].localeCompare(b[0]);
+    });
+    // Limit to 12 tools per category for the showcase
+    return ordered.map(([category, list]) => ({ category, tools: list.slice(0, 12) }));
+  }, []);
+
+  // Site-wide stats
+  const [dashboardStats, setDashboardStats] = useState<{ totalUsers: number; totalUsage: number; newUsers7Days?: number; newUsers30Days?: number } | null>(null);
+  const [totalEvents, setTotalEvents] = useState<number | null>(null);
+  const [activeUsers, setActiveUsers] = useState<number | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchStats = async () => {
+      try {
+        const ds = await getDashboardStats();
+        if (!mounted) return;
+        setDashboardStats({ totalUsers: ds.totalUsers, totalUsage: ds.totalUsage, newUsers7Days: ds.newUsers7Days, newUsers30Days: ds.newUsers30Days });
+
+        const allCounts = await getActivityCounts('all');
+        if (!mounted) return;
+        setTotalEvents(allCounts.events);
+
+        const onlineCounts = await getActivityCounts('online');
+        if (!mounted) return;
+        setActiveUsers(onlineCounts.uniqueUsers || 0);
+      } catch (err) {
+        console.error('Failed to load dashboard stats', err);
+      }
+    };
+
+    fetchStats();
+    return () => { mounted = false; };
+  }, []);
+
   return (
     <div className="space-y-16">
       {/* Hero Section */}
@@ -413,6 +463,59 @@ const HomePage: React.FC = () => {
             </div>
           </>
         )}
+      </div>
+
+      {/* Site stats */}
+      <div className="space-y-10">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold tracking-tight text-light sm:text-4xl">Site Statistics</h2>
+          <p className="mt-2 text-slate-400">Quick overview of site activity.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-secondary p-6 rounded-lg text-center">
+            <h3 className="text-sm text-slate-400">Total Users</h3>
+            <p className="mt-2 text-2xl font-bold text-light">{dashboardStats ? dashboardStats.totalUsers.toLocaleString() : '—'}</p>
+            <p className="mt-1 text-xs text-slate-400">New in 7 days: {dashboardStats?.newUsers7Days ?? '—'}</p>
+          </div>
+
+          <div className="bg-secondary p-6 rounded-lg text-center">
+            <h3 className="text-sm text-slate-400">Total Tool Uses</h3>
+            <p className="mt-2 text-2xl font-bold text-light">{dashboardStats ? dashboardStats.totalUsage.toLocaleString() : '—'}</p>
+            <p className="mt-1 text-xs text-slate-400">Avg tools/user: {dashboardStats && dashboardStats.totalUsers ? Math.round((dashboardStats.totalUsage || 0) / Math.max(1, dashboardStats.totalUsers)) : '—'}</p>
+          </div>
+
+          <div className="bg-secondary p-6 rounded-lg text-center">
+            <h3 className="text-sm text-slate-400">Total Events</h3>
+            <p className="mt-2 text-2xl font-bold text-light">{totalEvents !== null ? totalEvents.toLocaleString() : '—'}</p>
+            <p className="mt-1 text-xs text-slate-400">(Global activity/events recorded)</p>
+          </div>
+
+          <div className="bg-secondary p-6 rounded-lg text-center">
+            <h3 className="text-sm text-slate-400">Active Users</h3>
+            <p className="mt-2 text-2xl font-bold text-light">{activeUsers !== null ? activeUsers.toLocaleString() : '—'}</p>
+            <p className="mt-1 text-xs text-slate-400">Users active in the last 5 minutes</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Per-category showcases - horizontal scrollers for each category */}
+      <div className="space-y-10">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold tracking-tight text-light sm:text-4xl">Browse By Category</h2>
+          <p className="mt-2 text-slate-400">Quick previews of tools in each category. Swipe or scroll horizontally to explore.</p>
+        </div>
+        <div className="space-y-8">
+          {toolsByCategory.map(cat => (
+            <div key={cat.category} className="px-2">
+              <ToolRow
+                title={cat.category}
+                tools={cat.tools}
+                loading={false}
+                emptyMessage={`No tools available for ${cat.category}.`}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
