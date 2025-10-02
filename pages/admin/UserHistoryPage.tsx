@@ -73,6 +73,7 @@ const UserHistoryPage: React.FC = () => {
                 ) : error ? (
                     <p className="text-red-400">{error}</p>
                 ) : history.length > 0 ? (
+                    <div className="max-h-96 overflow-y-auto pr-2 hide-scrollbar">
                     <ul className="space-y-2">
                         {history.map(item => {
                             const tool = toolsById.get(item.toolId);
@@ -108,6 +109,7 @@ const UserHistoryPage: React.FC = () => {
                             );
                         })}
                     </ul>
+                    </div>
                 ) : (
                     <p className="text-slate-400 text-center py-4">This user has no tool usage history.</p>
                 )}
