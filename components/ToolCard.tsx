@@ -126,7 +126,7 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
             </span>
           )}
         </div>
-        {/* Only show progress to logged-in users */}
+  {/* Only show progress to logged-in users */}
         {currentUser && !isUnlocked && unlockProgress > 0 && (
           <div className="mt-2">
             <div className="w-full bg-gray-700 rounded-full h-1.5">
@@ -140,6 +140,36 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
             </p>
           </div>
         )}
+        <div className="mt-3 flex items-center justify-end gap-2">
+          {['General', 'High School', 'Medical', 'Programming', 'Games & Entertainment', 'Robotics & AI', 'GameDev'].includes(tool.category) && (
+            <button
+              onClick={async (e) => {
+                e.preventDefault();
+                try {
+                  const toolPath = `${window.location.origin}/#${`/tool/${tool.id}`}`;
+                  const shareText = `${tool.name} - ${toolPath}`;
+                  if (navigator.share) {
+                    await navigator.share({ title: tool.name, text: shareText, url: toolPath });
+                  } else {
+                    await navigator.clipboard.writeText(toolPath);
+                    toast('Tool link copied to clipboard');
+                  }
+                } catch (err) {
+                  console.error('Share failed', err);
+                  toast.error('Failed to copy link');
+                }
+              }}
+              aria-label="Share Tool"
+              title="Share Tool"
+              className="p-2 bg-primary/80 border border-slate-700 rounded text-sm hover:bg-accent transition flex items-center justify-center"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.2" className="text-slate-400/70" />
+                <path d="M8 12l4-4 4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="text-accent" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
     </ReactRouterDOM.Link>
   );
