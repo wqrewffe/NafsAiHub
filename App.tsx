@@ -38,6 +38,7 @@ import PoliciesPage from './pages/PoliciesPage';
 import SupportPage from './pages/SupportPage';
 import ContactPage from './pages/ContactPage';
 import HelpChatPage from './pages/HelpChatPage';
+import SharedOutputPage from './pages/SharedOutputPage';
 import CongratulationsModal from './components/CongratulationsModal';
 
 // Wrapper to extract :mode param and pass it to TrainerApp
@@ -191,6 +192,10 @@ function App() {
                           <ReactRouterDOM.Route 
                             path="/helpchat" 
                             element={<HelpChatPage />} 
+                          />
+                          <ReactRouterDOM.Route 
+                            path="/shared/:id" 
+                            element={<SharedOutputPage />} 
                           />
                           {/* /toolbox is served by the full-screen dev-toolbox route defined above */}
                           
