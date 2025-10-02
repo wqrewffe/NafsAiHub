@@ -353,6 +353,73 @@ export const getTopUsedToolsForUser = async (userId: string, limit: number = 7) 
   return tools as { toolId: string, count: number, toolName: string }[];
 };
 
+// Create a sharable output entry for a generated tool result.
+export const createSharedOutput = async (
+  userId: string | null,
+  tool: { id: string; name: string; category: string },
+  prompt: string,
+  output: string,
+  options?: Record<string, any>
+) => {
+  try {
+    const payload: any = {
+      userId: userId || null,
+      toolId: tool.id,
+      toolName: tool.name,
+      category: tool.category,
+      prompt: prompt || null,
+      output: output || null,
+      options: options || null,
+      createdAt: serverTimestamp(),
+    };
+
+    // Generate a friendly path and short id to allow prettier share URLs.
+    // Format: shared/tools-name-sharing-users-name-uid-<10char>
+    const slugify = (s: string) => s
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 40);
+
+    const randSuffix = () => {
+      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      let out = '';
+      for (let i = 0; i < 10; i++) out += chars[Math.floor(Math.random() * chars.length)];
+      return out;
+    };
+
+    const userDoc = userId ? await db.collection('users').doc(userId).get() : null;
+    const userName = userDoc && userDoc.exists ? (userDoc.data() as any).displayName || userId : userId || 'anon';
+
+    const friendlyParts = [
+      'shared',
+      `${slugify(tool.name)}-sharing`,
+      `${slugify(String(userName))}-${userId ? String(userId).slice(0, 8) : 'anon'}`,
+      randSuffix()
+    ];
+
+    const friendlyPath = `/${friendlyParts.join('-')}`;
+    const shortId = friendlyParts[friendlyParts.length - 1];
+
+    payload.friendlyPath = friendlyPath;
+    payload.shortId = shortId;
+
+    const docRef = await db.collection('sharedOutputs').add(payload);
+    // Also write a small resolver doc for quick lookups (optional)
+    try {
+      await db.collection('sharedOutputs').doc(docRef.id).set({ friendlyPath, shortId }, { merge: true });
+    } catch (e) {
+      // non-fatal
+      console.warn('Failed to set friendlyPath on sharedOutputs doc', e);
+    }
+
+    return { success: true, id: docRef.id, path: `/shared/${docRef.id}`, friendlyPath };
+  } catch (error) {
+    console.error('Error creating shared output:', error);
+    return { success: false, error };
+  }
+};
+
 // Anonymous IP-based usage helpers
 export const getAnonIpUsage = async (ip: string): Promise<Record<string, number>> => {
   try {
