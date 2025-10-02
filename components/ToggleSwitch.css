@@ -1,16 +1,7 @@
-.toggle {
-  appearance: none;
-  width: 3.5rem;
-  height: 2rem;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  position: relative;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
+.toggle{appearance:none;width:3.5rem;height:2rem;background-color:rgba(var(--theme-text-rgb),0.08);border-radius:999px;position:relative;cursor:pointer;transition:background-color .3s ease}
 
 .toggle:checked {
-  background-color: #3b82f6;
+  background-color: var(--primary);
 }
 
 .toggle:before {
@@ -22,7 +13,7 @@
   width: 1.5rem;
   height: 1.5rem;
   border-radius: 50%;
-  background-color: white;
+  background-color: rgba(var(--theme-text-rgb), 1);
   transition: transform 0.3s ease;
 }
 
@@ -32,5 +23,5 @@
 
 .toggle:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.45);
 }
