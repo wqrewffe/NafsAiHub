@@ -1,63 +1,13 @@
-.notification-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 999999 !important; /* Force highest z-index */
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding-top: 5rem;
-  transition: all 0.3s ease;
-}
-
-.notification-backdrop {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.notification-container {
-  position: relative;
-  width: 100%;
-  max-width: 32rem;
-  margin: 0 1rem;
-  transform-origin: top center;
-  opacity: 0;
-  transform: translateY(-20px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-/* Active states */
-.notification-overlay.active {
-  pointer-events: auto;
-}
-
-.notification-overlay.active .notification-backdrop {
-  opacity: 1;
-}
-
-.notification-overlay.active .notification-container {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.fade-in {
-  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.fade-out {
-  animation: fadeOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.scale-in {
-  animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.scale-out {
-  animation: scaleOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
+.notification-overlay{position:fixed;inset:0;z-index:9999;display:flex;justify-content:center;align-items:flex-start;padding-top:5rem;pointer-events:none}
+.notification-backdrop{position:fixed;inset:0;background:linear-gradient(180deg,rgba(var(--theme-primary-rgb),0.6),rgba(var(--theme-primary-rgb),0.35));backdrop-filter:blur(6px);opacity:0;transition:opacity .24s ease}
+.notification-container{position:relative;width:100%;max-width:520px;margin:0 1rem;transform-origin:top center;opacity:0;transform:translateY(-10px) scale(.995);transition:transform .22s ease,opacity .22s ease}
+.notification-overlay.active{pointer-events:auto}
+.notification-overlay.active .notification-backdrop{opacity:1}
+.notification-overlay.active .notification-container{opacity:1;transform:translateY(0) scale(1)}
+.fade-in{animation:fadeIn .32s cubic-bezier(.2,.8,.2,1) both}
+.fade-out{animation:fadeOut .28s cubic-bezier(.2,.8,.2,1) both}
+.scale-in{animation:scaleIn .28s cubic-bezier(.2,.8,.2,1) both}
+.scale-out{animation:scaleOut .24s cubic-bezier(.2,.8,.2,1) both}
 
 /* Debug styles */
 [data-type="insufficient"] {
@@ -151,9 +101,7 @@
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-.shake {
-  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-}
+.shake{animation:shake .5s cubic-bezier(.36,.07,.19,.97) both}
 
 /* Confetti animation */
 @keyframes ping {
@@ -170,23 +118,9 @@
 }
 
 /* Reward display */
-.points-value {
-  animation: scale-in 0.5s ease-out;
-  color: var(--primary-color);
-  font-weight: bold;
-}
+.points-value{animation:scale-in .5s ease-out;color:var(--primary);font-weight:700}
 
 /* Dark mode adjustments */
-@media (prefers-color-scheme: dark) {
-  .bg-secondary {
-    background-color: rgba(31, 41, 55, 0.95);
-  }
-
-  .text-light {
-    color: rgb(243, 244, 246);
-  }
-
-  .text-slate-300 {
-    color: rgb(203, 213, 225);
-  }
-}
+.bg-secondary{background:var(--surface)}
+.text-light{color:var(--text)}
+.text-slate-300{color:var(--muted-text)}
