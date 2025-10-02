@@ -398,13 +398,10 @@ const Navbar: React.FC = () => {
       )}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
-            <Link
-              to="/"
-              onClick={closeMobileMenu}
-              className="text-accent font-bold text-2xl hover:opacity-80 transition-opacity"
-            >
-              Naf's AI Hub
+          <div className="flex items-center gap-3">
+            <Link to="/" onClick={closeMobileMenu} className="brand flex items-center gap-3">
+              <img src="/fav.png" alt="Naf's AI Hub logo" className="brand-logo" />
+              <span className="brand-title text-accent font-bold text-2xl hover:opacity-80 transition-opacity">Naf's AI Hub</span>
             </Link>
 
             {/* left side: brand only on mobile; quick actions are rendered on the right beside the menu button */}
