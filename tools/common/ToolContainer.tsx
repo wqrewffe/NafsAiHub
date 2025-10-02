@@ -7,6 +7,7 @@ import { logToolUsage } from '../../services/firebaseService';
 import { toolAccessService, ToolAccess } from '../../services/toolAccessService';
 import { useCongratulations } from '../../hooks/CongratulationsProvider';
 import { tools } from '../index';
+import { createSharedOutput } from '../../services/firebaseService';
 import Spinner from '../../components/Spinner';
 import type { ToolOptionConfig, ImageFile } from '../../types';
 import { PaperClipIcon, XCircleIcon } from '../Icons';
@@ -236,7 +237,82 @@ const ToolContainer: React.FC<ToolContainerProps> = ({ toolId, toolName, toolCat
 
       {output && (
         <div className="mt-4">
-          <h3 className="text-xl font-bold text-light mb-2">Result</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold text-light mb-2">Result</h3>
+            <div className="flex items-center gap-2">
+              {/* Show share buttons only for specific categories */}
+              {['General', 'High School', 'Medical', 'Programming', 'Games & Entertainment', 'Robotics & AI', 'GameDev'].includes(toolCategory) && (
+                <>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const toolPath = `${window.location.origin}/#${`/tool/${toolId}`}`;
+                        const shareText = `${toolName} - ${toolPath}`;
+                        if (navigator.share) {
+                          await navigator.share({ title: toolName, text: shareText, url: toolPath });
+                        } else {
+                          await navigator.clipboard.writeText(toolPath);
+                          toast('Tool link copied to clipboard');
+                        }
+                      } catch (e) {
+                        console.error('Share tool failed', e);
+                        toast.error('Could not share tool link');
+                      }
+                    }}
+                    aria-label="Share Tool"
+                    title="Share Tool"
+                    className="p-2 bg-primary/80 border border-slate-700 rounded text-sm hover:bg-accent transition flex items-center justify-center"
+                  >
+                    {/* Small unique logo for sharing - circle + arrow */}
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-slate-200">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.2" className="text-slate-400/70" />
+                      <path d="M8 12l4-4 4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="text-accent" />
+                    </svg>
+                  </button>
+
+                  <button
+                    onClick={async () => {
+                      try {
+                        const structuredOutput = typeof output === 'string' ? null : output;
+                        const rawOutput = typeof output === 'string' ? output : JSON.stringify(output);
+                        const res = await createSharedOutput(
+                          currentUser ? currentUser.uid : null,
+                          { id: toolId, name: toolName, category: toolCategory },
+                          prompt,
+                          rawOutput,
+                          options
+                        );
+                        if (res && res.success) {
+                          const fullUrl = `${window.location.origin}/#${res.path}`;
+                          if (navigator.share) {
+                            await navigator.share({ title: `${toolName} result`, text: 'Check out this tool result', url: fullUrl });
+                          } else {
+                            await navigator.clipboard.writeText(fullUrl);
+                            toast('Result link copied to clipboard');
+                          }
+                        } else {
+                          console.error('Failed to create shared output', res.error);
+                          toast.error('Failed to share result');
+                        }
+                      } catch (e) {
+                        console.error('Share output failed', e);
+                        toast.error('Failed to share result');
+                      }
+                    }}
+                    aria-label="Share Output"
+                    title="Share Output"
+                    className="p-2 bg-primary/80 border border-slate-700 rounded text-sm hover:bg-accent transition flex items-center justify-center"
+                  >
+                    {/* Distinct small icon for sharing output - document with arrow */}
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="4" y="4" width="12" height="16" rx="1.5" stroke="currentColor" strokeWidth="1.2" className="text-slate-400/70" />
+                      <path d="M16 8v4m0 0 3-3m-3 3 3  -3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" className="text-accent" />
+                    </svg>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
           <div className="p-4 bg-primary rounded-md border border-slate-700">
             {renderOutput(output, undefined, options, prompt)}
           </div>
