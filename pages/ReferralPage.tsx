@@ -306,27 +306,29 @@ const ReferralPage: React.FC = () => {
 				{referralInfo.referralHistory.length > 0 && (
 					<div className="bg-secondary p-6 rounded-lg">
 						<h2 className="text-xl font-semibold mb-4">Referral History</h2>
-						<div className="space-y-4">
-							{referralInfo.referralHistory.map((history, index) => (
-								<div
-									key={index}
-									className="flex items-center justify-between p-4 bg-gray-700 rounded"
-								>
-									<div>
-										<p className="font-medium">{history.referredUserEmail}</p>
-										<p className="text-sm text-slate-400">{(() => {
-											const ts: any = history.timestamp;
-											if (!ts) return '';
-											if (typeof ts === 'string') return new Date(ts).toLocaleDateString();
-											if (ts.seconds) return new Date(ts.seconds * 1000).toLocaleDateString();
-											if (ts.toDate) return ts.toDate().toLocaleDateString();
-											if (ts instanceof Date) return ts.toLocaleDateString();
-											return String(ts);
-										})()}</p>
+						<div className="max-h-72 overflow-y-auto pr-2 hide-scrollbar">
+							<div className="space-y-4">
+								{referralInfo.referralHistory.map((history, index) => (
+									<div
+										key={index}
+										className="flex items-center justify-between p-4 bg-gray-700 rounded"
+									>
+										<div>
+											<p className="font-medium">{history.referredUserEmail}</p>
+											<p className="text-sm text-slate-400">{(() => {
+												const ts: any = history.timestamp;
+												if (!ts) return '';
+												if (typeof ts === 'string') return new Date(ts).toLocaleDateString();
+												if (ts.seconds) return new Date(ts.seconds * 1000).toLocaleDateString();
+												if (ts.toDate) return ts.toDate().toLocaleDateString();
+												if (ts instanceof Date) return ts.toLocaleDateString();
+												return String(ts);
+											})()}</p>
+										</div>
+										<div className="text-green-400">+100 points</div>
 									</div>
-									<div className="text-green-400">+100 points</div>
-								</div>
-							))}
+								))}
+							</div>
 						</div>
 					</div>
 				)}
