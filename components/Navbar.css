@@ -1,36 +1,9 @@
-.fallback-avatar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--primary-color);
-    color: white;
-    font-weight: 500;
-    font-size: 0.875rem;
-}
+.fallback-avatar{display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,var(--primary),var(--primary-600));color:var(--text);font-weight:600;font-size:0.9rem;width:40px;height:40px;border-radius:999px;box-shadow:0 4px 10px rgba(var(--theme-primary-rgb),0.12)}
+.fallback-avatar::before{content:attr(data-initials)}
 
-.fallback-avatar::before {
-    content: attr(data-initials);
-}
+/* Palestine banner - subtle, centered */
+.palestine-banner{display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,rgba(var(--theme-text-rgb),0.02),rgba(var(--theme-text-rgb),0.01));padding:8px 14px;border-bottom:1px solid var(--border);justify-content:center;font-weight:700;color:var(--text);font-size:0.95rem;border-radius:0 0 var(--radius-sm) var(--radius-sm)}
+.palestine-flag-svg{width:40px;height:24px;display:block;border-radius:4px;box-shadow:0 2px 6px rgba(var(--theme-text-rgb),0.35)}
+.palestine-text{letter-spacing:0.3px;color:var(--muted-text);text-shadow:none}
 
-/* Palestine banner styles */
-.palestine-banner {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-        padding: 6px 12px;
-        border-bottom: 1px solid rgba(255,255,255,0.04);
-        justify-content: center;
-        font-weight: 600;
-        color: #f8fafc; /* matches light text used in navbar */
-        font-size: 0.875rem;
-}
-
-.palestine-flag-svg { width: 38px; height: 23px; display: block; border-radius: 3px; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-.palestine-text { letter-spacing: 0.4px; color: #ffe7e6; text-shadow: 0 1px 0 rgba(0,0,0,0.35); }
-
-/* Slightly smaller on very small screens */
-@media (max-width: 420px) {
-    .palestine-banner { padding: 6px 8px; gap: 8px; font-size: 0.8rem; }
-    .palestine-flag-svg { width: 32px; height: 20px; }
-}
+@media (max-width:420px){.palestine-banner{padding:6px 10px;gap:8px;font-size:0.82rem}.palestine-flag-svg{width:32px;height:20px}}
