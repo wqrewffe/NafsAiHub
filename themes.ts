@@ -8,6 +8,50 @@ export interface Theme {
   };
 }
 
+// A compact default theme that maps to the new design tokens in styles.css
+export const defaultTheme: Theme = {
+  name: 'Professional Blue',
+  colors: { primary: '#2563eb', secondary: '#1e293b', accent: '#7c3aed', light: '#e6eef8' }
+};
+
+export const getDefaultTheme = () => defaultTheme;
+
+// Helper: apply a Theme to the document by setting CSS variables (safe to call in browser)
+export function applyTheme(theme: Theme) {
+  if (typeof document === 'undefined' || !document.documentElement) return;
+  const root = document.documentElement;
+  const { primary, secondary, accent, light } = theme.colors;
+  // Map theme colors to CSS variables used by styles.css
+  root.style.setProperty('--theme-bg', primary === '#ffffff' ? '#ffffff' : '#0b1020'); // fallback for light themes
+  root.style.setProperty('--theme-surface', secondary);
+  root.style.setProperty('--theme-muted', 'rgba(0,0,0,0.06)');
+  root.style.setProperty('--theme-primary', primary);
+  root.style.setProperty('--theme-primary-600', primary);
+  // set RGB tokens where useful
+  const toRgb = (hex: string) => {
+    const h = hex.replace('#','');
+    const bigint = parseInt(h.length === 3 ? h.split('').map(ch=>ch+ch).join('') : h, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `${r} ${g} ${b}`;
+  }
+  try{
+    root.style.setProperty('--theme-primary-rgb', toRgb(primary));
+    root.style.setProperty('--theme-accent', accent);
+    root.style.setProperty('--theme-accent-rgb', toRgb(accent));
+    root.style.setProperty('--theme-text', light);
+    root.style.setProperty('--theme-text-rgb', toRgb(light));
+  }catch(e){
+    // ignore malformed hex
+  }
+}
+
+// Apply default theme on load when running in a browser environment
+if (typeof document !== 'undefined') {
+  try { applyTheme(defaultTheme); } catch {};
+}
+
 export const themes: Theme[] = [
   // Core Dark Themes
   { name: 'Slate & Sky', colors: { primary: '#1e293b', secondary: '#334155', accent: '#38bdf8', light: '#f1f5f9' } },
