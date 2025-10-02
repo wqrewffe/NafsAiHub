@@ -107,9 +107,10 @@ const ToolPage: React.FC = () => {
             {historyLoading ? (
               <div className="flex justify-center items-center py-8"><Spinner /></div>
             ) : history.length > 0 ? (
-              <ul className="space-y-2">
-                {history.map(item => (
-                  <li key={item.id} className="bg-primary rounded-md animate-fade-in transition-all duration-300">
+                  <div className="max-h-96 overflow-y-auto pr-2 hide-scrollbar">
+                    <ul className="space-y-2">
+                    {history.map(item => (
+                      <li key={item.id} className="bg-primary rounded-md animate-fade-in transition-all duration-300">
                     <div 
                       className="flex justify-between items-start cursor-pointer p-4"
                       onClick={() => setExpandedHistoryId(expandedHistoryId === item.id ? null : item.id)}
@@ -140,6 +141,7 @@ const ToolPage: React.FC = () => {
                   </li>
                 ))}
               </ul>
+                </div>
             ) : (
               <p className="text-slate-400 text-center py-4">You haven't used this tool yet.</p>
             )}
