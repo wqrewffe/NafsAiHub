@@ -16,15 +16,7 @@
 }
 
 /* Backdrop */
-.notification-backdrop {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  z-index: 1;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
+.notification-backdrop{position:fixed;inset:0;background-color:rgba(var(--theme-primary-rgb),0.45);backdrop-filter:blur(4px);z-index:1;opacity:0;transition:opacity .3s ease}
 
 .notifications-root[data-visible="true"] .notification-backdrop {
   opacity: 1;
@@ -134,7 +126,7 @@
 .points-value {
   display: inline-block;
   font-weight: bold;
-  color: #10B981;
+  color: var(--accent);
   animation: pointsPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
