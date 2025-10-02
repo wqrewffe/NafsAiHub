@@ -20,7 +20,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             {/* Company Info */}
             <div className="md:col-span-2">
-              <h3 className="text-lg font-semibold text-light mb-4">Naf's AI Hub</h3>
+              <div className="flex items-center gap-3 mb-4">
+                <img src="/fav.png" alt="Naf's AI Hub logo" className="brand-logo" />
+                <h3 className="text-lg font-semibold text-light">Naf's AI Hub</h3>
+              </div>
               <p className="text-light/80 mb-4">
                 Empowering users with cutting-edge AI tools for creativity, productivity, and learning. 
                 Join our community and discover the future of AI-powered assistance.
