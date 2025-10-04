@@ -1,8 +1,6 @@
 
 import { GoogleGenAI, GenerateContentResponse, Type as GenAiType } from '@google/genai';
 
-// IMPORTANT: Your Gemini API key must be stored in an environment variable named 'API_KEY'.
-// Do not hardcode the API key in your code.
 const apiKey = process.env.API_KEY;
 
 if (!apiKey) {
@@ -13,7 +11,7 @@ const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
 interface ImagePart {
   mimeType: string;
-  data: string; // base64 encoded string
+  data: string; 
 }
 
 const buildContents = (prompt: string, image?: ImagePart) => {
@@ -62,7 +60,7 @@ export const generateJson = async (prompt: string, schema: any, image?: ImagePar
         return JSON.parse(jsonText);
     } catch (error) {
         console.error('Error generating JSON:', error);
-        throw new Error('Failed to generate valid JSON from Gemini API.');
+        throw new Error('Network Problem. Please try again.');
     }
 };
 
