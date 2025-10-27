@@ -1,0 +1,26 @@
+/* Critical CSS for fast initial render */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+body {
+  margin: 0;
+  opacity: 1 !important;
+  transition: opacity 0.1s ease;
+}
+
+#root {
+  height: 100vh;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.fast-page-transition {
+  animation: fadeIn 0.1s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

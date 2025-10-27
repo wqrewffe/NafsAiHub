@@ -1,9 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-transparent="true">
   <head>
     <meta charset="UTF-8" />
-<link rel="icon" type="image/png" href="/og-image.png">
+    <link rel="icon" type="image/png" href="/og-image.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Preload critical styles and assets for faster first paint -->
+  <link rel="preload" href="/ultra-fast.css" as="style">
+  <link rel="preload" href="/styles.css" as="style">
+  <link rel="preload" href="/index.css" as="style">
+  <link rel="preload" href="/og-image.png" as="image">
+  <link rel="preload" href="https://rsms.me/inter/inter.css" as="style" crossorigin>
+  <!-- Preload small inline scripts that help page initialization -->
+  <link rel="preload" href="/preloader.js" as="script">
+  <link rel="preload" href="/background-scroll.js" as="script">
+  <!-- Preload hero animation JSON to reduce hero jitter (used on HomePage) -->
+  <link rel="preload" href="https://lottie.host/80b18f76-b48e-4a6f-a859-9941a1a5b88f/aWvNoz32pP.json" as="fetch" crossorigin="anonymous">
+  <link rel="stylesheet" href="/ultra-fast.css">
+    <style>
+      /* Inline critical styles for instant loading */
+      .content-loading { opacity: 0; }
+      .content-loaded { opacity: 1; transition: opacity 0.1s; }
+      .spinner { animation: spin 0.4s linear infinite; }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <script src="/preloader.js" async></script>
+    <script src="/background-scroll.js" defer></script>
+    <script type="module" src="/index.tsx" async></script>
+    <script>
+      // Instant page initialization
+      window.instant = true;
+      document.documentElement.classList.add('no-transition');
+      window.addEventListener('load', () => {
+        requestAnimationFrame(() => {
+          document.documentElement.classList.remove('no-transition');
+        });
+      });
+    </script>
+    <script>
+      // Service worker handling: temporarily *unregister* any existing service workers to
+      // prevent stale cached HTML/JS from being served to users (this was causing the
+      // "past content" flash). If you rely on a service worker for offline features,
+      // re-enable registration after resolving caching strategies.
+      if ('serviceWorker' in navigator) {
+        // Attempt to unregister existing registrations on load
+        window.addEventListener('load', async () => {
+          try {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            for (const r of regs) {
+              try { await r.unregister(); } catch (e) { console.warn('Failed to unregister SW', e); }
+            }
+
+            // Also clear caches to remove any previously cached responses that may be showing stale UI
+            if (window.caches && typeof window.caches.keys === 'function') {
+              const keys = await caches.keys();
+              await Promise.all(keys.map(k => caches.delete(k)));
+            }
+
+            console.log('Service workers unregistered and caches cleared to avoid stale UI.');
+          } catch (e) {
+            console.warn('Error during service worker cleanup:', e);
+          }
+        });
+      }
+    </script>
     <title>NafsAiHub — Learn, Compete, and Collaborate</title>
     <meta name="description" content="NafsAiHub — a collaborative learning platform with quizzes, study groups, competitions, and AI-powered features." />
     <meta name="keywords" content="AI tools, learning platform, collaborative learning, quizzes, study groups, competitions, AI-powered features, educational technology, student tools, professional development" />
@@ -214,6 +274,16 @@
 <link rel="stylesheet" href="/index.css">
 </head>
   <body>
+    <!-- Full-site decorative background (sky / river / mountain) -->
+
+    <div class="site-bg" aria-hidden="true">
+      <div class="site-bg__layer site-bg__layer--1"></div>
+      <div class="site-bg__layer site-bg__layer--2"></div>
+      <div class="site-bg__layer site-bg__layer--3"></div>
+      <div class="site-bg__overlay"></div>
+    </div>
+    <script src="/site-bg-parallax.js"></script>
+
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

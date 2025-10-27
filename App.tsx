@@ -1,18 +1,22 @@
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
+import './styles/interactive.css';
 import { AuthProvider } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
 import { SettingsProvider } from './hooks/useSettings';
 import { CongratulationsProvider } from './hooks/CongratulationsProvider';
 import { ToolAccessProvider } from './hooks/useToolAccess';
 import Layout from './components/Layout';
-import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
-import SignUpPage from './pages/SignUpPage';
-import ToolPage from './pages/ToolPage';
-import CompetitionPage from './components/CompetitionPage';
-import ProfilePage from './pages/ProfilePage';
+import FastLoadingSpinner from './components/FastLoadingSpinner';
+
+// Lazy load all main pages
+const HomePage = React.lazy(() => import('./pages/HomePage'));
+const LoginPage = React.lazy(() => import('./pages/LoginPage'));
+const SignUpPage = React.lazy(() => import('./pages/SignUpPage'));
+const ToolPage = React.lazy(() => import('./pages/ToolPage'));
+const CompetitionPage = React.lazy(() => import('./components/CompetitionPage'));
+const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
 import { Routes, Route } from 'react-router-dom';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
