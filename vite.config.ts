@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
       minify: 'esbuild',
       cssCodeSplit: true,
       reportCompressedSize: false,
-      chunkSizeWarningLimit: 1000,
+      chunkSizeWarningLimit: 2000,
       emptyOutDir: true,
       assetsInlineLimit: 8192,
       minifyInternalExports: true,
@@ -33,11 +33,14 @@ export default defineConfig(({ mode }) => {
           manualChunks(id) {
             if (id.includes('node_modules')) {
               if (id.includes('react')) return 'vendor-react';
+              if (id.includes('@firebase')) return 'vendor-firebase';
+              if (id.includes('@emotion') || id.includes('@mui')) return 'vendor-ui';
               return 'vendor';
             }
-            if (id.includes('/hooks/') || id.includes('/services/')) {
-              return 'utils';
-            }
+            if (id.includes('/hooks/')) return 'hooks';
+            if (id.includes('/services/')) return 'services';
+            if (id.includes('/components/')) return 'components';
+            if (id.includes('/pages/')) return 'pages';
           }
         }
       }
