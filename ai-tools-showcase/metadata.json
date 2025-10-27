@@ -1,5 +1,0 @@
-{
-  "name": "AI Tools Showcase",
-  "description": "A web application where users can discover, submit, and manage AI tools. Admins can approve user-submitted tools to be featured in the showcase.",
-  "requestFramePermissions": []
-}
