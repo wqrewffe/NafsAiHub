@@ -3,7 +3,6 @@ import 'firebase/compat/auth';
 import 'firebase/compat/firestore';
 
 
-// WARNING: It is strongly recommended to use environment variables for your Firebase config
 export const firebaseConfig = {
    apiKey: "AIzaSyA5Ejm2hcRQv-ZEne_1Eo7wOHw6asweg3A",
   authDomain: "nafs--hub.firebaseapp.com",
@@ -27,21 +26,14 @@ try {
   throw new Error("Critical: Firebase initialization failed");
 }
 
-// Initialize Firebase services
 export const auth = app.auth();
 export const db = app.firestore();
 
-// Configure Firestore settings
 db.settings({
   cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
 });
 
-// NOTE: Firestore offline persistence was previously enabled here. That can cause
-// Firestore to return cached (stale) data immediately via onSnapshot/getDocs when
-// the network response is still pending — which can produce the "past content"
-// flash users reported. To avoid showing stale UI we disable persistence by
-// default. If you need offline support, re-enable persistence and ensure
-// components check snapshot.metadata.fromCache before rendering cached results.
+
 
 /*
 const enableFirestorePersistence = async () => {
@@ -61,7 +53,6 @@ const enableFirestorePersistence = async () => {
   }
 };
 
-// Disabled by default to prevent stale cached UI from appearing on first render
 // enableFirestorePersistence();
 */
 
