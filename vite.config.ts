@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
   // Allow both Vercel and Render preview hosts
   allowedHosts: ['nafsaihub.vercel.app']
       },
-      base: 'https://nafsaihub.onrender.com/'
+      // base: 'https://nafsaihub.onrender.com/'
    // Primary base used for production assets. Alternate deploy URL: https://nafsaihub.onrender.com/
    base: '/'
     };
