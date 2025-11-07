@@ -54,7 +54,7 @@ export default defineConfig(({ mode }) => {
     preview: {
       host: true,
       port: Number(process.env.PORT) || 3000,
-      allowedHosts: ['nafsaihub.vercel.app','nafsaihub.onrender.com']
+      allowedHosts: ['nafsaihub.onrender.com']
     }
   };
 });
