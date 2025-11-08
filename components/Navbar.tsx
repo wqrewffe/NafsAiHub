@@ -298,7 +298,7 @@ const Navbar: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
             <Link to="/" onClick={closeMobileMenu} className="brand flex items-center gap-3">
-              <img src="/fav.png" alt="Naf's AI Hub logo" className="brand-logo" />
+              <img src="/fav.png" alt="Naf's AI Hub logo" className="brand-logo" style={{ height: 28, width: 28, objectFit: 'contain' }} />
               <span className="brand-title font-bold text-2xl hover:opacity-80 transition-opacity" style={{ color: '#ff0000' }}>Naf's AI Hub</span>
             </Link>
 
