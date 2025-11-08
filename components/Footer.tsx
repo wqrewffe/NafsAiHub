@@ -9,7 +9,7 @@ const Footer: React.FC = () => {
           {/* Company Info */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-4">
-              <img src="/fav.png" alt="Naf's AI Hub logo" className="brand-logo" />
+              <img src="https://nafsaihub.vercel.app/assets/fav-Ck4NQm_F.png" alt="Naf's AI Hub logo" className="brand-logo" />
               <h3 className="text-lg font-semibold">Naf's AI Hub</h3>
             </div>
             <p className="text-light/80 mb-4">
