@@ -45,8 +45,8 @@ export const MetaTagGenerator: React.FC = () => {
     const [data, setData] = useState<MetaData>({
         title: 'Dev Toolbox',
         description: 'A suite of useful online tools for developers.',
-        url: 'https://example.com',
-        imageUrl: 'https://example.com/og-image.png',
+        url: 'https://nafsaihub.vercel.app',
+        imageUrl: 'https://nafsaihub.vercel.app/assets/fav-Ck4NQm_F.png',
         siteName: 'Dev Toolbox',
         twitterHandle: 'username',
     });
