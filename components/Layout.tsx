@@ -1,7 +1,7 @@
 import React, { ReactNode, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from './Navbar';
-import { UltraFastLoader } from './UltraFastLoader';
+import {UltraFastLoader} from './UltraFastLoader';
 import { useRoutePrefetch } from '../hooks/useRoutePrefetch';
 
 interface LayoutProps {
@@ -15,7 +15,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-primary text-light flex flex-col">
       <Navbar />
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="relative flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <UltraFastLoader>
           <div className="content-stable force-gpu">
             {children}

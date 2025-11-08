@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" data-transparent="true">
+<!-- Provide a fallback background & text color to avoid white flash before JS/CSS variables load -->
+<html lang="en" data-transparent="true" style="background-color:var(--theme-bg,#061018); color:var(--theme-text,#e6edf3)">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/fav.png">
@@ -7,9 +8,81 @@
     <link rel="stylesheet" href="/styles.css">
     <style>
       /* Inline critical styles for instant loading */
-      .content-loading { opacity: 0; }
-      .content-loaded { opacity: 1; transition: opacity 0.1s; }
-      .spinner { animation: spin 0.4s linear infinite; }
+      :root { --nav-height: 64px; }
+  /* Keep static content visible immediately so items don't disappear before React mounts. */
+  .content-loading { opacity: 1; }
+      /* faster fade so content is visible sooner */
+      .content-loaded { opacity: 1; transition: opacity 90ms ease-in; }
+      /* faster spinner animation for snappy feedback */
+  .spinner { animation: none !important; }
+
+    /* initial loader shown before React mounts: positioned under the navbar */
+    /* Use pointer-events:none so the placeholder nav remains interactive (links will be handled by React once mounted). */
+    #initial-loader { position: fixed; top: var(--nav-height); left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; z-index: 40; background: transparent; pointer-events: none; }
+    #initial-loader .spinner { width: 40px; height: 40px; border-width: 3px; }
+
+    /* Inline minimal navbar CSS so the static placeholder matches the real navbar
+      even before Tailwind or component CSS loads. It mirrors values from
+      components/Navbar.css (uses CSS vars where possible). */
+    #initial-nav { background: rgba(var(--primary-rgb, 6 8 15), 0.80); -webkit-backdrop-filter: blur(6px) saturate(1.05); backdrop-filter: blur(6px) saturate(1.05); border-bottom: 1px solid rgba(255,255,255,0.06); box-shadow: 0 6px 18px rgba(2,6,23,0.08); padding-top: 1rem; padding-bottom: 1rem; z-index: 50; }
+    #initial-nav .container { width:100%; max-width:1280px; margin:0 auto; padding-left:16px; padding-right:16px; }
+    #initial-nav .brand-title { color: var(--color-accent, #8b5cf6); font-weight:700; font-size:1.35rem; }
+    #initial-nav .brand-logo { height:28px; width:28px; object-fit:contain; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Ensure the initial paint uses the app background and not white while
+      CSS variables are not yet populated by JS. This prevents a white blank
+      page during reloads and shows the current page background immediately. */
+    html, body, #root { background: var(--theme-bg, #061018); color: var(--theme-text, #e6edf3); min-height: 100vh; }
+      /* Full Navbar.css inlined to make the placeholder pixel-perfect before
+         component CSS or Tailwind loads. Copied from components/Navbar.css. */
+      .fallback-avatar{display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,var(--primary),var(--primary-600));color:var(--text);font-weight:600;font-size:0.9rem;width:40px;height:40px;border-radius:999px;box-shadow:0 4px 10px rgba(var(--theme-primary-rgb),0.12)}
+      .fallback-avatar::before{content:attr(data-initials)}
+
+      /* Strong glass / blur navbar style - applied via `.navbar-glass` on the <nav> */
+      .navbar-glass{
+        /* Prefer primary color with alpha (matches `bg-primary/80`) with a safe fallback */
+        background: rgba(var(--primary-rgb, 6 8 15), 0.80);
+        -webkit-backdrop-filter: blur(6px) saturate(1.05); /* small blur like backdrop-blur-sm */
+        backdrop-filter: blur(6px) saturate(1.05);
+        border-bottom: 1px solid rgba(var(--theme-text-rgb), 0.08);
+        box-shadow: 0 6px 18px rgba(2,6,23,0.08);
+        /* Ensure navbar spacing is comfortable when not using Tailwind utilities */
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+      }
+
+      /* Increased font sizes for navbar items */
+      .navbar-glass a:not(.brand-title),
+      .navbar-glass button {
+        font-size: 1.05rem !important;  /* slightly larger than text-base */
+      }
+
+      .navbar-glass .brand-title {
+        font-size: 1.35rem !important;  /* slightly larger than original */
+      }
+
+      /* Make mobile menu items slightly smaller */
+      @media (max-width: 768px) {
+        .navbar-glass a:not(.brand-title),
+        .navbar-glass button {
+          font-size: 1rem !important;
+        }
+      }
+
+      /* Slightly stronger variant for very large screens */
+      @media (min-width:1200px){
+        .navbar-glass{backdrop-filter:blur(18px) saturate(1.15);-webkit-backdrop-filter:blur(18px) saturate(1.15);}
+      }
+
+
+      /* Palestine banner - subtle, centered */
+      .palestine-banner{display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,rgba(var(--theme-text-rgb),0.02),rgba(var(--theme-text-rgb),0.01));padding:8px 14px;border-bottom:1px solid var(--border);justify-content:center;font-weight:700;color:var(--text);font-size:0.95rem;border-radius:0 0 var(--radius-sm) var(--radius-sm)}
+      .palestine-flag-svg{width:40px;height:24px;display:block;border-radius:4px;box-shadow:0 2px 6px rgba(var(--theme-text-rgb),0.35)}
+      .palestine-text{letter-spacing:0.3px;color:var(--muted-text);text-shadow:none}
+
+      @media (max-width:420px){.palestine-banner{padding:6px 10px;gap:8px;font-size:0.82rem}.palestine-flag-svg{width:32px;height:20px}}
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -272,6 +345,41 @@
       <div class="site-bg__overlay"></div>
     </div>
     <script src="/site-bg-parallax.js"></script>
+    <!-- Lightweight static navbar placeholder that shows instantly on page load
+         (removed by React once the real Navbar mounts). This helps avoid a
+         blank white page — the placeholder is visually minimal and loads
+         instantly via plain HTML/CSS. -->
+    <!-- Static navbar placeholder that mirrors the real Navbar markup/styles
+         (keeps layout identical to avoid jump). Uses Tailwind utility classes
+         so it will match the real navbar when Tailwind is loaded. -->
+    <nav id="initial-nav" aria-hidden="true" class="navbar-glass sticky -top-1 bg-primary/80 backdrop-blur-sm py-2 z-50 -mt-1" style="position:fixed;left:0;right:0;top:0;height:var(--nav-height);">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <div class="flex items-center gap-3">
+            <a href="/" class="brand flex items-center gap-3">
+              <img src="/fav.png" alt="Naf's AI Hub logo" class="brand-logo" style="height:28px;width:28px;object-fit:contain;" />
+              <span class="brand-title text-accent font-bold text-2xl" style="opacity:0.9;">Naf's AI Hub</span>
+            </a>
+          </div>
+
+          <!-- Desktop placeholders -->
+          <div class="hidden md:flex items-center space-x-4">
+            <div class="w-20 h-8 bg-white/5 rounded-full" style="opacity:0.06"></div>
+            <div class="w-28 h-8 bg-white/5 rounded-full" style="opacity:0.06"></div>
+          </div>
+
+          <!-- Mobile placeholder: avatar + menu button -->
+          <div class="md:hidden flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-primary" style="opacity:0.9"></div>
+            <button class="p-2 rounded-md text-slate-300" aria-hidden="true">
+              <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Initial loader removed to avoid showing any spinner on refresh. -->
 
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>

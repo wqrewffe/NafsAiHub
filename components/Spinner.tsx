@@ -1,12 +1,15 @@
 import React from 'react';
 
+// Lightweight, non-animated placeholder used where pages previously returned
+// a spinner-only view. This prevents blank/empty areas while keeping a
+// consistent, non-jarring UX. Animations are intentionally disabled globally
+// except for the generate button.
 const Spinner: React.FC = () => {
-  return (
-    <div className="h-16 w-16 flex items-center justify-center">
-      {/* Simple CSS spinner */}
-      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-    </div>
-  );
+	return (
+		<div role="status" aria-live="polite" className="text-slate-400 text-sm">
+			Loading…
+		</div>
+	);
 };
 
 export default Spinner;
