@@ -5,7 +5,7 @@ const STATIC_ASSETS = [
   '/index.html',
   '/critical.css',
   '/styles.css',
-  '/og-image.png'
+  'https://nafsaihub.vercel.app/assets/fav-Ck4NQm_F.png'
 ];
 
 self.addEventListener('install', (event: any) => {
