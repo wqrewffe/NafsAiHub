@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+// Dynamically imported: jsPDF and html2canvas are heavy. We'll load them only when needed (downloadAsPdf).
 import ToolContainer from './common/ToolContainer';
 import type { ToolOptionConfig } from '../types';
 import { generateJson, GenAiType } from '../services/geminiService';
@@ -508,9 +507,12 @@ export const renderMcqOutput = (
         document.body.appendChild(container);
 
         try {
-            // Use html2canvas to capture the container
+            // Dynamically import html2canvas and jsPDF only when user requests a download.
+            // This keeps these large modules out of the initial bundle and reduces JS execution time.
+            const html2canvasMod: any = await import('html2canvas');
+            const html2canvas = html2canvasMod.default ?? html2canvasMod;
             const canvas = await html2canvas(container as HTMLElement, { scale: 2, useCORS: true });
-            const imgData = canvas.toDataURL('image/png');
+            const { jsPDF } = await import('jspdf');
             const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
             const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
