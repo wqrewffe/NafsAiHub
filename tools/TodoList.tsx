@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { ClipboardDocumentCheckIcon, TrashIcon, PencilIcon } from './Icons';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+// Recharts can be large; dynamically import it so charts don't bloat the initial bundle.
 
 interface Todo {
   id: number;
@@ -24,6 +24,21 @@ const priorityMap: { [key in Priority]: { color: string; name: string; value: nu
 const COLORS = ['#22c55e', '#eab308', '#ef4444'];
 
 const TodoListManager: React.FC = () => {
+  const [Recharts, setRecharts] = React.useState<any | null>(null);
+
+  React.useEffect(() => {
+    let mounted = true;
+    import('recharts')
+      .then((mod) => {
+        if (mounted) setRecharts(mod);
+      })
+      .catch((err) => {
+        console.warn('Failed to load recharts dynamically', err);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
   const [todos, setTodos] = useState<Todo[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
@@ -387,25 +402,29 @@ const TodoListManager: React.FC = () => {
       {/* 📊 Analytics Dashboard */}
       <div className="bg-primary p-4 rounded-lg border border-slate-700">
         <h3 className="text-xl font-bold text-light mb-2">Analytics</h3>
-        <ResponsiveContainer width="100%" height={200}>
-          <PieChart>
-            <Pie
-              data={chartData}
-              dataKey="value"
-              nameKey="name"
-              outerRadius={80}
-              label
-            >
-              {chartData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={COLORS[index % COLORS.length]}
-                />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
+        {Recharts ? (
+          <Recharts.ResponsiveContainer width="100%" height={200}>
+            <Recharts.PieChart>
+              <Recharts.Pie
+                data={chartData}
+                dataKey="value"
+                nameKey="name"
+                outerRadius={80}
+                label
+              >
+                {chartData.map((entry, index) => (
+                  <Recharts.Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
+                ))}
+              </Recharts.Pie>
+              <Recharts.Tooltip />
+            </Recharts.PieChart>
+          </Recharts.ResponsiveContainer>
+        ) : (
+          <div className="h-48 flex items-center justify-center text-sm text-slate-400">Loading chart…</div>
+        )}
       </div>
     </div>
   );
