@@ -292,14 +292,14 @@ const Navbar: React.FC = () => {
   );
 
   return (
-    <nav className="navbar-glass sticky -top-1 bg-primary/80 backdrop-blur-sm py-2 z-50 -mt-1">
+    <nav id="app-navbar" className="navbar-glass sticky -top-1 bg-primary/80 backdrop-blur-sm py-2 z-50 -mt-1">
       {/* Top banner removed to avoid rendering stale admin-controlled content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
             <Link to="/" onClick={closeMobileMenu} className="brand flex items-center gap-3">
               <img src="/fav.png" alt="Naf's AI Hub logo" className="brand-logo" />
-              <span className="brand-title text-accent font-bold text-2xl hover:opacity-80 transition-opacity">Naf's AI Hub</span>
+              <span className="brand-title font-bold text-2xl hover:opacity-80 transition-opacity" style={{ color: '#ff0000' }}>Naf's AI Hub</span>
             </Link>
 
             {/* left side: brand only on mobile; quick actions are rendered on the right beside the menu button */}

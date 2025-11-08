@@ -8,6 +8,8 @@ import { SettingsProvider } from './hooks/useSettings';
 import { CongratulationsProvider } from './hooks/CongratulationsProvider';
 import { ToolAccessProvider } from './hooks/useToolAccess';
 import Layout from './components/Layout';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import FastLoadingSpinner from './components/FastLoadingSpinner';
 
 // Lazy load all main pages
@@ -88,6 +90,8 @@ function App() {
           <CongratulationsProvider>
             <ToolAccessProvider>
               <ReactRouterDOM.HashRouter>
+                {/* App chrome that should always be visible */}
+                <Navbar />
                 <ReactRouterDOM.Routes>
                   {/* Trainer route rendered outside Layout so it displays full-screen without navbar/footer */}
                   <ReactRouterDOM.Route
@@ -231,6 +235,8 @@ function App() {
                 </ReactRouterDOM.Routes>
                 {/* Global Toaster for react-hot-toast */}
                 <Toaster position="top-right" />
+                {/* Always-visible footer */}
+                <Footer />
                 {/* CongratulationsModal is rendered by the CongratulationsProvider */}
               </ReactRouterDOM.HashRouter>
             </ToolAccessProvider>

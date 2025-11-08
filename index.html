@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/styles.css">
     <style>
       /* Inline critical styles for instant loading */
-      :root { --nav-height: 64px; }
+  :root { --nav-height: 64px; --initial-footer-height: 220px; }
   /* Keep static content visible immediately so items don't disappear before React mounts. */
   .content-loading { opacity: 1; }
       /* faster fade so content is visible sooner */
@@ -83,12 +83,26 @@
       .palestine-text{letter-spacing:0.3px;color:var(--muted-text);text-shadow:none}
 
       @media (max-width:420px){.palestine-banner{padding:6px 10px;gap:8px;font-size:0.82rem}.palestine-flag-svg{width:32px;height:20px}}
+    /* Skeleton / initial content placeholder styles - very small, lightweight rules
+      to show page structure while React bundles and lazy pages load. */
+    .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02)); border-radius:8px; }
+    .skeleton.hero { height: 220px; border-radius:12px; margin: 20px auto; max-width:1100px; }
+    .skeleton.row { display:flex; gap:16px; max-width:1100px; margin: 12px auto; }
+    .skeleton.card { flex:1; height:120px; }
+    .skeleton.sidebar { width:320px; height:420px; }
+   /* Make the initial-root fill the viewport minus nav + footer so the
+     static footer sits at the bottom like the real layout. Adjust the
+     fallback footer height (220px) if your real footer grows. */
+  /* Reserve space for the fixed placeholder footer so it doesn't overlap the navbar */
+  .initial-root { padding-top: calc(var(--nav-height) + 8px); pointer-events: none; min-height: calc(100vh - var(--nav-height) - var(--initial-footer-height)); padding-bottom: var(--initial-footer-height); }
+    /* subtle shimmer */
+    .skeleton::after{ content: ''; position: absolute; inset:0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.015), transparent); transform: translateX(-100%); animation: shimmer 1000ms linear infinite; border-radius:inherit }
+    @keyframes shimmer { to { transform: translateX(100%); } }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <script src="/preloader.js" defer></script>
-    <script src="/background-scroll.js" defer></script>
-    <script type="module" src="/index.tsx" defer></script>
+  <script src="/preloader.js" defer></script>
+  <script src="/background-scroll.js" defer></script>
     <script>
       // Instant page initialization
       window.instant = true;
@@ -358,14 +372,22 @@
           <div class="flex items-center gap-3">
             <a href="/" class="brand flex items-center gap-3">
               <img src="/fav.png" alt="Naf's AI Hub logo" class="brand-logo" style="height:28px;width:28px;object-fit:contain;" />
-              <span class="brand-title text-accent font-bold text-2xl" style="opacity:0.9;">Naf's AI Hub</span>
+              <span class="brand-title font-bold text-2xl" style="opacity:0.9;color:#ff0000;">Naf's AI Hub</span>
             </a>
           </div>
 
-          <!-- Desktop placeholders -->
+          <!-- Desktop full placeholder (mirrors real Navbar links) -->
           <div class="hidden md:flex items-center space-x-4">
-            <div class="w-20 h-8 bg-white/5 rounded-full" style="opacity:0.06"></div>
-            <div class="w-28 h-8 bg-white/5 rounded-full" style="opacity:0.06"></div>
+            <a href="/" class="text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Home</a>
+            <a href="/showcase" class="text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Tools</a>
+            <a href="/leaderboard" class="text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Leaderboard</a>
+            <a href="/badges" class="text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Badges</a>
+            <a href="/support" class="text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Support</a>
+            <a href="/contact" class="text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Contact</a>
+            <div class="flex items-center gap-3 ml-4">
+              <a href="/login" class="text-slate-300 hover:bg-slate-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Login</a>
+              <a href="/signup" class="bg-sky-500 text-white px-3 py-2 rounded-md text-sm font-medium">Sign Up</a>
+            </div>
           </div>
 
           <!-- Mobile placeholder: avatar + menu button -->
@@ -379,8 +401,79 @@
       </div>
     </nav>
 
-    <!-- Initial loader removed to avoid showing any spinner on refresh. -->
+  <!-- Full static footer placeholder to match the real footer while the app loads -->
+  <footer id="initial-footer" aria-hidden="true" class="bg-secondary/50 text-light border-t border-secondary/50" style="position:fixed;left:0;right:0;bottom:0;height:var(--initial-footer-height);z-index:30;">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid md:grid-cols-4 gap-8 mb-8">
+          <div class="md:col-span-2">
+            <div class="flex items-center gap-3 mb-4">
+              <img src="/fav.png" alt="Naf's AI Hub logo" class="brand-logo" style="height:28px;width:28px;object-fit:contain;" />
+              <h3 class="text-lg font-semibold">Naf's AI Hub</h3>
+            </div>
+            <p class="text-light/80 mb-4">Empowering users with cutting-edge AI tools for creativity, productivity, and learning.</p>
+            <div class="flex space-x-4">
+              <a href="#" class="text-light/70">Twitter</a>
+              <a href="#" class="text-light/70">LinkedIn</a>
+              <a href="#" class="text-light/70">Discord</a>
+            </div>
+          </div>
 
+          <div>
+            <h4 class="text-md font-semibold mb-4">Quick Links</h4>
+            <ul class="space-y-2">
+              <li><a href="/" class="text-light/80">Home</a></li>
+              <li><a href="/referral" class="text-light/80">Refer & Earn</a></li>
+              <li><a href="/leaderboard" class="text-light/80">Leaderboard</a></li>
+              <li><a href="/badges" class="text-light/80">Badges</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 class="text-md font-semibold mb-4">Support</h4>
+            <ul class="space-y-2">
+              <li><a href="/support" class="text-light/80">Help Center</a></li>
+              <li><a href="/contact" class="text-light/80">Contact Us</a></li>
+              <li><a href="/policies" class="text-light/80">Policies</a></li>
+              <li><a href="mailto:support@nafsaihub.com" class="text-light/80">Email Support</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="border-t border-secondary pt-6">
+          <div class="flex flex-col md:flex-row justify-between items-center">
+            <p class="text-sm text-light/70 mb-4 md:mb-0">&copy; 2025 Naf's AI Hub. All rights reserved.</p>
+            <div class="flex flex-wrap gap-6 text-sm">
+              <a href="/policies" class="text-light/70">Terms of Service</a>
+              <a href="/policies" class="text-light/70">Privacy Policy</a>
+              <a href="/policies" class="text-light/70">Community Guidelines</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Initial content skeleton placeholder: shows a hero + card row + right sidebar
+         so the page feels alive immediately while React bundles and lazy pages load. -->
+    <main id="initial-root" class="initial-root" aria-hidden="true">
+      <div style="max-width:1280px;margin:0 auto;padding:20px 16px;">
+        <div style="position:relative;" class="skeleton hero"></div>
+        <div class="skeleton row" style="margin-top:18px;">
+          <div class="skeleton card" style="position:relative;"></div>
+          <div class="skeleton card" style="position:relative;"></div>
+          <div class="skeleton card" style="position:relative;"></div>
+        </div>
+        <div style="display:flex;gap:16px;margin-top:18px;align-items:flex-start;">
+          <div style="flex:1;">
+            <div class="skeleton" style="height:220px;border-radius:10px;position:relative;"></div>
+            <div style="height:12px;margin-top:12px;width:40%;background:transparent"></div>
+            <div style="height:12px;margin-top:8px;width:80%;background:transparent"></div>
+          </div>
+          <div class="skeleton sidebar" style="position:relative;"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- root for React mount -->
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
