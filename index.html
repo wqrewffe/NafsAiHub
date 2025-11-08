@@ -3,7 +3,7 @@
 <html lang="en" data-transparent="true" style="background-color:var(--theme-bg,#061018); color:var(--theme-text,#e6edf3)">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/fav.png">
+  <link rel="icon" type="image/png" href="https://nafsaihub.vercel.app/assets/fav-Ck4NQm_F.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="/styles.css">
     <style>
@@ -358,7 +358,20 @@
       <div class="site-bg__layer site-bg__layer--3"></div>
       <div class="site-bg__overlay"></div>
     </div>
-    <script src="/site-bg-parallax.js"></script>
+    <!-- Load decorative background effects only on larger screens to avoid mobile overhead -->
+    <script>
+      (function(){
+        try {
+          if (typeof window === 'undefined') return;
+          if (window.innerWidth < 768) return; // skip on small screens
+          const s = document.createElement('script');
+          s.src = '/site-bg-parallax.js';
+          s.defer = true;
+          s.onerror = function(){ console && console.debug && console.debug('site-bg-parallax.js failed to load'); };
+          document.head.appendChild(s);
+        } catch (e) { /* ignore */ }
+      })();
+    </script>
     <!-- Lightweight static navbar placeholder that shows instantly on page load
          (removed by React once the real Navbar mounts). This helps avoid a
          blank white page — the placeholder is visually minimal and loads
@@ -371,7 +384,7 @@
         <div class="flex items-center justify-between h-16">
           <div class="flex items-center gap-3">
             <a href="/" class="brand flex items-center gap-3">
-              <img src="/fav.png" alt="Naf's AI Hub logo" class="brand-logo" style="height:28px;width:28px;object-fit:contain;" />
+              <img src="https://nafsaihub.vercel.app/assets/fav-Ck4NQm_F.png" alt="Naf's AI Hub logo" class="brand-logo" style="height:28px;width:28px;object-fit:contain;" />
               <span class="brand-title font-bold text-2xl" style="opacity:0.9;color:#ff0000;">Naf's AI Hub</span>
             </a>
           </div>
@@ -407,7 +420,7 @@
         <div class="grid md:grid-cols-4 gap-8 mb-8">
           <div class="md:col-span-2">
             <div class="flex items-center gap-3 mb-4">
-              <img src="/fav.png" alt="Naf's AI Hub logo" class="brand-logo" style="height:28px;width:28px;object-fit:contain;" />
+              <img src="https://nafsaihub.vercel.app/assets/fav-Ck4NQm_F.png" alt="Naf's AI Hub logo" class="brand-logo" style="height:28px;width:28px;object-fit:contain;" />
               <h3 class="text-lg font-semibold">Naf's AI Hub</h3>
             </div>
             <p class="text-light/80 mb-4">Empowering users with cutting-edge AI tools for creativity, productivity, and learning.</p>
