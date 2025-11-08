@@ -23,28 +23,28 @@ import { Routes, Route } from 'react-router-dom';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
 import { Toaster } from 'react-hot-toast';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
+const ForgotPasswordPage = React.lazy(() => import('./pages/ForgotPasswordPage'));
 const TrainerApp = React.lazy(() => import('./TRAINER/trainerExport'));
 const DevToolboxApp = React.lazy(() => import('./dev-toolbox/App'));
 const ToolsShowcaseApp = React.lazy(() => import('./ai-tools-showcase/App'));
-import VerifyEmailPage from './pages/VerifyEmailPage';
-import SettingsPage from './pages/SettingsPage';
-import AdminDashboardPage from './pages/admin/AdminDashboardPage';
-import UserHistoryPage from './pages/admin/UserHistoryPage';
-import ModifyPage from './pages/admin/ModifyPage';
-import BuyCheckoutPage from './pages/BuyCheckoutPage';
-import PaymentVerificationPage from './pages/admin/PaymentVerificationPage';
-import ChangeProductPricePage from './pages/admin/ChangeProductPricePage';
-import TodoListPage from './pages/TodoListPage';
-import NoteTakingPage from './pages/NoteTakingPage';
-import ReferralPage from './pages/ReferralPage';
-import LeaderboardPage from './pages/LeaderboardPage';
-import BadgesPage from './pages/BadgesPage';
-import PoliciesPage from './pages/PoliciesPage';
-import SupportPage from './pages/SupportPage';
-import ContactPage from './pages/ContactPage';
-import HelpChatPage from './pages/HelpChatPage';
-import SharedOutputPage from './pages/SharedOutputPage';
+const VerifyEmailPage = React.lazy(() => import('./pages/VerifyEmailPage'));
+const SettingsPage = React.lazy(() => import('./pages/SettingsPage'));
+const AdminDashboardPage = React.lazy(() => import('./pages/admin/AdminDashboardPage'));
+const UserHistoryPage = React.lazy(() => import('./pages/admin/UserHistoryPage'));
+const ModifyPage = React.lazy(() => import('./pages/admin/ModifyPage'));
+const BuyCheckoutPage = React.lazy(() => import('./pages/BuyCheckoutPage'));
+const PaymentVerificationPage = React.lazy(() => import('./pages/admin/PaymentVerificationPage'));
+const ChangeProductPricePage = React.lazy(() => import('./pages/admin/ChangeProductPricePage'));
+const TodoListPage = React.lazy(() => import('./pages/TodoListPage'));
+const NoteTakingPage = React.lazy(() => import('./pages/NoteTakingPage'));
+const ReferralPage = React.lazy(() => import('./pages/ReferralPage'));
+const LeaderboardPage = React.lazy(() => import('./pages/LeaderboardPage'));
+const BadgesPage = React.lazy(() => import('./pages/BadgesPage'));
+const PoliciesPage = React.lazy(() => import('./pages/PoliciesPage'));
+const SupportPage = React.lazy(() => import('./pages/SupportPage'));
+const ContactPage = React.lazy(() => import('./pages/ContactPage'));
+const HelpChatPage = React.lazy(() => import('./pages/HelpChatPage'));
+const SharedOutputPage = React.lazy(() => import('./pages/SharedOutputPage'));
 import CongratulationsModal from './components/CongratulationsModal';
 
 // Wrapper to extract :mode param and pass it to TrainerApp
@@ -130,7 +130,8 @@ function App() {
                     path="/*"
                     element={
                       <Layout>
-                        <ReactRouterDOM.Routes>
+                        <React.Suspense fallback={<FastLoadingSpinner />}>
+                          <ReactRouterDOM.Routes>
                           {/* Public Routes */}
                           <ReactRouterDOM.Route path="/" element={<HomePage />} />
                           <ReactRouterDOM.Route path="/login" element={<LoginPage />} />
@@ -228,7 +229,8 @@ function App() {
                             path="/admin/change-product-price"
                             element={<AdminRoute><ChangeProductPricePage /></AdminRoute>}
                           />
-                        </ReactRouterDOM.Routes>
+                          </ReactRouterDOM.Routes>
+                        </React.Suspense>
                       </Layout>
                     }
                   />
