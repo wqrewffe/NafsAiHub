@@ -3,7 +3,7 @@ const criticalResources = [
   '/styles.css',
   '/critical.css',
   '/instant.css',
-  '/fav.png'
+  'https://nafsaihub.vercel.app/assets/fav-Ck4NQm_F.png'
 ];
 
 // Preload critical resources with correct `as` values
