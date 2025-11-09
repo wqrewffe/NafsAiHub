@@ -1,0 +1,126 @@
+.notification-overlay{position:fixed;inset:0;z-index:9999;display:flex;justify-content:center;align-items:flex-start;padding-top:5rem;pointer-events:none}
+.notification-backdrop{position:fixed;inset:0;background:linear-gradient(180deg,rgba(var(--theme-primary-rgb),0.6),rgba(var(--theme-primary-rgb),0.35));backdrop-filter:blur(6px);opacity:0;transition:opacity .24s ease}
+.notification-container{position:relative;width:100%;max-width:520px;margin:0 1rem;transform-origin:top center;opacity:0;transform:translateY(-10px) scale(.995);transition:transform .22s ease,opacity .22s ease}
+.notification-overlay.active{pointer-events:auto}
+.notification-overlay.active .notification-backdrop{opacity:1}
+.notification-overlay.active .notification-container{opacity:1;transform:translateY(0) scale(1)}
+.fade-in{animation:fadeIn .32s cubic-bezier(.2,.8,.2,1) both}
+.fade-out{animation:fadeOut .28s cubic-bezier(.2,.8,.2,1) both}
+.scale-in{animation:scaleIn .28s cubic-bezier(.2,.8,.2,1) both}
+.scale-out{animation:scaleOut .24s cubic-bezier(.2,.8,.2,1) both}
+
+/* Debug styles */
+[data-type="insufficient"] {
+  animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-20px);
+  }
+  60% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+.fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+.scale-in {
+  animation: scale-in 0.3s ease-out forwards;
+}
+
+.animate-bounce {
+  animation: bounce 2s infinite;
+}
+
+.animate-ping {
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.shake{animation:shake .5s cubic-bezier(.36,.07,.19,.97) both}
+
+/* Confetti animation */
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: .5;
+  }
+}
+
+/* Reward display */
+.points-value{animation:scale-in .5s ease-out;color:var(--primary);font-weight:700}
+
+/* Dark mode adjustments */
+.bg-secondary{background:var(--surface)}
+.text-light{color:var(--text)}
+.text-slate-300{color:var(--muted-text)}

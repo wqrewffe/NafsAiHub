@@ -1,0 +1,365 @@
+.fallback-avatar{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(180deg,var(--primary),var(--primary-600));
+  color:var(--text);
+  font-weight:600;
+  font-size:0.9rem;
+  width:40px;
+  height:40px;
+  border-radius:999px;
+  box-shadow:0 4px 10px rgba(var(--theme-primary-rgb),0.12);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fallback-avatar:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(var(--theme-primary-rgb),0.2);
+}
+
+.fallback-avatar::before{
+  content:attr(data-initials);
+}
+
+/* Enhanced glass / blur navbar style - Artistic */
+.navbar-glass{
+	background: rgba(var(--primary-rgb, 6 8 15), 0.75);
+	-webkit-backdrop-filter: blur(20px) saturate(180%);
+	backdrop-filter: blur(20px) saturate(180%);
+	border-bottom: 1px solid rgba(var(--theme-text-rgb), 0.1);
+	box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(var(--color-light-rgb, var(--theme-text-rgb)), 0.05) inset,
+    0 0 40px rgba(var(--color-primary-rgb, var(--theme-primary-rgb)), 0.1);
+	padding-top: 0.25rem;
+	padding-bottom: 0.25rem;
+	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	width: 100%;
+	z-index: 9999;
+}
+
+.navbar-glass::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 100%;
+	background: linear-gradient(
+		180deg,
+		rgba(var(--color-primary-rgb, var(--theme-primary-rgb)), 0.05) 0%,
+		transparent 50%,
+		transparent 100%
+	);
+	pointer-events: none;
+	z-index: -1;
+}
+
+.navbar-glass::after {
+	content: '';
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(var(--color-primary-rgb, var(--theme-primary-rgb)), 0.4),
+		rgba(var(--color-accent-rgb, var(--theme-accent-rgb)), 0.4),
+		rgba(var(--color-accent-rgb, var(--theme-accent-rgb)), 0.4),
+		rgba(var(--color-primary-rgb, var(--theme-primary-rgb)), 0.4),
+		transparent
+	);
+	opacity: 0.6;
+	transition: opacity 0.3s;
+	background-size: 200% 100%;
+	animation: gradientShift 3s ease infinite;
+}
+
+.navbar-glass:hover::after {
+	opacity: 1;
+	animation-duration: 2s;
+}
+
+/* Enhanced navbar links */
+.navbar-glass a:not(.brand-title),
+.navbar-glass button {
+	font-size: 1.05rem !important;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	position: relative;
+}
+
+.navbar-glass a:not(.brand-title):hover,
+.navbar-glass button:hover {
+	transform: translateY(-2px);
+	filter: brightness(1.2);
+}
+
+.navbar-glass .brand-title {
+	font-size: 1.35rem !important;
+	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+	background: linear-gradient(135deg, #ff0000, #ff4444, #ff6666);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+	background-size: 200% 200%;
+	animation: gradientShift 3s ease infinite;
+	position: relative;
+	display: inline-block;
+}
+
+.navbar-glass .brand-title::after {
+	content: '';
+	position: absolute;
+	bottom: -2px;
+	left: 0;
+	width: 0;
+	height: 2px;
+	background: linear-gradient(90deg, #ff0000, #ff4444);
+	border-radius: 2px;
+	transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.navbar-glass .brand-title:hover {
+	transform: scale(1.05);
+	filter: brightness(1.15);
+	animation-duration: 1.5s;
+}
+
+.navbar-glass .brand-title:hover::after {
+	width: 100%;
+}
+
+/* Enhanced brand logo */
+.brand-logo {
+	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+	filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.brand:hover .brand-logo {
+	transform: rotate(5deg) scale(1.1);
+	filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+/* Make mobile menu items slightly smaller */
+@media (max-width: 768px) {
+	.navbar-glass a:not(.brand-title),
+	.navbar-glass button {
+		font-size: 1rem !important;
+	}
+}
+
+/* Enhanced blur for large screens - Artistic */
+@media (min-width:1200px){
+	.navbar-glass{
+		backdrop-filter: blur(24px) saturate(180%);
+		-webkit-backdrop-filter: blur(24px) saturate(180%);
+		box-shadow: 
+      0 12px 48px rgba(0, 0, 0, 0.25),
+      0 0 0 1px rgba(var(--color-light-rgb, var(--theme-text-rgb)), 0.08) inset,
+      0 0 60px rgba(var(--color-primary-rgb, var(--theme-primary-rgb)), 0.15);
+	}
+	
+	.navbar-glass::before {
+		background: linear-gradient(
+			180deg,
+			rgba(var(--color-primary-rgb, var(--theme-primary-rgb)), 0.08) 0%,
+			transparent 50%,
+			transparent 100%
+		);
+	}
+}
+
+/* Palestine banner - enhanced */
+.palestine-banner{
+	display:flex;
+	align-items:center;
+	gap:12px;
+	background:linear-gradient(90deg,rgba(var(--theme-text-rgb),0.02),rgba(var(--theme-text-rgb),0.01));
+	padding:8px 14px;
+	border-bottom:1px solid var(--border);
+	justify-content:center;
+	font-weight:700;
+	color:var(--text);
+	font-size:0.95rem;
+	border-radius:0 0 var(--radius-sm) var(--radius-sm);
+	transition: all 0.3s ease;
+}
+
+.palestine-banner:hover {
+	background:linear-gradient(90deg,rgba(var(--theme-text-rgb),0.05),rgba(var(--theme-text-rgb),0.03));
+	transform: translateY(-1px);
+}
+
+.palestine-flag-svg{
+	width:40px;
+	height:24px;
+	display:block;
+	border-radius:4px;
+	box-shadow:0 2px 6px rgba(var(--theme-text-rgb),0.35);
+	transition: all 0.3s ease;
+}
+
+.palestine-banner:hover .palestine-flag-svg {
+	transform: scale(1.05);
+	box-shadow: 0 4px 10px rgba(var(--theme-text-rgb),0.5);
+}
+
+.palestine-text{
+	letter-spacing:0.3px;
+	color:var(--muted-text);
+	text-shadow:none;
+}
+
+@media (max-width:420px){
+	.palestine-banner{
+		padding:6px 10px;
+		gap:8px;
+		font-size:0.82rem;
+	}
+	.palestine-flag-svg{
+		width:32px;
+		height:20px;
+	}
+}
+
+/* Enhanced Desktop Dropdown Menu */
+.desktop-dropdown-menu {
+  animation: dropdownFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 8px 32px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  transform-origin: top right;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.9) rotateX(-10deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotateX(0deg);
+  }
+}
+
+.desktop-menu-item {
+  position: relative;
+  margin: 0 4px;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.desktop-menu-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) scaleY(0);
+  width: 4px;
+  height: 0;
+  background: linear-gradient(180deg, var(--accent, #3b82f6), var(--accent, #60a5fa));
+  border-radius: 0 4px 4px 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+.desktop-menu-item::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.desktop-menu-item:hover::before {
+  transform: translateY(-50%) scaleY(1);
+  height: 70%;
+}
+
+.desktop-menu-item:hover::after {
+  left: 100%;
+}
+
+.desktop-menu-item:hover {
+  transform: translateX(4px);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.desktop-menu-item:active {
+  transform: translateX(2px);
+  transition: all 0.1s;
+}
+
+.desktop-menu-item svg,
+.desktop-menu-item .w-5 {
+  flex-shrink: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.desktop-menu-item:hover svg {
+  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3));
+}
+
+/* Enhanced Navbar Avatar */
+.navbar-glass .w-8.h-8.rounded-full {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.navbar-glass .w-8.h-8.rounded-full:hover {
+  transform: scale(1.15);
+  border-color: var(--color-accent, #3b82f6);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Enhanced Points Display */
+.navbar-glass .flex.items-center.px-3.py-1 {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+}
+
+.navbar-glass .flex.items-center.px-3.py-1:hover {
+  transform: scale(1.05);
+  border-color: var(--color-accent, #3b82f6);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+/* Mobile Menu Enhancements */
+@media (max-width: 768px) {
+  .navbar-glass .md\\:hidden {
+    animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

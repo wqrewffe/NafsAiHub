@@ -1,0 +1,27 @@
+.toggle{appearance:none;width:3.5rem;height:2rem;background-color:rgba(var(--theme-text-rgb),0.08);border-radius:999px;position:relative;cursor:pointer;transition:background-color .3s ease}
+
+.toggle:checked {
+  background-color: var(--primary);
+}
+
+.toggle:before {
+  content: "";
+  position: absolute;
+  left: 0.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background-color: rgba(var(--theme-text-rgb), 1);
+  transition: transform 0.3s ease;
+}
+
+.toggle:checked:before {
+  transform: translate(1.5rem, -50%);
+}
+
+.toggle:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.45);
+}
