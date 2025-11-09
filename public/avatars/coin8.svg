@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
-  <defs><linearGradient id="g8" x1="0" x2="1"><stop offset="0%" stop-color="#B3E5FC"/><stop offset="100%" stop-color="#03A9F4"/></linearGradient></defs>
-  <circle cx="60" cy="60" r="50" fill="url(#g8)" stroke="#0288D1" stroke-width="3"/>
-  <text x="60" y="72" font-family="Inter, Arial" font-weight="700" font-size="24" text-anchor="middle" fill="#012F45">100K</text>
-  <path d="M35 40c10 6 20 6 30 0" stroke="#ffffff" stroke-opacity="0.08" stroke-width="6" fill="none" stroke-linecap="round" />
-</svg>
