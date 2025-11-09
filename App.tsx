@@ -1,7 +1,8 @@
 
-import React, { Suspense } from 'react';
+import React, { Suspense, memo } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 import './styles/interactive.css';
+import './styles/artistic-design.css';
 import { AuthProvider } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
 import { SettingsProvider } from './hooks/useSettings';
@@ -12,8 +13,10 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import FastLoadingSpinner from './components/FastLoadingSpinner';
 
-// Lazy load all main pages
-const HomePage = React.lazy(() => import('./pages/HomePage'));
+// Eagerly load HomePage since it's the landing page and mostly static
+import HomePage from './pages/HomePage';
+
+// Lazy load other pages
 const LoginPage = React.lazy(() => import('./pages/LoginPage'));
 const SignUpPage = React.lazy(() => import('./pages/SignUpPage'));
 const ToolPage = React.lazy(() => import('./pages/ToolPage'));
@@ -82,17 +85,11 @@ const TrainerWrapper: React.FC = () => {
   return <TrainerApp initialMode={mode} />;
 };
 
-function App() {
-  return (
-    <AuthProvider>
-      <ThemeProvider>
-        <SettingsProvider>
-          <CongratulationsProvider>
-            <ToolAccessProvider>
-              <ReactRouterDOM.HashRouter>
-                {/* App chrome that should always be visible */}
-                <Navbar />
-                <ReactRouterDOM.Routes>
+// Memoized wrapper to prevent unnecessary re-renders of static components
+const AppContent = memo(() => (
+  <>
+    <Navbar />
+    <ReactRouterDOM.Routes>
                   {/* Trainer route rendered outside Layout so it displays full-screen without navbar/footer */}
                   <ReactRouterDOM.Route
                     path="/trainer/:mode?"
@@ -234,11 +231,26 @@ function App() {
                       </Layout>
                     }
                   />
-                </ReactRouterDOM.Routes>
-                {/* Global Toaster for react-hot-toast */}
-                <Toaster position="top-right" />
-                {/* Always-visible footer */}
-                <Footer />
+    </ReactRouterDOM.Routes>
+    {/* Global Toaster for react-hot-toast */}
+    <Toaster position="top-right" />
+    {/* Always-visible footer */}
+    <Footer />
+  </>
+));
+
+AppContent.displayName = 'AppContent';
+
+function App() {
+  return (
+    <AuthProvider>
+      <ThemeProvider>
+        <SettingsProvider>
+          <CongratulationsProvider>
+            <ToolAccessProvider>
+              <ReactRouterDOM.HashRouter>
+                {/* App chrome that should always be visible */}
+                <AppContent />
                 {/* CongratulationsModal is rendered by the CongratulationsProvider */}
               </ReactRouterDOM.HashRouter>
             </ToolAccessProvider>
