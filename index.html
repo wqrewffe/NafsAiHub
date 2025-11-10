@@ -3,6 +3,10 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!-- Prevent browser from caching this HTML -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <link rel="icon" type="image/png" href="https://nafsaihub.vercel.app/assets/fav-Ck4NQm_F.png">
     <title>NafsAiHub — Learn, Compete, and Collaborate</title>
     
@@ -79,36 +83,115 @@
   
   
   <script>
-    // Early cleanup of broken localStorage (runs before React loads)
-    // Only removes keys that are clearly broken source file references
+    // IMMEDIATE cleanup - runs synchronously before ANY other scripts
     (function() {
+      'use strict';
+      
+      console.log('[Cleanup] Starting aggressive cache cleanup...');
+      
+      // 1. Clear broken localStorage immediately
       try {
         const keys = Object.keys(localStorage);
+        let removedCount = 0;
         keys.forEach(key => {
-          // Only remove keys that exactly match the broken source file paths from 404 errors
           if (key === '/App.tsx' || key === '/components/Layout.tsx' || key === '/hooks/useAuth.tsx' ||
               key.includes('/App.tsx') || key.includes('/components/Layout.tsx') || key.includes('/hooks/useAuth.tsx')) {
             localStorage.removeItem(key);
+            removedCount++;
           }
         });
+        if (removedCount > 0) {
+          console.log('[Cleanup] Removed', removedCount, 'broken localStorage entries');
+        }
       } catch(e) {
-        console.warn('Early cleanup error:', e);
+        console.warn('[Cleanup] localStorage cleanup error:', e);
       }
+
+      // 2. Unregister ALL service workers IMMEDIATELY (don't wait for load event)
+      if('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          console.log('[Cleanup] Found', registrations.length, 'service worker registrations');
+          for(let registration of registrations) {
+            registration.unregister().then(function(success) {
+              if (success) {
+                console.log('[Cleanup] Service worker unregistered successfully');
+              }
+            }).catch(function(err) {
+              console.warn('[Cleanup] Service worker unregister error:', err);
+            });
+          }
+        }).catch(function(err) {
+          console.warn('[Cleanup] Service worker getRegistrations error:', err);
+        });
+      }
+
+      // 3. Clear ALL caches IMMEDIATELY
+      if('caches' in window) {
+        caches.keys().then(function(cacheNames) {
+          console.log('[Cleanup] Found', cacheNames.length, 'caches to clear');
+          return Promise.all(
+            cacheNames.map(function(cacheName) {
+              console.log('[Cleanup] Deleting cache:', cacheName);
+              return caches.delete(cacheName);
+            })
+          ).then(function() {
+            console.log('[Cleanup] All caches cleared successfully');
+          });
+        }).catch(function(err) {
+          console.warn('[Cleanup] Cache cleanup error:', err);
+        });
+      }
+
+      // 4. Clear IndexedDB if it exists (some browsers cache here)
+      if('indexedDB' in window) {
+        try {
+          // Try to delete any IndexedDB databases that might contain broken data
+          if (indexedDB.databases) {
+            indexedDB.databases().then(function(databases) {
+              databases.forEach(function(db) {
+                if (db.name && (db.name.includes('nafs') || db.name.includes('cache'))) {
+                  indexedDB.deleteDatabase(db.name).catch(function(err) {
+                    console.warn('IndexedDB delete error:', err);
+                  });
+                }
+              });
+            }).catch(function(err) {
+              console.warn('IndexedDB databases() error:', err);
+            });
+          }
+        } catch(e) {
+          console.warn('IndexedDB cleanup error:', e);
+        }
+      }
+
+      // 5. Clear sessionStorage as well (just in case)
+      try {
+        sessionStorage.clear();
+        console.log('[Cleanup] sessionStorage cleared');
+      } catch(e) {
+        console.warn('[Cleanup] sessionStorage clear error:', e);
+      }
+      
+      console.log('[Cleanup] Initial cleanup complete');
     })();
 
-    // Service worker cleanup
-    if('serviceWorker' in navigator){
-      window.addEventListener('load',async()=>{
-        try{
-          const regs=await navigator.serviceWorker.getRegistrations();
-          for(const r of regs)await r.unregister();
-          if(window.caches){
-            const keys=await caches.keys();
-            await Promise.all(keys.map(k=>caches.delete(k)));
+    // Also run cleanup on load as backup
+    window.addEventListener('load', function() {
+      if('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for(let registration of registrations) {
+            registration.unregister();
           }
-        }catch(e){console.warn('SW cleanup error:',e)}
-      });
-    }
+        });
+      }
+      if('caches' in window) {
+        caches.keys().then(function(cacheNames) {
+          return Promise.all(cacheNames.map(function(cacheName) {
+            return caches.delete(cacheName);
+          }));
+        });
+      }
+    });
   </script>
   
   <script src="/preloader.js" defer></script>
