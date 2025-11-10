@@ -4,9 +4,6 @@ import { Tool } from './types';
 import { Welcome } from './components/tools/Welcome';
 import { AllTools } from './components/tools/AllTools';
 import { useAuth } from '../hooks/useAuth';
-import AnimatedBackground from './components/AnimatedBackground';
-import './components/AnimatedBackground.css';
-import './components/glass.css';
 import { logToolUsage } from '../services/firebaseService';
 
 const Sidebar: React.FC<{ 
@@ -48,15 +45,15 @@ const Sidebar: React.FC<{
   }, [filteredTools]);
     
     return (
-        <aside className="glass-bg-darker w-full h-full flex flex-col">
-            <div className="flex items-center justify-between space-x-3 p-4 border-b border-slate-800/20 flex-shrink-0 bg-slate-900/30 backdrop-blur-sm">
+        <aside className="bg-secondary/50 backdrop-blur-xl border-r border-accent/20 w-full h-full flex flex-col">
+            <div className="flex items-center justify-between space-x-3 p-4 border-b border-accent/20 flex-shrink-0 bg-secondary/30 backdrop-blur-sm">
                  <div className="flex items-center gap-3">
-                   <div className="p-2 bg-slate-800/40 rounded-lg backdrop-blur-sm">
-                      <svg className="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                   <div className="p-2 bg-accent/10 rounded-lg backdrop-blur-sm border border-accent/20">
+                      <svg className="w-6 h-6 text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 12l4.179 2.25M6.429 9.75l5.571 3 5.571-3m0 0l4.179 2.25L12 14.25l-5.571-3" />
                       </svg>
                    </div>
-                   <h1 className="text-xl font-bold text-white">Dev Toolbox</h1>
+                   <h1 className="text-xl font-bold text-light">Dev Toolbox</h1>
                  </div>
                  <div className="flex items-center gap-2">
                    <button
@@ -73,7 +70,7 @@ const Sidebar: React.FC<{
                          window.location.assign('/#/');
                        }
                      }}
-                     className="px-3 py-1 rounded text-sm text-white bg-slate-800/40 hover:bg-slate-800/60 backdrop-blur-sm transition-all duration-200 border border-slate-700/30"
+                     className="px-3 py-1 rounded text-sm text-light bg-secondary/50 hover:bg-secondary/70 backdrop-blur-sm transition-all duration-200 border border-accent/30 hover:border-accent/50"
                    >
                      Main Home
                    </button>
@@ -81,11 +78,11 @@ const Sidebar: React.FC<{
             </div>
             
       <nav className="flex-grow overflow-y-auto px-4 pb-4 space-y-2">
-         <button type="button" onClick={() => handleLinkClick('welcome')} className={`w-full text-left flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${activeToolId === 'welcome' ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800 text-slate-300'}`}>
+         <button type="button" onClick={() => handleLinkClick('welcome')} className={`w-full text-left flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${activeToolId === 'welcome' ? 'bg-accent/20 text-accent border border-accent/30' : 'hover:bg-secondary/50 text-slate-300 hover:text-light'}`}>
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
           <span>Home</span>
         </button>
-         <button type="button" onClick={() => handleLinkClick('all_tools')} className={`w-full text-left flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${activeToolId === 'all_tools' ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800 text-slate-300'}`}>
+         <button type="button" onClick={() => handleLinkClick('all_tools')} className={`w-full text-left flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${activeToolId === 'all_tools' ? 'bg-accent/20 text-accent border border-accent/30' : 'hover:bg-secondary/50 text-slate-300 hover:text-light'}`}>
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
           <span>All Tools</span>
         </button>
@@ -96,19 +93,19 @@ const Sidebar: React.FC<{
             placeholder="Search tools..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 glass-bg"
+            className="w-full px-3 py-2 rounded-lg text-light placeholder-slate-400 bg-secondary/30 border border-accent/20 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all duration-300"
           />
         </div>
                 {(Object.entries(groupedTools) as [string, import('./types').Tool[]][]).map(([category, tools]) => (
                     <div key={category}>
-                        <button onClick={() => toggleCategory(category)} className="w-full flex justify-between items-center text-left text-sm font-semibold text-slate-400 hover:text-white px-3 py-2 rounded-lg">
+                        <button onClick={() => toggleCategory(category)} className="w-full flex justify-between items-center text-left text-sm font-semibold text-slate-400 hover:text-accent px-3 py-2 rounded-lg transition-colors">
                             <span>{category}</span>
                             <svg className={`w-4 h-4 transition-transform ${expandedCategories[category] ? 'rotate-90' : ''}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
                         </button>
                          {expandedCategories[category] && (
-                            <div className="pl-4 mt-1 space-y-1 border-l border-slate-700 ml-2">
+                            <div className="pl-4 mt-1 space-y-1 border-l border-accent/20 ml-2">
                 {tools.map(tool => (
-                  <button key={tool.id} type="button" onClick={() => handleLinkClick(tool.id)} className={`w-full text-left flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors ${activeToolId === tool.id ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800 text-slate-300'}`}>
+                  <button key={tool.id} type="button" onClick={() => handleLinkClick(tool.id)} className={`w-full text-left flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors ${activeToolId === tool.id ? 'bg-accent/20 text-accent border border-accent/30' : 'hover:bg-secondary/50 text-slate-300 hover:text-light'}`}>
                     <tool.icon className="w-4 h-4 flex-shrink-0" />
                     <span>{tool.name}</span>
                   </button>
@@ -209,20 +206,21 @@ function App() {
   }, [pathname, handleSelectTool]);
 
   return (
-    <div className="min-h-screen text-slate-200 flex">
-      <AnimatedBackground />
+    <div className="min-h-screen text-slate-200 flex" style={{ backgroundColor: 'var(--color-secondary, #061018)' }}>
       <button 
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="lg:hidden fixed top-4 left-4 z-60 p-2 rounded-md text-white glass-bg"
+        className="lg:hidden fixed top-20 right-4 z-[10000] p-3 rounded-lg text-light bg-accent/20 border-2 border-accent/40 hover:bg-accent/30 hover:border-accent/60 backdrop-blur-sm transition-all duration-200 shadow-lg shadow-accent/20"
         aria-label="Open sidebar"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" />
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="5" r="2" />
+          <circle cx="12" cy="12" r="2" />
+          <circle cx="12" cy="19" r="2" />
         </svg>
       </button>
 
   <div className="hidden lg:block lg:w-72 lg:flex-shrink-0">
-          <div className="fixed top-0 left-0 h-full w-72">
+          <div className="sticky top-0 h-screen overflow-y-auto">
              <Sidebar onSelectTool={handleSelectTool} activeToolId={activeToolId} />
           </div>
       </div>
@@ -231,11 +229,11 @@ function App() {
         <div className="relative h-full w-72 z-50">
            <Sidebar onSelectTool={handleSelectTool} activeToolId={activeToolId} />
         </div>
-        <div className="fixed inset-0 glass-bg-darker z-40" onClick={() => setIsSidebarOpen(false)}></div>
+        <div className="fixed inset-0 bg-secondary/80 backdrop-blur-sm z-40" onClick={() => setIsSidebarOpen(false)}></div>
       </div>
 
-    <main className="flex-1 overflow-y-auto relative z-10">
-      <div className="p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto pt-24 lg:pt-32">
+    <main className="flex-1 relative z-10 min-h-screen">
+      <div className="p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto pt-24 lg:pt-32 pb-32 lg:pb-40">
         {ActiveToolComponent}
       </div>
     </main>
