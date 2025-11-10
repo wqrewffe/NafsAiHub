@@ -173,6 +173,23 @@
       }
       
       console.log('[Cleanup] Initial cleanup complete');
+      
+      // Force reload CSS files to prevent stale styles
+      function reloadStylesheets() {
+        const stylesheets = document.querySelectorAll('link[rel="stylesheet"]');
+        stylesheets.forEach(function(link) {
+          const href = link.getAttribute('href');
+          if (href && !href.includes('cdn.tailwindcss.com')) {
+            const url = new URL(href, window.location.origin);
+            url.searchParams.set('_t', Date.now());
+            link.setAttribute('href', url.pathname + url.search);
+            console.log('[Cleanup] Reloaded stylesheet:', href);
+          }
+        });
+      }
+      
+      // Reload stylesheets after a short delay to ensure they're not cached
+      setTimeout(reloadStylesheets, 100);
     })();
 
     // Also run cleanup on load as backup
@@ -283,7 +300,7 @@
     </div>
   </footer> -->
   
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/styles.css?v=1.0.2" id="main-stylesheet">
   <!-- Loading Skeleton -->
   <main class="initial-root" aria-hidden="true">
     <div style="max-width:1280px;margin:0 auto;padding:0 1rem">
