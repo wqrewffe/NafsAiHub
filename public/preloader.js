@@ -6,15 +6,24 @@ const criticalResources = [
   '/fav.png'
 ];
 
-// Preload critical resources with correct `as` values
+// Preload critical resources with correct `as` values and cache-busting
 criticalResources.forEach(resource => {
   const link = document.createElement('link');
   link.rel = 'preload';
-  if (resource.endsWith('.css')) link.as = 'style';
-  else if (resource.match(/\.(png|jpg|jpeg|webp|avif|gif)$/i)) link.as = 'image';
-  else if (resource.endsWith('.js')) link.as = 'script';
-  else link.as = 'fetch';
-  link.href = resource;
+  if (resource.endsWith('.css')) {
+    link.as = 'style';
+    // Add cache-busting to CSS files
+    link.href = resource + '?v=1.0.2&_t=' + Date.now();
+  } else if (resource.match(/\.(png|jpg|jpeg|webp|avif|gif)$/i)) {
+    link.as = 'image';
+    link.href = resource;
+  } else if (resource.endsWith('.js')) {
+    link.as = 'script';
+    link.href = resource;
+  } else {
+    link.as = 'fetch';
+    link.href = resource;
+  }
   document.head.appendChild(link);
 });
 
