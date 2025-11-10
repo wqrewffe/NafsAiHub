@@ -1,13 +1,22 @@
 {
   "rewrites": [
     {
-      "source": "/((?!api/).*)",
+      "source": "/((?!api/|assets/|fav\\.png|favicon|manifest\\.json|robots\\.txt|sitemap\\.xml|instant\\.css|styles\\.css|preloader\\.js|.*\\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json|xml|txt|webp|avif)).*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json|xml|webp|avif))",
       "headers": [
         {
           "key": "Cache-Control",
