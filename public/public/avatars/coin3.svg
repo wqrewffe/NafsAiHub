@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <circle cx="60" cy="60" r="52" fill="#FFCDD2" stroke="#E53935" stroke-width="3"/>
+  <g transform="translate(0,-4)">
+    <path d="M36 60c0-14 10-26 24-26s24 12 24 26-10 26-24 26S36 74 36 60z" fill="#FFF3F3" opacity="0.6"/>
+  </g>
+  <text x="60" y="72" font-family="Inter, Arial" font-weight="700" font-size="28" text-anchor="middle" fill="#7B1F1F">3K</text>
+</svg>
