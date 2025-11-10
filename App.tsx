@@ -15,6 +15,7 @@ import FastLoadingSpinner from './components/FastLoadingSpinner';
 
 // Eagerly load HomePage since it's the landing page and mostly static
 import HomePage from './pages/HomePage';
+import DevToolboxApp from './dev-toolbox/App';
 
 // Lazy load other pages
 const LoginPage = React.lazy(() => import('./pages/LoginPage'));
@@ -28,7 +29,6 @@ import AdminRoute from './components/AdminRoute';
 import { Toaster } from 'react-hot-toast';
 const ForgotPasswordPage = React.lazy(() => import('./pages/ForgotPasswordPage'));
 const TrainerApp = React.lazy(() => import('./TRAINER/trainerExport'));
-const DevToolboxApp = React.lazy(() => import('./dev-toolbox/App'));
 const ToolsShowcaseApp = React.lazy(() => import('./ai-tools-showcase/App'));
 const VerifyEmailPage = React.lazy(() => import('./pages/VerifyEmailPage'));
 const SettingsPage = React.lazy(() => import('./pages/SettingsPage'));
@@ -104,10 +104,7 @@ const AppContent = memo(() => (
                   <ReactRouterDOM.Route
                     path="/toolbox/*"
                     element={
-                      <React.Suspense fallback={<div className="p-8 text-center">Loading Toolbox...</div>}>
-                        {/* @ts-ignore */}
-                        <DevToolboxApp />
-                      </React.Suspense>
+                      <DevToolboxApp />
                     }
                   />
 
