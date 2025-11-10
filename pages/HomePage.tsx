@@ -27,6 +27,17 @@ import NeuralNetwork from '../components/NeuralNetwork';
 
 const HERO_ANIMATION_URL = 'https://lottie.host/80b18f76-b48e-4a6f-a859-9941a1a5b88f/aWvNoz32pP.json';
 
+// Additional icons for dev-toolbox content
+const DocumentIcon: React.FC<{className?: string}> = (props) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>);
+const PhotoIcon: React.FC<{className?: string}> = (props) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25z" /></svg>);
+const SwatchIcon: React.FC<{className?: string}> = (props) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.998 15.998 0 013.388-1.62m0 0a15.998 15.998 0 013.388-1.62m0 0a15.998 15.998 0 013.388-1.62m0 0a15.998 15.998 0 013.388-1.62m0 0a15.998 15.998 0 013.388-1.62M12 6.375a3.375 3.375 0 116.75 0 3.375 3.375 0 01-6.75 0z" /></svg>);
+const ShareIcon: React.FC<{className?: string}> = (props) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.195.025.39.05.588.08m-5.88-.08a2.25 2.25 0 01-2.186 0c.195.025.39.05.588.08m5.88-.08l-2.186.086m2.186-.086l2.186.086m0 0a2.25 2.25 0 100-2.186m0 2.186c-.195-.025-.39-.05-.588-.08m5.88.08a2.25 2.25 0 012.186 0c-.195-.025-.39-.05-.588-.08m-5.88.08l2.186-.086m-2.186.086l-2.186-.086" /></svg>);
+const QrCodeIcon: React.FC<{className?: string}> = (props) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.5A.75.75 0 014.5 3.75h4.5a.75.75 0 01.75.75v4.5a.75.75 0 01-.75.75h-4.5a.75.75 0 01-.75-.75v-4.5zM3.75 15a.75.75 0 01.75-.75h4.5a.75.75 0 01.75.75v4.5a.75.75 0 01-.75.75h-4.5a.75.75 0 01-.75-.75v-4.5zM15 3.75a.75.75 0 00-.75.75v4.5a.75.75 0 00.75.75h4.5a.75.75 0 00.75-.75v-4.5a.75.75 0 00-.75-.75h-4.5zM16.5 15h-1.875a.375.375 0 00-.375.375v1.875c0 .207.168.375.375.375H16.5v1.125c0 .621-.504 1.125-1.125 1.125H14.25v-1.125c0-.207.168-.375.375-.375h1.875v-1.875a.375.375 0 00-.375-.375H14.25v-1.125c0-.621.504-1.125 1.125-1.125h1.125v1.5c0 .207-.168.375-.375.375H16.5v1.125z" /></svg>);
+const MagnifyingGlassIcon: React.FC<{className?: string}> = (props) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>);
+const ArrowPathIcon: React.FC<{className?: string}> = (props) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.667 0l3.181-3.183m-11.667 0l3.181-3.183a8.25 8.25 0 00-11.667 0l3.181 3.183" /></svg>);
+const GradientGeneratorIcon: React.FC<{className?: string}> = (props) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.998 15.998 0 013.388-1.62m0 0a15.998 15.998 0 013.388-1.62m0 0a15.998 15.998 0 013.388-1.62m0 0a15.998 15.998 0 013.388-1.62m0 0a15.998 15.998 0 013.388-1.62M12 6.375a3.375 3.375 0 116.75 0 3.375 3.375 0 01-6.75 0z" /></svg>);
+const ShieldCheckIcon: React.FC<{className?: string}> = (props) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.602-3.751A11.959 11.959 0 0112 2.75z" /></svg>);
+
 // Initialize static data immediately (not in useEffect)
 const toolsById = new Map(tools.map(tool => [tool.id, tool]));
 
@@ -85,6 +96,39 @@ const HomePage: React.FC = memo(() => {
 
     checkNewUser();
   }, [currentUser]);
+
+  // Prefetch DevToolboxApp module early for instant navigation
+  useEffect(() => {
+    // Prefetch on page load with a small delay to not block initial render
+    const prefetchTimer = setTimeout(() => {
+      import('./../dev-toolbox/App').catch(() => {
+        // Silently fail if prefetch fails
+      });
+    }, 1000);
+    
+    return () => clearTimeout(prefetchTimer);
+  }, []);
+
+  // Prefetch when user scrolls near toolbox section
+  useEffect(() => {
+    const handleScroll = () => {
+      const toolboxSection = document.getElementById('tools');
+      if (toolboxSection) {
+        const rect = toolboxSection.getBoundingClientRect();
+        // Prefetch when user is within 500px of the toolbox section
+        if (rect.top < window.innerHeight + 500) {
+          import('./../dev-toolbox/App').catch(() => {});
+          window.removeEventListener('scroll', handleScroll);
+        }
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Check immediately in case user is already near the section
+    handleScroll();
+    
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Featured tools are now initialized statically - no useEffect needed
 
@@ -449,7 +493,7 @@ const HomePage: React.FC = memo(() => {
             </span>
           </h1>
           <p className="mt-4 sm:mt-6 md:mt-8 text-base sm:text-lg md:text-xl max-w-3xl mx-auto md:mx-0 leading-relaxed text-slate-300 transition-colors duration-300 px-2 sm:px-0">
-            The most comprehensive AI-powered platform featuring over 220 specialized tools designed to revolutionize how students, professionals, developers, and creators work, learn, and innovate. From essay writing and medical diagnosis to code explanation and creative storytelling - Naf's AI Hub has everything you need to supercharge your productivity and unlock your full potential. Experience the future of intelligent assistance today.
+            The most comprehensive AI-powered platform featuring <span className="font-semibold text-accent">81+ AI-powered tools</span> and <span className="font-semibold text-primary">110+ developer utilities</span> designed to revolutionize how students, professionals, developers, and creators work, learn, and innovate. From essay writing and medical diagnosis to code explanation and creative storytelling - plus a complete Developer Toolbox with professional utilities for text, image, color, and security tasks - Naf's AI Hub has everything you need to supercharge your productivity and unlock your full potential. Experience the future of intelligent assistance today.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-6 sm:mt-8 justify-center md:justify-start px-2 sm:px-0">
             <button 
@@ -472,7 +516,15 @@ const HomePage: React.FC = memo(() => {
             </div>
             <div className="flex items-center gap-2">
               <SparklesIcon className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
-              <span>220+ AI Tools</span>
+              <span><span className="text-accent font-semibold">81+</span> AI Tools</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CpuChipIcon className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              <span><span className="text-primary font-semibold">110+</span> Developer Tools</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <RocketLaunchIcon className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
+              <span><span className="font-semibold text-light">191+</span> Total Tools</span>
             </div>
           </div>
         </div>
@@ -520,13 +572,115 @@ const HomePage: React.FC = memo(() => {
         </div>
       </div>
 
+      {/* Daily Engagement Section */}
+      {currentUser && (
+        <div className="bg-gradient-to-r from-accent/20 via-primary/20 to-accent/20 border border-accent/30 rounded-2xl p-6 sm:p-8 scroll-reveal relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-primary/5"></div>
+          <div className="relative z-10">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-bold text-light mb-2">Keep Your Streak Going! 🔥</h2>
+                <p className="text-sm sm:text-base text-slate-300">Visit daily to maintain your streak and unlock rewards</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-center">
+                  <div className="text-3xl sm:text-4xl font-bold text-accent">{streak}</div>
+                  <div className="text-xs sm:text-sm text-slate-400">Day Streak</div>
+                </div>
+                {dailyReward && (
+                  <div className="px-4 py-2 bg-accent/20 border border-accent/40 rounded-lg">
+                    <div className="text-xs text-accent font-semibold">🎁 Daily Reward!</div>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-primary/30 backdrop-blur-sm border border-accent/20 rounded-lg p-4 hover:border-accent/40 transition-all duration-300">
+                <div className="flex items-center gap-3 mb-2">
+                  <SparklesIcon className="h-5 w-5 text-accent" />
+                  <h3 className="font-semibold text-light">Daily Login Bonus</h3>
+                </div>
+                <p className="text-sm text-slate-400">Earn 25 points every day you visit</p>
+              </div>
+              <div className="bg-primary/30 backdrop-blur-sm border border-accent/20 rounded-lg p-4 hover:border-accent/40 transition-all duration-300">
+                <div className="flex items-center gap-3 mb-2">
+                  <BoltIcon className="h-5 w-5 text-accent" />
+                  <h3 className="font-semibold text-light">Streak Milestones</h3>
+                </div>
+                <p className="text-sm text-slate-400">Get 100 bonus points every 5 days</p>
+              </div>
+              <div className="bg-primary/30 backdrop-blur-sm border border-accent/20 rounded-lg p-4 hover:border-accent/40 transition-all duration-300">
+                <div className="flex items-center gap-3 mb-2">
+                  <ClipboardDocumentCheckIcon className="h-5 w-5 text-accent" />
+                  <h3 className="font-semibold text-light">Tool Mastery</h3>
+                </div>
+                <p className="text-sm text-slate-400">Level up by using tools regularly</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Actions Section */}
+      <div className="space-y-4 sm:space-y-6 scroll-reveal">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl sm:text-2xl font-bold text-light">Quick Actions</h2>
+          <button
+            onClick={() => navigate('/profile')}
+            className="text-sm text-accent hover:text-accent/80 transition-colors duration-300"
+          >
+            View Profile →
+          </button>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+          {[
+            { icon: CodeBracketIcon, label: 'Code Tools', action: () => setActiveCategory('Programming'), color: 'from-blue-500/20 to-blue-600/20' },
+            { icon: AcademicCapIcon, label: 'Study Tools', action: () => setActiveCategory('High School'), color: 'from-green-500/20 to-green-600/20' },
+            { icon: StethoscopeIcon, label: 'Medical Tools', action: () => setActiveCategory('Medical'), color: 'from-red-500/20 to-red-600/20' },
+            { icon: CpuChipIcon, label: 'Developer Toolbox', action: () => {
+              import('./../dev-toolbox/App');
+              window.location.hash = '#/toolbox';
+            }, color: 'from-purple-500/20 to-purple-600/20' },
+            { icon: BoltIcon, label: 'AI Trainer', action: () => navigate('/trainer'), color: 'from-yellow-500/20 to-yellow-600/20' },
+            { icon: SparklesIcon, label: 'All Tools', action: () => document.getElementById('tools')?.scrollIntoView({ behavior: 'smooth' }), color: 'from-accent/20 to-primary/20' },
+          ].map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.label}
+                onClick={item.action}
+                className={`bg-gradient-to-br ${item.color} border border-accent/20 rounded-xl p-4 sm:p-5 hover:border-accent/40 hover:scale-105 transition-all duration-300 group`}
+                style={{ animationDelay: `${index * 0.05}s` }}
+              >
+                <Icon className="h-6 w-6 sm:h-8 sm:w-8 text-accent mx-auto mb-2 group-hover:scale-110 transition-transform duration-300" />
+                <div className="text-xs sm:text-sm font-medium text-light text-center">{item.label}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Statistics Section */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 scroll-reveal">
-        <div className="bg-secondary/50 border border-accent/20 rounded-lg p-4 sm:p-6 text-center hover:border-accent/40 transition-all duration-300 hover:bg-secondary/70">
-          <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-accent mb-2">
-            {tools.length}+
+        <div className="bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/30 rounded-lg p-4 sm:p-6 text-center hover:border-accent/50 transition-all duration-300 hover:bg-accent/25 hover:scale-105 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10">
+            <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-accent mb-2">
+              81+
+            </div>
+            <div className="text-xs sm:text-sm text-slate-300 font-medium">AI Tools</div>
+            <div className="text-xs text-slate-400 mt-1">Powered by Gemini</div>
           </div>
-          <div className="text-xs sm:text-sm text-slate-400">AI Tools Available</div>
+        </div>
+        <div className="bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30 rounded-lg p-4 sm:p-6 text-center hover:border-primary/50 transition-all duration-300 hover:bg-primary/25 hover:scale-105 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10">
+            <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary mb-2">
+              110+
+            </div>
+            <div className="text-xs sm:text-sm text-slate-300 font-medium">Non-AI Tools</div>
+            <div className="text-xs text-slate-400 mt-1">Developer Toolbox</div>
+          </div>
         </div>
         <div className="bg-secondary/50 border border-accent/20 rounded-lg p-4 sm:p-6 text-center hover:border-accent/40 transition-all duration-300 hover:bg-secondary/70">
           <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-accent mb-2">
@@ -540,11 +694,41 @@ const HomePage: React.FC = memo(() => {
           </div>
           <div className="text-xs sm:text-sm text-slate-400">Active Users</div>
         </div>
-        <div className="bg-secondary/50 border border-accent/20 rounded-lg p-4 sm:p-6 text-center hover:border-accent/40 transition-all duration-300 hover:bg-secondary/70">
-          <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-accent mb-2">
-            100%
+      </div>
+      
+      {/* Total Tools Highlight */}
+      <div className="bg-gradient-to-r from-accent/20 via-primary/20 to-accent/20 border border-accent/30 rounded-2xl p-6 sm:p-8 text-center scroll-reveal relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-primary/5"></div>
+        <div className="relative z-10">
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <SparklesIcon className="h-8 w-8 sm:h-10 sm:w-10 text-accent" />
+            <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-light">
+              <span className="bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">
+                191+ Total Tools
+              </span>
+            </h3>
+            <SparklesIcon className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
           </div>
-          <div className="text-xs sm:text-sm text-slate-400">Free to Use</div>
+          <p className="text-sm sm:text-base text-slate-300 mb-4">
+            Combining <span className="font-semibold text-accent">81+ AI-powered tools</span> with <span className="font-semibold text-primary">110+ developer utilities</span> for the ultimate productivity platform
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <button
+              onClick={() => document.getElementById('tools')?.scrollIntoView({ behavior: 'smooth' })}
+              className="px-6 py-2 bg-accent/20 hover:bg-accent/30 border border-accent/40 text-accent font-semibold rounded-lg transition-all duration-300 text-sm sm:text-base"
+            >
+              Explore AI Tools
+            </button>
+            <button
+              onMouseEnter={() => import('./../dev-toolbox/App')}
+              onClick={() => {
+                window.location.hash = '#/toolbox';
+              }}
+              className="px-6 py-2 bg-primary/20 hover:bg-primary/30 border border-primary/40 text-primary font-semibold rounded-lg transition-all duration-300 text-sm sm:text-base"
+            >
+              Explore Developer Tools
+            </button>
+          </div>
         </div>
       </div>
 
@@ -578,6 +762,136 @@ const HomePage: React.FC = memo(() => {
           showViewAll={true}
           viewAllLink="#tools"
         />
+      </div>
+
+      {/* Developer Toolbox Highlight Section */}
+      <div className="bg-gradient-to-br from-secondary/60 via-secondary/40 to-secondary/60 border border-accent/30 rounded-2xl p-6 sm:p-8 lg:p-10 scroll-reveal overflow-hidden relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-accent/5 via-transparent to-primary/5"></div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 bg-accent/20 rounded-xl">
+              <CpuChipIcon className="h-8 w-8 text-accent" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-light">Developer Toolbox</h2>
+          </div>
+          <p className="text-base sm:text-lg text-slate-300 mb-6 leading-relaxed">
+            Access over <span className="font-bold text-accent">110+ professional developer tools</span> in one powerful suite. From text manipulation and image processing to color utilities and security tools - everything developers and designers need is at your fingertips.
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-6">
+            <div className="bg-primary/30 backdrop-blur-sm border border-accent/20 rounded-lg p-3 text-center hover:border-accent/40 transition-all duration-300">
+              <DocumentIcon className="h-6 w-6 text-accent mx-auto mb-2" />
+              <div className="text-xs sm:text-sm font-semibold text-light">Text Tools</div>
+              <div className="text-xs text-slate-400 mt-1">20+ Tools</div>
+            </div>
+            <div className="bg-primary/30 backdrop-blur-sm border border-accent/20 rounded-lg p-3 text-center hover:border-accent/40 transition-all duration-300">
+              <PhotoIcon className="h-6 w-6 text-accent mx-auto mb-2" />
+              <div className="text-xs sm:text-sm font-semibold text-light">Image Tools</div>
+              <div className="text-xs text-slate-400 mt-1">15+ Tools</div>
+            </div>
+            <div className="bg-primary/30 backdrop-blur-sm border border-accent/20 rounded-lg p-3 text-center hover:border-accent/40 transition-all duration-300">
+              <SwatchIcon className="h-6 w-6 text-accent mx-auto mb-2" />
+              <div className="text-xs sm:text-sm font-semibold text-light">Color Tools</div>
+              <div className="text-xs text-slate-400 mt-1">18+ Tools</div>
+            </div>
+            <div className="bg-primary/30 backdrop-blur-sm border border-accent/20 rounded-lg p-3 text-center hover:border-accent/40 transition-all duration-300">
+              <ShareIcon className="h-6 w-6 text-accent mx-auto mb-2" />
+              <div className="text-xs sm:text-sm font-semibold text-light">Social Tools</div>
+              <div className="text-xs text-slate-400 mt-1">14+ Tools</div>
+            </div>
+            <div className="bg-primary/30 backdrop-blur-sm border border-accent/20 rounded-lg p-3 text-center hover:border-accent/40 transition-all duration-300">
+              <CodeBracketIcon className="h-6 w-6 text-accent mx-auto mb-2" />
+              <div className="text-xs sm:text-sm font-semibold text-light">Dev Tools</div>
+              <div className="text-xs text-slate-400 mt-1">30+ Tools</div>
+            </div>
+            <div className="bg-primary/30 backdrop-blur-sm border border-accent/20 rounded-lg p-3 text-center hover:border-accent/40 transition-all duration-300">
+              <ShieldCheckIcon className="h-6 w-6 text-accent mx-auto mb-2" />
+              <div className="text-xs sm:text-sm font-semibold text-light">Security</div>
+              <div className="text-xs text-slate-400 mt-1">10+ Tools</div>
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onMouseEnter={() => import('./../dev-toolbox/App')}
+              onClick={() => {
+                window.location.hash = '#/toolbox';
+              }}
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-primary to-accent text-white font-semibold rounded-xl hover:shadow-2xl hover:shadow-accent/50 transition-all duration-300 transform hover:scale-105 btn-animated"
+            >
+              Explore Developer Toolbox
+            </button>
+            <button
+              onClick={() => document.getElementById('tools')?.scrollIntoView({ behavior: 'smooth' })}
+              className="flex-1 px-6 py-3 bg-secondary border-2 border-accent/30 text-light font-semibold rounded-xl hover:bg-accent/10 hover:border-accent/50 transition-all duration-300"
+            >
+              View All Categories
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Popular Toolbox Tools Section */}
+      <div className="space-y-6 sm:space-y-8 scroll-reveal">
+        <div className="text-center px-2 sm:px-0">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-light transition-colors duration-300 hover:text-accent inline-block">Popular Developer Tools</h2>
+          <p className="mt-3 sm:mt-4 text-sm sm:text-base text-slate-400 max-w-2xl mx-auto">Discover some of the most-used tools in our comprehensive developer toolbox. Perfect for everyday coding, design, and development tasks.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 scroll-reveal-stagger">
+          {[
+            { icon: CodeBracketIcon, title: 'JSON Formatter', desc: 'Format and validate JSON with syntax highlighting and error detection.', category: 'Text Tools', toolId: 'json-formatter' },
+            { icon: KeyIcon, title: 'Password Generator', desc: 'Create secure, customizable passwords with multiple options and strength indicators.', category: 'Developer Tools', toolId: 'password-generator' },
+            { icon: SwatchIcon, title: 'Color Converter', desc: 'Convert between HEX, RGB, HSL, and more color formats instantly.', category: 'Color Tools', toolId: 'color-converter' },
+            { icon: QrCodeIcon, title: 'QR Code Generator', desc: 'Generate QR codes for URLs, text, or contact information with customization options.', category: 'Social Tools', toolId: 'qr-code-generator' },
+            { icon: PhotoIcon, title: 'Image Resizer', desc: 'Resize images to specific dimensions while maintaining aspect ratio or custom cropping.', category: 'Image Tools', toolId: 'image-resizer' },
+            { icon: MagnifyingGlassIcon, title: 'Regex Tester', desc: 'Test and debug regular expressions with real-time matching and explanation.', category: 'Developer Tools', toolId: 'regex-tester' },
+            { icon: ArrowPathIcon, title: 'Base64 Converter', desc: 'Encode and decode Base64 strings for images, text, and binary data.', category: 'Text Tools', toolId: 'base64-converter' },
+            { icon: GradientGeneratorIcon, title: 'Gradient Generator', desc: 'Create beautiful CSS gradients with visual editor and code export.', category: 'Color Tools', toolId: 'gradient-generator' },
+            { icon: ShieldCheckIcon, title: 'Security Header Scanner', desc: 'Analyze website security headers and get recommendations for improvements.', category: 'Security Tools', toolId: 'security-header-scanner' },
+          ].map((tool, index) => {
+            const Icon = tool.icon;
+            return (
+              <button
+                key={tool.title}
+                onMouseEnter={() => {
+                  // Prefetch the DevToolboxApp module on hover for instant navigation
+                  import('./../dev-toolbox/App');
+                }}
+                onClick={() => {
+                  // Use direct hash navigation for instant redirect (milliseconds)
+                  window.location.hash = `#/toolbox/${tool.toolId}`;
+                }}
+                className="bg-secondary/50 border border-accent/20 rounded-lg p-5 sm:p-6 hover:border-accent/40 hover:bg-secondary/70 transition-all duration-300 group text-left w-full cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="p-2 bg-accent/10 rounded-lg group-hover:bg-accent/20 transition-colors duration-300 flex-shrink-0">
+                    <Icon className="h-6 w-6 text-accent" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-lg font-semibold text-light group-hover:text-accent transition-colors duration-300">{tool.title}</h3>
+                      <svg className="h-4 w-4 text-accent/50 group-hover:text-accent group-hover:translate-x-1 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                    <p className="text-sm text-slate-400 leading-relaxed mb-2">{tool.desc}</p>
+                    <span className="inline-block text-xs px-2 py-1 bg-primary/30 text-accent rounded">{tool.category}</span>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        <div className="text-center">
+          <button
+            onMouseEnter={() => import('./../dev-toolbox/App')}
+            onClick={() => {
+              window.location.hash = '#/toolbox';
+            }}
+            className="px-8 py-3 bg-gradient-to-r from-primary to-accent text-white font-semibold rounded-xl hover:shadow-2xl hover:shadow-accent/50 transition-all duration-300 transform hover:scale-105 btn-animated"
+          >
+            Explore All 110+ Developer Tools
+          </button>
+        </div>
       </div>
 
       {/* Use Cases Section */}
@@ -731,8 +1045,9 @@ const HomePage: React.FC = memo(() => {
                           }
 
                           if (cat.name === 'Toolbox') {
-                            // Navigate to the dedicated Toolbox page which loads the dev-toolbox folder
-                            navigate('/toolbox');
+                            // Prefetch and navigate instantly using hash
+                            import('./../dev-toolbox/App');
+                            window.location.hash = '#/toolbox';
                             return;
                           }
 
@@ -816,6 +1131,144 @@ const HomePage: React.FC = memo(() => {
         </div>
       </div>
 
+      {/* Tips & Tricks Section */}
+      <div className="space-y-6 sm:space-y-8 scroll-reveal">
+        <div className="text-center px-2 sm:px-0">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-light transition-colors duration-300 hover:text-accent inline-block">Pro Tips & Tricks</h2>
+          <p className="mt-3 sm:mt-4 text-sm sm:text-base text-slate-400">Maximize your productivity with these expert tips</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 scroll-reveal-stagger">
+          {[
+            { 
+              icon: SparklesIcon, 
+              title: 'Combine Multiple Tools', 
+              tip: 'Chain tools together for powerful workflows. Use Essay Outliner → Thesis Generator → Text Summarizer for complete essay creation.',
+              color: 'from-blue-500/20 to-blue-600/20'
+            },
+            { 
+              icon: UserCircleIcon, 
+              title: 'Save Your Work', 
+              tip: 'All your tool outputs are automatically saved to your history. Access them anytime from your profile dashboard.',
+              color: 'from-green-500/20 to-green-600/20'
+            },
+            { 
+              icon: BoltIcon, 
+              title: 'Use AI Trainer Daily', 
+              tip: 'Practice with AI Trainer daily to improve your skills. Track your progress and unlock new training modes as you level up.',
+              color: 'from-yellow-500/20 to-yellow-600/20'
+            },
+            { 
+              icon: CpuChipIcon, 
+              title: 'Explore Developer Toolbox', 
+              tip: 'The Developer Toolbox has 110+ utilities. Bookmark your favorites for quick access to tools like JSON Formatter and Color Converter.',
+              color: 'from-purple-500/20 to-purple-600/20'
+            },
+            { 
+              icon: ClipboardDocumentCheckIcon, 
+              title: 'Track Your Progress', 
+              tip: 'Monitor your tool mastery levels and usage streaks. Higher mastery unlocks bonus features and XP rewards.',
+              color: 'from-pink-500/20 to-pink-600/20'
+            },
+            { 
+              icon: RocketLaunchIcon, 
+              title: 'Share & Collaborate', 
+              tip: 'Share your tool outputs with study groups or teams. Use collaborative features to work together in real-time.',
+              color: 'from-orange-500/20 to-orange-600/20'
+            },
+          ].map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <div 
+                key={item.title}
+                className={`bg-gradient-to-br ${item.color} border border-accent/20 rounded-lg p-5 sm:p-6 hover:border-accent/40 transition-all duration-300 group`}
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="p-2 bg-accent/20 rounded-lg group-hover:bg-accent/30 transition-colors duration-300 flex-shrink-0">
+                    <Icon className="h-6 w-6 text-accent" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-light mb-2 group-hover:text-accent transition-colors duration-300">{item.title}</h3>
+                    <p className="text-sm text-slate-300 leading-relaxed">{item.tip}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* What's New / Updates Section */}
+      <div className="bg-gradient-to-br from-secondary/60 via-secondary/40 to-secondary/60 border border-accent/30 rounded-2xl p-6 sm:p-8 lg:p-10 scroll-reveal">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-3 bg-accent/20 rounded-xl">
+            <SparklesIcon className="h-6 w-6 sm:h-8 sm:w-8 text-accent" />
+          </div>
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-light">What's New</h2>
+            <p className="text-sm sm:text-base text-slate-400">Latest updates and features</p>
+          </div>
+        </div>
+        <div className="space-y-4">
+          {[
+            { date: 'Latest', title: 'Enhanced Developer Toolbox', desc: 'Added 10+ new security and networking tools including Port Scanner, CVE Search, and Password Strength Analyzer.' },
+            { date: 'This Week', title: 'Improved AI Responses', desc: 'Upgraded AI models for faster, more accurate responses across all tools. Experience better context understanding.' },
+            { date: 'Recently', title: 'New Tool Categories', desc: 'Expanded categories with more specialized tools for gaming, entertainment, and robotics enthusiasts.' },
+          ].map((update, index) => (
+            <div 
+              key={index}
+              className="bg-primary/30 backdrop-blur-sm border border-accent/20 rounded-lg p-4 sm:p-5 hover:border-accent/40 transition-all duration-300"
+            >
+              <div className="flex items-start gap-4">
+                <div className="px-3 py-1 bg-accent/20 text-accent text-xs font-semibold rounded-full whitespace-nowrap">
+                  {update.date}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base sm:text-lg font-semibold text-light mb-1">{update.title}</h3>
+                  <p className="text-sm text-slate-400">{update.desc}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => document.getElementById('tools')?.scrollIntoView({ behavior: 'smooth' })}
+            className="px-6 py-3 bg-accent/20 hover:bg-accent/30 border border-accent/40 text-accent font-semibold rounded-xl transition-all duration-300"
+          >
+            Explore New Features
+          </button>
+        </div>
+      </div>
+
+      {/* Community Highlights */}
+      <div className="space-y-6 sm:space-y-8 scroll-reveal">
+        <div className="text-center px-2 sm:px-0">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-light transition-colors duration-300 hover:text-accent inline-block">Join the Community</h2>
+          <p className="mt-3 sm:mt-4 text-sm sm:text-base text-slate-400">See what others are achieving with Naf's AI Hub</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+          {[
+            { stat: '10K+', label: 'Daily Active Users', icon: UserCircleIcon },
+            { stat: '500K+', label: 'Tools Used This Month', icon: SparklesIcon },
+            { stat: '95%', label: 'User Satisfaction', icon: RocketLaunchIcon },
+          ].map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <div 
+                key={item.label}
+                className="bg-secondary/50 border border-accent/20 rounded-lg p-6 text-center hover:border-accent/40 transition-all duration-300"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <Icon className="h-8 w-8 text-accent mx-auto mb-3" />
+                <div className="text-3xl sm:text-4xl font-bold text-accent mb-2">{item.stat}</div>
+                <div className="text-sm text-slate-400">{item.label}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Call to Action Section */}
       <div className="bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 border border-accent/30 rounded-2xl p-8 sm:p-12 text-center scroll-reveal">
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-light mb-4 sm:mb-6">
@@ -825,19 +1278,43 @@ const HomePage: React.FC = memo(() => {
           Join thousands of users who are already using Naf's AI Hub to work smarter, learn faster, and achieve more. Get started in seconds - no credit card required.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <button
-            onClick={() => navigate('/signup')}
-            className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-primary to-accent text-white text-base font-semibold rounded-xl hover:shadow-2xl hover:shadow-accent/50 transition-all duration-300 transform hover:scale-105 btn-animated"
-          >
-            Create Free Account
-          </button>
-          <button
-            onClick={() => document.getElementById('tools')?.scrollIntoView({ behavior: 'smooth' })}
-            className="w-full sm:w-auto px-8 py-4 bg-secondary border-2 border-accent/30 text-light text-base font-semibold rounded-xl hover:bg-accent/10 hover:border-accent/50 transition-all duration-300"
-          >
-            Explore All Tools
-          </button>
+          {!currentUser ? (
+            <>
+              <button
+                onClick={() => navigate('/signup')}
+                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-primary to-accent text-white text-base font-semibold rounded-xl hover:shadow-2xl hover:shadow-accent/50 transition-all duration-300 transform hover:scale-105 btn-animated"
+              >
+                Create Free Account
+              </button>
+              <button
+                onClick={() => document.getElementById('tools')?.scrollIntoView({ behavior: 'smooth' })}
+                className="w-full sm:w-auto px-8 py-4 bg-secondary border-2 border-accent/30 text-light text-base font-semibold rounded-xl hover:bg-accent/10 hover:border-accent/50 transition-all duration-300"
+              >
+                Explore All Tools
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => navigate('/profile')}
+                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-primary to-accent text-white text-base font-semibold rounded-xl hover:shadow-2xl hover:shadow-accent/50 transition-all duration-300 transform hover:scale-105 btn-animated"
+              >
+                View My Dashboard
+              </button>
+              <button
+                onClick={() => document.getElementById('tools')?.scrollIntoView({ behavior: 'smooth' })}
+                className="w-full sm:w-auto px-8 py-4 bg-secondary border-2 border-accent/30 text-light text-base font-semibold rounded-xl hover:bg-accent/10 hover:border-accent/50 transition-all duration-300"
+              >
+                Continue Exploring
+              </button>
+            </>
+          )}
         </div>
+        {currentUser && (
+          <p className="mt-4 text-sm text-slate-400">
+            Keep your {streak}-day streak going! 🔥 Visit tomorrow to earn more rewards.
+          </p>
+        )}
       </div>
     </div>
     </div>
