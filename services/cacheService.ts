@@ -5,7 +5,7 @@ interface CacheItem<T> {
 }
 
 // Bump this version to invalidate previously cached entries and avoid restoring stale UI
-const APP_VERSION = '1.0.1'; // Update this when making breaking changes
+const APP_VERSION = '1.0.2'; // Update this when making breaking changes - bumped to clear broken cache from 404 errors
 const CACHE_DURATION = 1000 * 60 * 60; // 1 hour default
 
 export const cacheService = {
