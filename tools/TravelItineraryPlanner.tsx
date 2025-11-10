@@ -45,38 +45,29 @@ export const TravelItineraryOutputView: React.FC<{ output: ItineraryOutput | str
   }
 
   if (!data || !Array.isArray(data.itinerary) || data.itinerary.length === 0) {
-    return (
-      <p className="text-red-400">
-        Could not generate an itinerary. Please be more specific about your destination and duration.
-      </p>
-    );
+    return <p className="text-red-400">Could not generate an itinerary. Please be more specific about your destination and duration.</p>;
   }
 
-  /* ---------- Fetch DuckDuckGo Images (No API Key Needed) ---------- */
+  /* ---------- Fetch Unsplash Images ---------- */
   useEffect(() => {
     const fetchImages = async () => {
       const newImages: Record<number, string[]> = {};
+      const accessKey = 'WIU2A27eAd946lHKoVOan148kUBOwlNCGIXdHi0bD0E'; // use .env for safety
 
       for (const day of data.itinerary) {
         try {
           const query = `${data.location} ${day.title}`;
-          // Use a free DuckDuckGo image search API proxy (no API key required)
-          const response = await fetch(
-            `https://duckduckgo-image-api.vercel.app/search?query=${encodeURIComponent(query)}`
+          const res = await fetch(
+            `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=3&client_id=${accessKey}`
           );
-          const json = await response.json();
-
-          // Save top 3 images
-          newImages[day.day] = json.results?.slice(0, 3).map((img: any) => img.image) || [];
-        } catch (error) {
-          console.error('Image fetch failed:', error);
+          const json = await res.json();
+          newImages[day.day] = json.results?.map((img: any) => img.urls.small) || [];
+        } catch {
           newImages[day.day] = [];
         }
       }
-
       setImages(newImages);
     };
-
     fetchImages();
   }, [data]);
 
@@ -151,7 +142,7 @@ export const TravelItineraryOutputView: React.FC<{ output: ItineraryOutput | str
 
 /* ---------- Main Tool Component ---------- */
 const TravelItineraryPlanner: React.FC = () => {
-  const toolInfo = tools.find((t) => t.id === 'travel-itinerary-planner')!;
+  const toolInfo = tools.find(t => t.id === 'travel-itinerary-planner')!;
 
   const optionsConfig: ToolOptionConfig[] = [
     {
@@ -163,9 +154,9 @@ const TravelItineraryPlanner: React.FC = () => {
         { value: 'Relaxed', label: 'Relaxed' },
         { value: 'Moderate', label: 'Moderate' },
         { value: 'Packed', label: 'Packed' },
-      ],
+      ]
     },
-    languageOptions,
+    languageOptions
   ];
 
   const schema = {
