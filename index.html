@@ -79,6 +79,23 @@
   
   
   <script>
+    // Early cleanup of broken localStorage (runs before React loads)
+    // Only removes keys that are clearly broken source file references
+    (function() {
+      try {
+        const keys = Object.keys(localStorage);
+        keys.forEach(key => {
+          // Only remove keys that exactly match the broken source file paths from 404 errors
+          if (key === '/App.tsx' || key === '/components/Layout.tsx' || key === '/hooks/useAuth.tsx' ||
+              key.includes('/App.tsx') || key.includes('/components/Layout.tsx') || key.includes('/hooks/useAuth.tsx')) {
+            localStorage.removeItem(key);
+          }
+        });
+      } catch(e) {
+        console.warn('Early cleanup error:', e);
+      }
+    })();
+
     // Service worker cleanup
     if('serviceWorker' in navigator){
       window.addEventListener('load',async()=>{
@@ -101,7 +118,7 @@
   <script>
     if(window.innerWidth>=768){
       const s=document.createElement('script');
-      s.src='/site-bg-parallax.js';
+      // s.src='/site-bg-parallax.js';
       s.defer=true;
       document.head.appendChild(s);
     }
