@@ -2,6 +2,38 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
+// Cleanup function to remove broken localStorage entries from previous broken deployments
+const cleanupBrokenLocalStorage = () => {
+  try {
+    const allKeys = Object.keys(localStorage);
+    
+    // Only remove keys that are clearly broken (source file references from the 404 errors)
+    // Be conservative - only remove keys that are definitely problematic
+    allKeys.forEach(key => {
+      // Remove keys that are exact matches to the broken source file paths
+      if (key === '/App.tsx' || key === '/components/Layout.tsx' || key === '/hooks/useAuth.tsx' ||
+          key.includes('/App.tsx') || key.includes('/components/Layout.tsx') || key.includes('/hooks/useAuth.tsx')) {
+        console.log('Removing broken localStorage key:', key);
+        localStorage.removeItem(key);
+        return;
+      }
+      
+      // Remove keys that look like they're trying to cache source file paths
+      // But be very specific to avoid removing valid data
+      if ((key.startsWith('/') && (key.endsWith('.tsx') || key.endsWith('.ts'))) ||
+          (key.includes('/App.tsx') || key.includes('/components/Layout.tsx') || key.includes('/hooks/useAuth.tsx'))) {
+        console.log('Removing broken localStorage key:', key);
+        localStorage.removeItem(key);
+      }
+    });
+  } catch (error) {
+    console.warn('Error during localStorage cleanup:', error);
+  }
+};
+
+// Run cleanup before React initializes
+cleanupBrokenLocalStorage();
+
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error("Could not find root element to mount to");
 
