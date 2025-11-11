@@ -29,7 +29,19 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
   const visuallyUnlocked = isAdmin || isUnlocked || (!!currentUser) || anonAllowed;
   const navigate = useNavigate();
 
-  const [perToolCost, setPerToolCost] = React.useState<number | null>(null);
+  const [perToolCost, setPerToolCost] = React.useState<number | null>(() => {
+    // Try to restore cached cost immediately to prevent "Unlock for X points" flash
+    try {
+      const cached = localStorage.getItem(`tool_cost_${tool.id}`);
+      if (cached) {
+        const parsed = Number(cached);
+        if (isFinite(parsed)) return parsed;
+      }
+    } catch (e) {
+      console.warn('Failed to restore cached tool cost for', tool.id);
+    }
+    return null;
+  });
 
   React.useEffect(() => {
     let mounted = true;
@@ -42,7 +54,15 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool }) => {
           const data = snap.data() as any;
           if (data && data.unlockCost !== undefined && data.unlockCost !== null) {
             const parsed = Number(data.unlockCost);
-            if (isFinite(parsed)) setPerToolCost(parsed);
+            if (isFinite(parsed)) {
+              setPerToolCost(parsed);
+              // Cache this cost so next load is instant
+              try {
+                localStorage.setItem(`tool_cost_${tool.id}`, String(parsed));
+              } catch (e) {
+                console.warn('Failed to cache tool cost for', tool.id);
+              }
+            }
           }
         }
       } catch (e) {
