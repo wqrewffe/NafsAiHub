@@ -2,7 +2,6 @@ import { db, auth } from '../firebase/config';
 import { FirestoreUser } from '../types';
 import firebase from 'firebase/compat/app';
 import { notificationService } from './notificationService';
-import { serverTimestamp } from 'firebase/firestore';
 // Note: The original code mixed v9 modular imports (doc, getDoc) with the v8 compat syntax.
 // This version consistently uses the v8 compat syntax (e.g., db.collection(...).doc(...))
 // which matches the majority of the original code.
@@ -28,6 +27,28 @@ export const isUserAdmin = async (userId: string): Promise<boolean> => {
   } catch (error) {
     console.error(`Error checking admin status for user ${userId}:`, error);
     return false;
+  }
+};
+
+/**
+ * Persist a global Unlock All Tools setting from the code-defined tools list.
+ * Useful to set the global flag without re-running the heavy per-user batch.
+ */
+export const persistGlobalUnlockFromTools = async (): Promise<void> => {
+  try {
+    const { tools } = await import('../tools/index');
+    const allToolIds = tools.map((t: any) => t.id);
+    if (!allToolIds.length) throw new Error('No tools found to persist');
+
+    await db.collection('adminSettings').doc('unlockAllTools').set({
+      active: true,
+      toolIds: allToolIds,
+      unlockedAt: firebase.firestore.Timestamp.now()
+    });
+    console.log('[ADMIN] Persisted global unlockAllTools via persistGlobalUnlockFromTools');
+  } catch (error) {
+    console.error('[ADMIN] Failed to persist global unlock from tools:', error);
+    throw error;
   }
 };
 
@@ -518,6 +539,18 @@ export const blockAllToolsForAllUsers = async (): Promise<number> => {
 
     console.log(`[LOCK] Committing batch for ${count} users...`);
     await batch.commit();
+    // Also clear the global admin unlock flag so new users won't be auto-unlocked
+    try {
+      await db.collection('adminSettings').doc('unlockAllTools').set({
+        active: false,
+        toolIds: [],
+        unlockedAt: null
+      }, { merge: true });
+      console.log('[LOCK] ✅ Cleared global unlockAllTools setting');
+    } catch (e) {
+      console.warn('[LOCK] ⚠️ Failed to clear global unlockAllTools setting', e);
+    }
+
     console.log(`[LOCK] ✅ Successfully locked admin-unlocked tools for ${count} non-admin users (preserved purchases)`);
     return count;
   } catch (error) {
@@ -567,7 +600,7 @@ export const unlockAllToolsForAllUsers = async (): Promise<number> => {
         
         batch.update(doc.ref, {
           unlockedTools: mergedTools,
-          adminUnlockedAt: serverTimestamp(), // Use Firestore server timestamp
+          adminUnlockedAt: firebase.firestore.Timestamp.now(), // Use Firestore server timestamp
           adminUnlockedTools: allToolIds // Track which tools were admin-unlocked
         });
         count++;
@@ -576,6 +609,19 @@ export const unlockAllToolsForAllUsers = async (): Promise<number> => {
 
     console.log(`[UNLOCK] Committing batch for ${count} users...`);
     await batch.commit();
+    console.log(`[UNLOCK] Committing global unlock state...`);
+    try {
+      // Persist a global flag so future users also get unlocked tools on account creation
+      await db.collection('adminSettings').doc('unlockAllTools').set({
+        active: true,
+        toolIds: allToolIds,
+        unlockedAt: firebase.firestore.Timestamp.now()
+      });
+      console.log('[UNLOCK] ✅ Persisted global unlockAllTools setting');
+    } catch (e) {
+      console.warn('[UNLOCK] ⚠️ Failed to persist global unlockAllTools setting', e);
+    }
+
     console.log(`[UNLOCK] ✅ Successfully unlocked all ${allToolIds.length} tools for ${count} non-admin users (preserving purchases)`);
     return count;
   } catch (error) {
