@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
-import { doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, increment, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 export const useEngagement = () => {
@@ -8,82 +8,85 @@ export const useEngagement = () => {
   const [streak, setStreak] = useState(0);
   const [dailyReward, setDailyReward] = useState<string | null>(null);
   const [lastActive, setLastActive] = useState<Date | null>(null);
+  const [toolUsageToday, setToolUsageToday] = useState(false);
 
   // Random rewards pool
   const DAILY_LOGIN_POINTS = 25;
-const STREAK_MILESTONE = 5;
-const STREAK_BONUS_POINTS = 100;
+  const STREAK_MILESTONE = 5;
+  const STREAK_BONUS_POINTS = 100;
 
-const rewards = [
+  const rewards = [
     'double_points',
     'special_badge',
     'tool_unlock',
     'bonus_features'
   ];
 
+  // Initialize streak from Firestore on component mount
   useEffect(() => {
     if (!currentUser) return;
 
-    const checkAndUpdateStreak = async () => {
-      const userRef = doc(db, 'users', currentUser.uid);
-      const userDoc = await getDoc(userRef);
-      const userData = userDoc.data();
-      
-      const today = new Date();
-      const lastActiveDate = userData?.lastActive?.toDate() || null;
-      
-      if (!lastActiveDate) {
-        // First time user
-        const isAdmin = userData?.role === 'admin';
-        await updateDoc(userRef, {
-          streak: 1,
-          lastActive: today,
-          points: isAdmin ? Number.MAX_SAFE_INTEGER : (userData?.points || 0) + DAILY_LOGIN_POINTS
-        });
-        setStreak(1);
-      } else {
-        const daysSinceLastActive = Math.floor((today.getTime() - lastActiveDate.getTime()) / (1000 * 60 * 60 * 24));
+    const initializeStreak = async () => {
+      try {
+        const userRef = doc(db, 'users', currentUser.uid);
+        const userDoc = await getDoc(userRef);
         
-        if (daysSinceLastActive === 1) {
-          // Consecutive day
-          const newStreak = (userData?.streak || 0) + 1;
-          const isAdmin = userData?.role === 'admin';
-          const updates: any = {
-            streak: newStreak,
-            lastActive: today,
-            points: increment(DAILY_LOGIN_POINTS)
-          };
-
-          // Bonus points for streak milestones
-          if (newStreak % STREAK_MILESTONE === 0) {
-            updates.points = increment(DAILY_LOGIN_POINTS + STREAK_BONUS_POINTS);
-          }
-
-          await updateDoc(userRef, updates);
-          setStreak(newStreak);
+        if (!userDoc.exists()) {
+          // New user
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
           
-          // Random reward on streak milestones
-          if (newStreak % 5 === 0) {
-            const randomReward = rewards[Math.floor(Math.random() * rewards.length)];
-            setDailyReward(randomReward);
+          await setDoc(userRef, {
+            streak: 0,
+            lastStreakDay: null,
+            lastToolUsageDate: null,
+            streakLastUpdated: Timestamp.now(),
+            points: 0,
+            role: 'user'
+          }, { merge: true });
+          
+          setStreak(0);
+        } else {
+          const userData = userDoc.data();
+          setStreak(userData?.streak || 0);
+          
+          const lastStreakDay = userData?.lastStreakDay?.toDate() || null;
+          setLastActive(lastStreakDay);
+          
+          // Check if streak should be broken
+          if (lastStreakDay) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const lastStreakDayNormalized = new Date(lastStreakDay);
+            lastStreakDayNormalized.setHours(0, 0, 0, 0);
+            
+            const daysSinceLastStreak = Math.floor(
+              (today.getTime() - lastStreakDayNormalized.getTime()) / (1000 * 60 * 60 * 24)
+            );
+            
+            if (daysSinceLastStreak > 1) {
+              // Streak is broken
+              await updateDoc(userRef, {
+                streak: 0,
+                lastStreakDay: null,
+              });
+              setStreak(0);
+            }
           }
-        } else if (daysSinceLastActive > 1) {
-          // Streak broken
-          await updateDoc(userRef, {
-            streak: 1,
-            lastActive: today,
-          });
-          setStreak(1);
         }
+      } catch (error) {
+        console.error('Error initializing streak:', error);
       }
     };
 
-    checkAndUpdateStreak();
+    initializeStreak();
   }, [currentUser]);
 
   return {
     streak,
     dailyReward,
-    lastActive
+    lastActive,
+    toolUsageToday,
+    setToolUsageToday
   };
 };
