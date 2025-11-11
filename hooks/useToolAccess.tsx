@@ -22,7 +22,30 @@
 
   export function ToolAccessProvider({ children }: { children: React.ReactNode }) {
     const { currentUser } = useAuth();
-    const [toolAccess, setToolAccess] = useState<ToolAccess | null>(null);
+    const TOOL_ACCESS_CACHE_KEY = 'nafs_tool_access_cache_v1';
+
+    // Helper to restore cached tool access to avoid "Unlock for points" flash
+    const getCachedToolAccess = (): ToolAccess | null => {
+      try {
+        const raw = localStorage.getItem(TOOL_ACCESS_CACHE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return parsed as ToolAccess;
+      } catch (e) {
+        console.warn('Failed to restore cached tool access:', e);
+        return null;
+      }
+    };
+
+    const cacheToolAccess = (access: ToolAccess) => {
+      try {
+        localStorage.setItem(TOOL_ACCESS_CACHE_KEY, JSON.stringify(access));
+      } catch (e) {
+        console.warn('Failed to cache tool access:', e);
+      }
+    };
+
+    const [toolAccess, setToolAccess] = useState<ToolAccess | null>(() => getCachedToolAccess());
     const ANON_LOCAL_KEY = 'nafs_anonymous_tool_usage_v1';
     const ANON_IP_USAGE_KEY = 'nafs_anonymous_tool_usage_by_ip_v1';
     const ANON_PENDING_KEY = 'nafs_anonymous_tool_usage_pending_v1';
@@ -126,6 +149,7 @@
             adminUnlockedAt: access.adminUnlockedAt
           });
           setToolAccess(access);
+          cacheToolAccess(access);
         } catch (error) {
           console.error('[INIT] Failed to load initial tool access:', error);
         }
@@ -142,6 +166,7 @@
           adminUnlockedAt: updatedAccess.adminUnlockedAt
         });
         setToolAccess(updatedAccess);
+        cacheToolAccess(updatedAccess);
       });
 
       return () => {
@@ -247,10 +272,15 @@
       
       const success = await toolAccessService.unlockToolWithPoints(currentUser.uid, toolId);
       if (success) {
-        setToolAccess(prev => prev ? {
-          ...prev,
-          unlockedTools: [...prev.unlockedTools, toolId]
-        } : null);
+        setToolAccess(prev => {
+          if (!prev) return null;
+          const updated = {
+            ...prev,
+            unlockedTools: [...prev.unlockedTools, toolId]
+          };
+          cacheToolAccess(updated);
+          return updated;
+        });
       }
       return success;
     };
