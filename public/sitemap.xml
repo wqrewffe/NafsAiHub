@@ -1,171 +1,250 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Main Pages -->
   <url>
-    <loc>https://nafsaihub.vercel.app/</loc>
+    <loc>https://nafsaihub.vercel.app/#/</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/login</loc>
+    <loc>https://nafsaihub.vercel.app/#/login</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/signup</loc>
+    <loc>https://nafsaihub.vercel.app/#/signup</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/forgot-password</loc>
+    <loc>https://nafsaihub.vercel.app/#/forgot-password</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/verify-email</loc>
+    <loc>https://nafsaihub.vercel.app/#/verify-email</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/policies</loc>
+    <loc>https://nafsaihub.vercel.app/#/policies</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/support</loc>
+    <loc>https://nafsaihub.vercel.app/#/support</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/contact</loc>
+    <loc>https://nafsaihub.vercel.app/#/contact</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/helpchat</loc>
+    <loc>https://nafsaihub.vercel.app/#/helpchat</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/badges</loc>
+    <loc>https://nafsaihub.vercel.app/#/badges</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/leaderboard</loc>
+    <loc>https://nafsaihub.vercel.app/#/leaderboard</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/todo</loc>
+    <loc>https://nafsaihub.vercel.app/#/todo</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/notes</loc>
+    <loc>https://nafsaihub.vercel.app/#/notes</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/settings</loc>
+    <loc>https://nafsaihub.vercel.app/#/settings</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/referral</loc>
+    <loc>https://nafsaihub.vercel.app/#/referral</loc>
+    <lastmod>2025-11-09T15:04:12.950Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Trainers -->
+  <url>
+    <loc>https://nafsaihub.vercel.app/#/trainer/select</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/trainer/select</loc>
+    <loc>https://nafsaihub.vercel.app/#/trainer/lights-out</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/trainer/lights-out</loc>
+    <loc>https://nafsaihub.vercel.app/#/trainer/grid-reflex</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/trainer/grid-reflex</loc>
+    <loc>https://nafsaihub.vercel.app/#/trainer/precision-point</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/trainer/precision-point</loc>
+    <loc>https://nafsaihub.vercel.app/#/trainer/sequence</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/trainer/sequence</loc>
+    <loc>https://nafsaihub.vercel.app/#/trainer/color-match</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/trainer/color-match</loc>
+    <loc>https://nafsaihub.vercel.app/#/trainer/peripheral-vision</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/trainer/peripheral-vision</loc>
+    <loc>https://nafsaihub.vercel.app/#/trainer/dodge-and-click</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/trainer/dodge-and-click</loc>
+    <loc>https://nafsaihub.vercel.app/#/trainer/auditory-reaction</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/trainer/auditory-reaction</loc>
+    <loc>https://nafsaihub.vercel.app/#/trainer/cognitive-shift</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/trainer/cognitive-shift</loc>
+    <loc>https://nafsaihub.vercel.app/#/trainer/target-tracking</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/trainer/target-tracking</loc>
+    <loc>https://nafsaihub.vercel.app/#/trainer/digit-span</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/trainer/digit-span</loc>
+    <loc>https://nafsaihub.vercel.app/#/trainer/visual-search</loc>
+    <lastmod>2025-11-09T15:04:12.950Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Toolbox -->
+  <url>
+    <loc>https://nafsaihub.vercel.app/#/toolbox</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nafsaihub.vercel.app/trainer/visual-search</loc>
+    <loc>https://nafsaihub.vercel.app/#/toolbox/image-resizer</loc>
     <lastmod>2025-11-09T15:04:12.950Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://nafsaihub.vercel.app/#/toolbox/image-compressor</loc>
+    <lastmod>2025-11-09T15:04:12.950Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nafsaihub.vercel.app/#/toolbox/image-to-ascii</loc>
+    <lastmod>2025-11-09T15:04:12.950Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nafsaihub.vercel.app/#/toolbox/lorem-picsum-generator</loc>
+    <lastmod>2025-11-09T15:04:12.950Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nafsaihub.vercel.app/#/toolbox/base64-converter</loc>
+    <lastmod>2025-11-09T15:04:12.950Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nafsaihub.vercel.app/#/toolbox/text-statistics</loc>
+    <lastmod>2025-11-09T15:04:12.950Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nafsaihub.vercel.app/#/toolbox/image-to-base64</loc>
+    <lastmod>2025-11-09T15:04:12.950Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nafsaihub.vercel.app/#/toolbox/color-picker-image</loc>
+    <lastmod>2025-11-09T15:04:12.950Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nafsaihub.vercel.app/#/toolbox/yt-thumbnail-downloader</loc>
+    <lastmod>2025-11-09T15:04:12.950Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nafsaihub.vercel.app/#/toolbox/yt-timestamp-link</loc>
+    <lastmod>2025-11-09T15:04:12.950Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://nafsaihub.vercel.app/#/toolbox/advanced-screenshot</loc>
+    <lastmod>2025-11-09T15:04:12.950Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
 </urlset>
