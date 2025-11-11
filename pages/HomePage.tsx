@@ -1244,7 +1244,7 @@ const HomePage: React.FC = memo(() => {
       </div>
 
       {/* Community Highlights */}
-      <div className="space-y-6 sm:space-y-8 scroll-reveal">
+      {/* <div className="space-y-6 sm:space-y-8 scroll-reveal">
         <div className="text-center px-2 sm:px-0">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-light transition-colors duration-300 hover:text-accent inline-block">Join the Community</h2>
           <p className="mt-3 sm:mt-4 text-sm sm:text-base text-slate-400">See what others are achieving with Naf's AI Hub</p>
@@ -1269,7 +1269,7 @@ const HomePage: React.FC = memo(() => {
             );
           })}
         </div>
-      </div>
+      </div> */}
 
       {/* Call to Action Section */}
       <div className="bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 border border-accent/30 rounded-2xl p-8 sm:p-12 text-center scroll-reveal">
