@@ -496,12 +496,14 @@ const HomePage: React.FC = memo(() => {
             The most comprehensive AI-powered platform featuring <span className="font-semibold text-accent">81+ AI-powered tools</span> and <span className="font-semibold text-primary">110+ developer utilities</span> designed to revolutionize how students, professionals, developers, and creators work, learn, and innovate. From essay writing and medical diagnosis to code explanation and creative storytelling - plus a complete Developer Toolbox with professional utilities for text, image, color, and security tasks - Naf's AI Hub has everything you need to supercharge your productivity and unlock your full potential. Experience the future of intelligent assistance today.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-6 sm:mt-8 justify-center md:justify-start px-2 sm:px-0">
-            <button 
-              onClick={() => navigate('/signup')}
-              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-primary to-accent text-white text-sm sm:text-base font-semibold rounded-xl hover:shadow-2xl hover:shadow-accent/50 transition-all duration-300 transform hover:scale-105 btn-animated"
-            >
-              Get Started Free
-            </button>
+            {!currentUser && (
+              <button 
+                onClick={() => navigate('/signup')}
+                className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-primary to-accent text-white text-sm sm:text-base font-semibold rounded-xl hover:shadow-2xl hover:shadow-accent/50 transition-all duration-300 transform hover:scale-105 btn-animated"
+              >
+                Get Started Free
+              </button>
+            )}
             <button 
               onClick={() => document.getElementById('tools')?.scrollIntoView({ behavior: 'smooth' })}
               className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-secondary border-2 border-accent/30 text-light text-sm sm:text-base font-semibold rounded-xl hover:bg-accent/10 hover:border-accent/50 transition-all duration-300"
