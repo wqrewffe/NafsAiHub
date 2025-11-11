@@ -13,8 +13,49 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Initialize with current auth state immediately to prevent blocking
-  const [currentUser, setCurrentUser] = useState<firebase.User | null>(() => auth.currentUser);
+  // Try to restore a minimal cached user object immediately to avoid a visible "logged-out" flash.
+  // We store a tiny snapshot after successful sign-in and clear it on sign-out.
+  const getCachedUser = (): any | null => {
+    try {
+      const raw = localStorage.getItem('cachedAuthUser');
+      if (!raw) return auth.currentUser || null;
+      const parsed = JSON.parse(raw);
+      // return a lightweight object compatible with usages in the app (uid, displayName, email, photoURL, emailVerified, metadata)
+      return {
+        uid: parsed.uid,
+        displayName: parsed.displayName || null,
+        email: parsed.email || null,
+        photoURL: parsed.photoURL || null,
+        emailVerified: !!parsed.emailVerified,
+        metadata: parsed.metadata || {}
+      } as any;
+    } catch (e) {
+      return auth.currentUser || null;
+    }
+  };
+
+  const cacheUser = (user: firebase.User | null) => {
+    try {
+      if (!user) {
+        localStorage.removeItem('cachedAuthUser');
+        return;
+      }
+      const toSave = {
+        uid: user.uid,
+        displayName: user.displayName || null,
+        email: user.email || null,
+        photoURL: user.photoURL || null,
+        emailVerified: !!user.emailVerified,
+        metadata: user.metadata || {}
+      };
+      localStorage.setItem('cachedAuthUser', JSON.stringify(toSave));
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  // Initialize with current auth state or cached snapshot to prevent blocking
+  const [currentUser, setCurrentUser] = useState<firebase.User | null>(() => getCachedUser());
   const [loading, setLoading] = useState(true);
   const [ipBlocked, setIpBlocked] = useState<boolean>(false);
 
@@ -54,7 +95,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       unsubscribe = auth.onAuthStateChanged((user) => {
+        // Update UI immediately and cache a lightweight snapshot so next page load can rehydrate fast
         setCurrentUser(user);
+        cacheUser(user as any);
         setLoading(false);
 
         // Best-effort: persist the user's public IP into their Firestore profile
@@ -104,6 +147,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           })();
         } else {
           // user signed out: cleanup presence and intervals
+          cacheUser(null);
           if (presenceInterval) { clearInterval(presenceInterval); presenceInterval = null; }
           if (currentUser) {
             setUserOffline(currentUser.uid).catch(() => {});
