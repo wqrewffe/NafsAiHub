@@ -1,5 +1,5 @@
 import { db } from '../firebase/config';
-import { doc, getDoc, updateDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, onSnapshot, collection, query, where, limit, getDocs } from 'firebase/firestore';
 import { getTopUsedToolsGlobal } from './firebaseService';
 import { isUserAdmin } from './adminService';
 import { notificationService } from './notificationService';
@@ -95,21 +95,92 @@ export const toolAccessService = {
         return data;
       }
       // New users (non-admin) should start with no unlocked tools
+      // Check for a global admin unlock-all setting so future/new users inherit it
+      let globalAdminUnlockedTools: string[] = [];
+      let globalAdminUnlockedAt: Date | null = null;
+      
+      console.log('[INIT] Creating new toolAccess for user:', userId);
+      
+      try {
+        const globalRef = doc(db, 'adminSettings', 'unlockAllTools');
+        const globalDoc = await getDoc(globalRef);
+        console.log('[INIT] globalDoc.exists():', globalDoc.exists());
+        
+        if (globalDoc.exists()) {
+          const gd: any = globalDoc.data();
+          console.log('[INIT] adminSettings data:', { active: gd?.active, toolIdsLength: gd?.toolIds?.length });
+          
+          if (gd?.active && Array.isArray(gd.toolIds) && gd.toolIds.length > 0) {
+            globalAdminUnlockedTools = gd.toolIds;
+            // If unlockedAt is a Firestore Timestamp, convert to Date
+            if (gd.unlockedAt && gd.unlockedAt.toDate) {
+              globalAdminUnlockedAt = gd.unlockedAt.toDate();
+            } else if (gd.unlockedAt) {
+              globalAdminUnlockedAt = new Date(gd.unlockedAt);
+            }
+            console.log('[INIT] ✅ Global admin unlock FOUND - tools:', globalAdminUnlockedTools.length);
+          } else {
+            console.log('[INIT] ⚠️ Global doc exists but active=false or no toolIds');
+          }
+        } else {
+          console.log('[INIT] No global admin unlock doc found at adminSettings/unlockAllTools');
+        }
+      } catch (e) {
+        console.warn('[INIT] ⚠️ Failed to read global admin unlock settings', e);
+      }
+
+      // Fallback: if no adminSettings doc exists (older deployments), try to infer from existing toolAccess docs
+      if (!globalAdminUnlockedTools.length) {
+        try {
+          console.log('[INIT] Fallback: searching toolAccess docs for adminUnlockedAt...');
+          const q = query(collection(db, 'toolAccess'), where('adminUnlockedAt', '!=', null), limit(1));
+          const snaps = await getDocs(q);
+          if (!snaps.empty) {
+            const d = snaps.docs[0].data() as any;
+            console.log('[INIT] Fallback found toolAccess doc with adminUnlockedAt');
+            if (Array.isArray(d.adminUnlockedTools) && d.adminUnlockedTools.length) {
+              globalAdminUnlockedTools = d.adminUnlockedTools;
+              if (d.adminUnlockedAt && d.adminUnlockedAt.toDate) {
+                globalAdminUnlockedAt = d.adminUnlockedAt.toDate();
+              } else if (d.adminUnlockedAt) {
+                globalAdminUnlockedAt = new Date(d.adminUnlockedAt);
+              }
+              console.log('[INIT] ✅ Fallback FOUND - inferred tools:', globalAdminUnlockedTools.length);
+            }
+          } else {
+            console.log('[INIT] Fallback: no toolAccess docs with adminUnlockedAt found');
+          }
+        } catch (e) {
+          console.warn('[INIT] ⚠️ Fallback failed:', e);
+        }
+      }
 
       // Set up initial tool access document
+      // For non-admin users: unlockedTools = purchased tools (none initially) + adminUnlockedTools = globally admin-unlocked
+      // For admin users: unlockedTools = ['*'] (all tools via wildcard)
       const initialToolAccess: ToolAccess = {
         userId,
         isAdmin,
-        unlockedTools: isAdmin ? ['*'] : [], // '*' wildcard means all tools unlocked
+        unlockedTools: isAdmin ? ['*'] : [], // Empty for new non-admin users (purchased tools only)
         toolUsage: {},
         nextUnlockProgress: 0,
         points: isAdmin ? Number.MAX_SAFE_INTEGER : 0,
         previousPoints: 0,
-        adminUnlockedTools: [], // Track tools unlocked by admin
-        adminUnlockedAt: null // Track when admin unlocked all tools
+        adminUnlockedTools: globalAdminUnlockedTools || [], // Track tools unlocked by admin globally (separate from purchases)
+        adminUnlockedAt: globalAdminUnlockedAt // Track when admin unlocked all tools globally
       };
       
       await setDoc(accessRef, initialToolAccess);
+      
+      console.log('[INIT] ✅ Created new toolAccess doc:', {
+        userId,
+        isAdmin,
+        unlockedToolsCount: initialToolAccess.unlockedTools.length,
+        adminUnlockedToolsCount: initialToolAccess.adminUnlockedTools?.length || 0,
+        adminUnlockedTools: initialToolAccess.adminUnlockedTools?.slice(0, 5),
+        adminUnlockedAt: initialToolAccess.adminUnlockedAt
+      });
+      
       // Notify brand-new non-admin users about trial rules
       if (!isAdmin) {
         try {
@@ -423,8 +494,10 @@ export const toolAccessService = {
       if (toolAccess.isAdmin || toolAccess.unlockedTools.includes('*')) {
         return true;
       }
-      // Check if the specific tool is unlocked
-      return toolAccess.unlockedTools.includes(toolId);
+      // Check if the tool is in unlockedTools (purchased) or adminUnlockedTools (admin-unlocked globally)
+      const isAdminUnlocked = toolAccess.adminUnlockedTools?.includes(toolId) || false;
+      const isPurchased = toolAccess.unlockedTools.includes(toolId);
+      return isPurchased || isAdminUnlocked;
     } catch (error) {
       console.error('Error in isToolUnlocked:', error);
       throw error;
