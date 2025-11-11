@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://nafsaihub.vercel.app/sitemap.xml
+Sitemap: https://nafsaihub.vercel.app/site.xml
