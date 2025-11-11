@@ -1,5 +1,5 @@
 import { db } from '../firebase/config';
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { getTopUsedToolsGlobal } from './firebaseService';
 import { isUserAdmin } from './adminService';
 import { notificationService } from './notificationService';
@@ -62,6 +62,8 @@ export interface ToolAccess {
   points?: number;
   previousPoints?: number;
   totalToolUses?: number;
+  adminUnlockedTools?: string[]; // Tools unlocked by admin
+  adminUnlockedAt?: Date | null; // When admin unlocked all tools
 }
 
 interface TopTool {
@@ -102,7 +104,9 @@ export const toolAccessService = {
         toolUsage: {},
         nextUnlockProgress: 0,
         points: isAdmin ? Number.MAX_SAFE_INTEGER : 0,
-        previousPoints: 0
+        previousPoints: 0,
+        adminUnlockedTools: [], // Track tools unlocked by admin
+        adminUnlockedAt: null // Track when admin unlocked all tools
       };
       
       await setDoc(accessRef, initialToolAccess);
@@ -434,6 +438,65 @@ export const toolAccessService = {
     } catch (error) {
       console.error('Error in getUnlockedTools:', error);
       throw error;
+    }
+  },
+
+  /**
+   * Subscribe to real-time updates of a user's tool access
+   * This allows instant refresh when admin unlocks/locks tools
+   * @param userId The user ID to monitor
+   * @param callback Function called whenever tool access changes
+   * @returns Unsubscribe function to stop listening
+   */
+  subscribeToToolAccess(
+    userId: string,
+    callback: (toolAccess: ToolAccess) => void
+  ): (() => void) | null {
+    try {
+      const accessRef = doc(db, 'toolAccess', userId);
+      console.log(`[SUBSCRIBE] Setting up real-time listener for user ${userId}`);
+      
+      // Set up real-time listener
+      const unsubscribe = onSnapshot(accessRef, async (snapshot) => {
+        try {
+          if (snapshot.exists()) {
+            const data = snapshot.data() as ToolAccess;
+            console.log(`[SUBSCRIBE] Received update for user ${userId}:`, {
+              unlockedToolsCount: data.unlockedTools?.length || 0,
+              adminUnlockedToolsCount: data.adminUnlockedTools?.length || 0,
+              adminUnlockedAt: data.adminUnlockedAt,
+              isAdmin: data.isAdmin
+            });
+            
+            const isAdmin = await isUserAdmin(userId);
+            
+            // Ensure admin field is current
+            if (isAdmin && (!data.unlockedTools.includes('*') || data.isAdmin !== isAdmin)) {
+              console.log(`[SUBSCRIBE] Updating admin user ${userId} to have wildcard access`);
+              const updates = {
+                isAdmin: true,
+                unlockedTools: ['*'],
+                points: Number.MAX_SAFE_INTEGER
+              };
+              await updateDoc(accessRef, updates);
+              callback({ ...data, ...updates });
+            } else {
+              console.log(`[SUBSCRIBE] Calling callback with data for user ${userId}`);
+              callback(data);
+            }
+          }
+        } catch (error) {
+          console.error('Error in subscribeToToolAccess callback:', error);
+        }
+      }, (error) => {
+        console.error(`[SUBSCRIBE] Error listening to toolAccess for user ${userId}:`, error);
+      });
+
+      console.log(`[SUBSCRIBE] Real-time listener set up successfully for user ${userId}`);
+      return unsubscribe;
+    } catch (error) {
+      console.error('Error setting up tool access subscription:', error);
+      return null;
     }
   }
 };
