@@ -257,8 +257,11 @@
         console.log(`[CHECK] User has wildcard access, all tools unlocked`);
         return true;
       }
-      const isUnlocked = toolAccess.unlockedTools.includes(toolId);
-      console.log(`[CHECK] Tool ${toolId} - Unlocked: ${isUnlocked} | Unlocked Tools: [${toolAccess.unlockedTools.slice(0, 5).join(', ')}${toolAccess.unlockedTools.length > 5 ? '...' : ''}] (${toolAccess.unlockedTools.length} total) | AdminUnlockedAt: ${toolAccess.adminUnlockedAt}`);
+      // Check both purchased tools and admin-globally-unlocked tools
+      const isPurchased = toolAccess.unlockedTools.includes(toolId);
+      const isAdminUnlocked = toolAccess.adminUnlockedTools?.includes(toolId) || false;
+      const isUnlocked = isPurchased || isAdminUnlocked;
+      console.log(`[CHECK] Tool ${toolId} - Unlocked: ${isUnlocked} (Purchased: ${isPurchased}, AdminUnlocked: ${isAdminUnlocked}) | Unlocked Tools: [${toolAccess.unlockedTools.slice(0, 5).join(', ')}${toolAccess.unlockedTools.length > 5 ? '...' : ''}] (${toolAccess.unlockedTools.length} total) | AdminUnlockedAt: ${toolAccess.adminUnlockedAt}`);
       return isUnlocked;
     };
 
