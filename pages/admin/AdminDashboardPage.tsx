@@ -20,6 +20,13 @@ import {
     toggleUserBlock
     , getUserIp, blockIp, unblockIp, isIpBlocked
 } from '../../services/firebaseService';
+import {
+    blockToolForAllUsers,
+    unlockToolForAllUsers,
+    blockAllToolsForAllUsers,
+    unlockAllToolsForAllUsers,
+    checkUnlockStatus
+} from '../../services/adminService';
 import { sendPasswordResetEmailToUser, setUserPasswordInFirestore } from '../../services/firebaseService';
 import {
     listCompetitions,
@@ -92,6 +99,10 @@ const AdminDashboardPage: React.FC = () => {
     const [seriesPoints, setSeriesPoints] = useState<number>(30);
     const [seriesSource, setSeriesSource] = useState<'globalHistory' | 'globalPageViews'>('globalHistory');
     const [diagnostic, setDiagnostic] = useState<{ totalCount?: number; missingFieldsUsers?: any[] }>({});
+    const [toolManagementLoading, setToolManagementLoading] = useState(false);
+    const [toolManagementMessage, setToolManagementMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+    const [unlockStatus, setUnlockStatus] = useState<{ isAdminUnlockActive: boolean; affectedUsers: number; totalUsers: number } | null>(null);
+    const [loadingUnlockStatus, setLoadingUnlockStatus] = useState(false);
 
     // helper to create a manual alert from admin
     const handleCreateAlert = async (type: string, severity: 'info' | 'warning' | 'critical', message: string) => {
@@ -101,6 +112,29 @@ const AdminDashboardPage: React.FC = () => {
             console.error('Failed to create alert', err);
         }
     };
+
+    // Load unlock status on mount
+    useEffect(() => {
+        const loadUnlockStatus = async () => {
+            try {
+                setLoadingUnlockStatus(true);
+                const status = await checkUnlockStatus();
+                setUnlockStatus(status);
+                console.log('Unlock status loaded:', status);
+            } catch (error) {
+                console.error('Failed to load unlock status:', error);
+                setUnlockStatus(null);
+            } finally {
+                setLoadingUnlockStatus(false);
+            }
+        };
+        
+        loadUnlockStatus();
+        
+        // Reload status every 10 seconds to reflect changes
+        const interval = setInterval(loadUnlockStatus, 10000);
+        return () => clearInterval(interval);
+    }, []);
 
     const handleForceLogout = async (userId: string) => {
         try {
@@ -427,6 +461,67 @@ const AdminDashboardPage: React.FC = () => {
         } catch (err) {
             console.error(err);
             alert('Failed to unblock IP');
+        }
+    };
+
+    // Tool Management Handlers
+    const handleLockAllTools = async () => {
+        if (!confirm('Lock ALL tools for all non-admin users? This action cannot be undone immediately.')) return;
+        setToolManagementLoading(true);
+        setToolManagementMessage(null);
+        try {
+            const affectedCount = await blockAllToolsForAllUsers();
+            setToolManagementMessage({
+                type: 'success',
+                message: `Successfully locked all tools for ${affectedCount} users`
+            });
+            // Reload unlock status
+            setTimeout(async () => {
+                try {
+                    const status = await checkUnlockStatus();
+                    setUnlockStatus(status);
+                } catch (error) {
+                    console.error('Failed to reload unlock status:', error);
+                }
+            }, 1000);
+        } catch (error) {
+            console.error('Error locking all tools:', error);
+            setToolManagementMessage({
+                type: 'error',
+                message: 'Failed to lock all tools. Check console for details.'
+            });
+        } finally {
+            setToolManagementLoading(false);
+        }
+    };
+
+    const handleUnlockAllTools = async () => {
+        if (!confirm('Unlock ALL tools for all non-admin users?')) return;
+        setToolManagementLoading(true);
+        setToolManagementMessage(null);
+        try {
+            const affectedCount = await unlockAllToolsForAllUsers();
+            setToolManagementMessage({
+                type: 'success',
+                message: `Successfully unlocked all tools for ${affectedCount} users`
+            });
+            // Reload unlock status
+            setTimeout(async () => {
+                try {
+                    const status = await checkUnlockStatus();
+                    setUnlockStatus(status);
+                } catch (error) {
+                    console.error('Failed to reload unlock status:', error);
+                }
+            }, 1000);
+        } catch (error) {
+            console.error('Error unlocking all tools:', error);
+            setToolManagementMessage({
+                type: 'error',
+                message: 'Failed to unlock all tools. Check console for details.'
+            });
+        } finally {
+            setToolManagementLoading(false);
         }
     };
 
@@ -1122,6 +1217,64 @@ const AdminDashboardPage: React.FC = () => {
                             </li>
                         ))}
                     </ul>
+                </DashboardSection>
+                <DashboardSection title="Tool Access Management">
+                    <div className="space-y-4">
+                        <p className="text-sm text-slate-400">
+                            Lock or unlock all tools for all non-admin users. This affects access across the entire platform.
+                        </p>
+
+                        {/* Status Indicator */}
+                        <div className={`p-3 rounded border ${unlockStatus?.isAdminUnlockActive ? 'bg-green-900/30 border-green-600/50' : 'bg-slate-900/30 border-slate-600/30'}`}>
+                            {loadingUnlockStatus ? (
+                                <p className="text-sm text-slate-400">Loading status...</p>
+                            ) : unlockStatus ? (
+                                <>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className={`w-3 h-3 rounded-full ${unlockStatus.isAdminUnlockActive ? 'bg-green-500 animate-pulse' : 'bg-slate-500'}`}></span>
+                                        <span className={`text-sm font-semibold ${unlockStatus.isAdminUnlockActive ? 'text-green-300' : 'text-slate-400'}`}>
+                                            {unlockStatus.isAdminUnlockActive ? '✅ ALL TOOLS UNLOCKED' : '🔒 Tools Locked'}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-slate-400">
+                                        {unlockStatus.isAdminUnlockActive 
+                                            ? `${unlockStatus.affectedUsers}/${unlockStatus.totalUsers} users have free access to all tools`
+                                            : `Users only have access to tools they've purchased`
+                                        }
+                                    </p>
+                                </>
+                            ) : null}
+                        </div>
+                        
+                        {toolManagementMessage && (
+                            <div className={`p-3 rounded ${toolManagementMessage.type === 'success' ? 'bg-green-900/30 border border-green-600 text-green-200' : 'bg-red-900/30 border border-red-600 text-red-200'}`}>
+                                {toolManagementMessage.message}
+                            </div>
+                        )}
+                        
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <button 
+                                onClick={handleLockAllTools}
+                                disabled={toolManagementLoading}
+                                className="flex-1 px-4 py-2 rounded bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold transition"
+                            >
+                                {toolManagementLoading ? 'Processing...' : '🔒 Lock All Tools'}
+                            </button>
+                            <button 
+                                onClick={handleUnlockAllTools}
+                                disabled={toolManagementLoading}
+                                className="flex-1 px-4 py-2 rounded bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold transition"
+                            >
+                                {toolManagementLoading ? 'Processing...' : '🔓 Unlock All Tools'}
+                            </button>
+                        </div>
+                        
+                        <div className="p-3 bg-primary rounded text-xs text-slate-400 space-y-1">
+                            <p>• <strong>Lock All:</strong> Removes all tools from non-admin users' unlocked tool list</p>
+                            <p>• <strong>Unlock All:</strong> Adds all available tools to non-admin users' unlocked tool list</p>
+                            <p>• <strong>Admins:</strong> Always have access to all tools regardless of settings</p>
+                        </div>
+                    </div>
                 </DashboardSection>
                 <DashboardSection title="Top Tools">
                      <ul className="space-y-3">
