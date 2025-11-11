@@ -118,11 +118,38 @@
       }
 
       const loadToolAccess = async () => {
-        const access = await toolAccessService.getToolAccess(currentUser.uid);
-        setToolAccess(access);
+        try {
+          const access = await toolAccessService.getToolAccess(currentUser.uid);
+          console.log('[INIT] Initial tool access loaded:', { 
+            unlockedToolsCount: access.unlockedTools.length,
+            adminUnlockedToolsCount: access.adminUnlockedTools?.length || 0,
+            adminUnlockedAt: access.adminUnlockedAt
+          });
+          setToolAccess(access);
+        } catch (error) {
+          console.error('[INIT] Failed to load initial tool access:', error);
+        }
       };
 
       loadToolAccess();
+
+      // Set up real-time listener to detect when admin unlocks/locks tools
+      console.log('[INIT] Setting up real-time listener for user', currentUser.uid);
+      const unsubscribe = toolAccessService.subscribeToToolAccess(currentUser.uid, (updatedAccess) => {
+        console.log('[INIT] Real-time listener triggered, updating state with:', {
+          unlockedToolsCount: updatedAccess.unlockedTools?.length || 0,
+          adminUnlockedToolsCount: updatedAccess.adminUnlockedTools?.length || 0,
+          adminUnlockedAt: updatedAccess.adminUnlockedAt
+        });
+        setToolAccess(updatedAccess);
+      });
+
+      return () => {
+        if (unsubscribe) {
+          console.log('[INIT] Cleaning up real-time listener for user', currentUser.uid);
+          unsubscribe();
+        }
+      };
     }, [currentUser]);
 
     // Fetch public IP (cached) and flush any pending increments to IP store
@@ -192,12 +219,22 @@
     }, [anonIp]);
 
     const isToolUnlocked = (toolId: string) => {
-      if (!toolAccess) return false;
+      if (!toolAccess) {
+        console.log(`[CHECK] No toolAccess data available yet`);
+        return false;
+      }
       // Admin or wildcard access means all tools are unlocked
-      if (toolAccess.isAdmin || toolAccess.unlockedTools.includes('*')) {
+      if (toolAccess.isAdmin) {
+        console.log(`[CHECK] User is admin, all tools unlocked`);
         return true;
       }
-      return toolAccess.unlockedTools.includes(toolId);
+      if (toolAccess.unlockedTools.includes('*')) {
+        console.log(`[CHECK] User has wildcard access, all tools unlocked`);
+        return true;
+      }
+      const isUnlocked = toolAccess.unlockedTools.includes(toolId);
+      console.log(`[CHECK] Tool ${toolId} - Unlocked: ${isUnlocked} | Unlocked Tools: [${toolAccess.unlockedTools.slice(0, 5).join(', ')}${toolAccess.unlockedTools.length > 5 ? '...' : ''}] (${toolAccess.unlockedTools.length} total) | AdminUnlockedAt: ${toolAccess.adminUnlockedAt}`);
+      return isUnlocked;
     };
 
     const unlockToolWithPoints = async (toolId: string) => {
