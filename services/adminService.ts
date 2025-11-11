@@ -2,6 +2,7 @@ import { db, auth } from '../firebase/config';
 import { FirestoreUser } from '../types';
 import firebase from 'firebase/compat/app';
 import { notificationService } from './notificationService';
+import { serverTimestamp } from 'firebase/firestore';
 // Note: The original code mixed v9 modular imports (doc, getDoc) with the v8 compat syntax.
 // This version consistently uses the v8 compat syntax (e.g., db.collection(...).doc(...))
 // which matches the majority of the original code.
@@ -399,6 +400,222 @@ export const getAllUsers = async (): Promise<FirestoreUser[]> => {
     } as FirestoreUser));
   } catch (error) {
     console.error('Error getting all users:', error);
+    throw error;
+  }
+};
+
+/**
+ * Lock (block) a specific tool for all users by preventing access in toolAccess documents
+ * @param toolId The ID of the tool to lock
+ * @returns Count of users affected
+ */
+export const blockToolForAllUsers = async (toolId: string): Promise<number> => {
+  try {
+    const batch = db.batch();
+    let count = 0;
+
+    // Get all toolAccess documents
+    const toolAccessSnapshot = await db.collection('toolAccess').get();
+
+    toolAccessSnapshot.forEach(doc => {
+      const data = doc.data();
+      const unlockedTools = data.unlockedTools || [];
+      
+      // Only update if the tool is in the unlockedTools array
+      if (unlockedTools.includes(toolId)) {
+        const updatedTools = unlockedTools.filter((id: string) => id !== toolId);
+        batch.update(doc.ref, {
+          unlockedTools: updatedTools
+        });
+        count++;
+      }
+    });
+
+    await batch.commit();
+    console.log(`Successfully locked tool ${toolId} for ${count} users`);
+    return count;
+  } catch (error) {
+    console.error(`Error locking tool ${toolId} for all users:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Unlock a specific tool for all users by adding it to their toolAccess documents
+ * @param toolId The ID of the tool to unlock
+ * @returns Count of users affected
+ */
+export const unlockToolForAllUsers = async (toolId: string): Promise<number> => {
+  try {
+    const batch = db.batch();
+    let count = 0;
+
+    // Get all toolAccess documents
+    const toolAccessSnapshot = await db.collection('toolAccess').get();
+
+    toolAccessSnapshot.forEach(doc => {
+      const data = doc.data();
+      const unlockedTools = data.unlockedTools || [];
+      
+      // Only update if the tool is not already in the unlockedTools array
+      if (!unlockedTools.includes(toolId)) {
+        batch.update(doc.ref, {
+          unlockedTools: [...unlockedTools, toolId]
+        });
+        count++;
+      }
+    });
+
+    await batch.commit();
+    console.log(`Successfully unlocked tool ${toolId} for ${count} users`);
+    return count;
+  } catch (error) {
+    console.error(`Error unlocking tool ${toolId} for all users:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Lock (block) all tools for all users
+ * Only removes admin-unlocked tools, preserves purchased/earned tools
+ * @returns Count of users affected
+ */
+export const blockAllToolsForAllUsers = async (): Promise<number> => {
+  try {
+    console.log('[LOCK] Starting blockAllToolsForAllUsers...');
+    const batch = db.batch();
+    let count = 0;
+
+    // Get all toolAccess documents
+    const toolAccessSnapshot = await db.collection('toolAccess').get();
+    console.log(`[LOCK] Found ${toolAccessSnapshot.size} users to update`);
+
+    toolAccessSnapshot.forEach(doc => {
+      const data = doc.data();
+      // Check if user is not admin
+      if (!data.isAdmin) {
+        // Get tools that were admin-unlocked
+        const adminUnlockedTools = data.adminUnlockedTools || [];
+        const currentUnlockedTools = data.unlockedTools || [];
+        
+        console.log(`[LOCK] User ${doc.id}: has ${currentUnlockedTools.length} tools, ${adminUnlockedTools.length} were admin-granted`);
+        
+        // Remove only admin-unlocked tools, keep purchased ones
+        const remainingTools = currentUnlockedTools.filter(
+          (toolId: string) => !adminUnlockedTools.includes(toolId)
+        );
+        
+        console.log(`[LOCK] User ${doc.id}: will have ${remainingTools.length} tools after lock (purchased only)`);
+        
+        batch.update(doc.ref, {
+          unlockedTools: remainingTools,
+          adminUnlockedAt: null, // Clear admin unlock timestamp
+          adminUnlockedTools: [] // Clear admin unlocked tools list
+        });
+        count++;
+      }
+    });
+
+    console.log(`[LOCK] Committing batch for ${count} users...`);
+    await batch.commit();
+    console.log(`[LOCK] ✅ Successfully locked admin-unlocked tools for ${count} non-admin users (preserved purchases)`);
+    return count;
+  } catch (error) {
+    console.error('[LOCK] ❌ Error locking all tools for all users:', error);
+    throw error;
+  }
+};
+
+/**
+ * Unlock all tools for all users (preserves purchased tools)
+ * Adds a flag to track which tools are admin-unlocked vs purchased
+ * @returns Count of users affected
+ */
+export const unlockAllToolsForAllUsers = async (): Promise<number> => {
+  try {
+    console.log('[UNLOCK] Starting unlockAllToolsForAllUsers...');
+    const batch = db.batch();
+    let count = 0;
+
+    // Import tools from the tools folder (81+ tools defined in code)
+    // This ensures we unlock ALL tools, not just the ones in Firestore
+    const { tools } = await import('../tools/index');
+    const allToolIds = tools.map(tool => tool.id);
+    console.log(`[UNLOCK] Found ${allToolIds.length} total tools from tools/index.tsx`);
+    console.log(`[UNLOCK] Tool IDs: [${allToolIds.slice(0, 10).join(', ')}${allToolIds.length > 10 ? '...' : ''}]`);
+
+    if (allToolIds.length === 0) {
+      console.warn('[UNLOCK] No tools found in tools/index.tsx!');
+      throw new Error('No tools found in tools/index.tsx');
+    }
+
+    // Get all toolAccess documents
+    const toolAccessSnapshot = await db.collection('toolAccess').get();
+    console.log(`[UNLOCK] Found ${toolAccessSnapshot.size} users to update`);
+
+    toolAccessSnapshot.forEach(doc => {
+      const data = doc.data();
+      // Check if user is not admin
+      if (!data.isAdmin) {
+        const currentUnlockedTools = data.unlockedTools || [];
+        console.log(`[UNLOCK] User ${doc.id}: currently has ${currentUnlockedTools.length} tools`);
+        
+        // Combine existing (purchased) tools with new (admin-unlocked) tools
+        const mergedTools = [...new Set([...currentUnlockedTools, ...allToolIds])];
+        
+        console.log(`[UNLOCK] User ${doc.id}: will have ${mergedTools.length} tools after unlock`);
+        
+        batch.update(doc.ref, {
+          unlockedTools: mergedTools,
+          adminUnlockedAt: serverTimestamp(), // Use Firestore server timestamp
+          adminUnlockedTools: allToolIds // Track which tools were admin-unlocked
+        });
+        count++;
+      }
+    });
+
+    console.log(`[UNLOCK] Committing batch for ${count} users...`);
+    await batch.commit();
+    console.log(`[UNLOCK] ✅ Successfully unlocked all ${allToolIds.length} tools for ${count} non-admin users (preserving purchases)`);
+    return count;
+  } catch (error) {
+    console.error('[UNLOCK] ❌ Error unlocking all tools for all users:', error);
+    throw error;
+  }
+};
+
+/**
+ * Check the current unlock status globally
+ * Returns info about how many users have admin-unlocked tools
+ */
+export const checkUnlockStatus = async (): Promise<{
+  isAdminUnlockActive: boolean;
+  affectedUsers: number;
+  totalUsers: number;
+}> => {
+  try {
+    console.log('[STATUS] Checking admin unlock status...');
+    const toolAccessSnapshot = await db.collection('toolAccess').get();
+    const totalUsers = toolAccessSnapshot.size;
+    
+    let affectedUsers = 0;
+    toolAccessSnapshot.forEach(doc => {
+      const data = doc.data();
+      if (!data.isAdmin && data.adminUnlockedAt) {
+        affectedUsers++;
+      }
+    });
+
+    const isAdminUnlockActive = affectedUsers > 0;
+    console.log(`[STATUS] Admin unlock is ${isAdminUnlockActive ? '✅ ACTIVE' : '❌ INACTIVE'} for ${affectedUsers}/${totalUsers} users`);
+    
+    return {
+      isAdminUnlockActive,
+      affectedUsers,
+      totalUsers
+    };
+  } catch (error) {
+    console.error('[STATUS] ❌ Error checking unlock status:', error);
     throw error;
   }
 };
