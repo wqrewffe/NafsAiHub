@@ -488,3 +488,1025 @@ textarea {
 .stagger-item:nth-child(6) { animation-delay: 0.6s; }
 .stagger-item:nth-child(7) { animation-delay: 0.7s; }
 .stagger-item:nth-child(8) { animation-delay: 0.8s; }
+
+/* ============================================
+   GENERATE BUTTON PREMIUM ANIMATIONS
+   ============================================ */
+
+/* Rainbow wave pulse animation */
+@keyframes rainbowWave {
+  0% {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 25%, #4ecdc4 50%, #45b7d1 75%, #96ceb4 100%);
+    background-size: 400% 400%;
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 100% 50%;
+  }
+  50% {
+    background-position: 0% 50%;
+  }
+  75% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Electric spark animation */
+@keyframes electricSpark {
+  0%, 100% {
+    box-shadow: 
+      0 8px 24px rgba(59, 130, 246, 0.3),
+      0 0 0 0 rgba(59, 130, 246, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 8px 24px rgba(59, 130, 246, 0.6),
+      0 0 30px 10px rgba(59, 130, 246, 0.1),
+      inset 0 0 15px rgba(59, 130, 246, 0.2);
+  }
+}
+
+/* Liquid swirl animation */
+@keyframes liquidSwirl {
+  0% {
+    transform: translateY(-3px) rotate(0deg);
+    filter: brightness(1) saturate(1);
+  }
+  25% {
+    transform: translateY(0px) rotate(2deg);
+    filter: brightness(1.05) saturate(1.1);
+  }
+  50% {
+    transform: translateY(3px) rotate(0deg);
+    filter: brightness(1.1) saturate(1.2);
+  }
+  75% {
+    transform: translateY(0px) rotate(-2deg);
+    filter: brightness(1.05) saturate(1.1);
+  }
+  100% {
+    transform: translateY(-3px) rotate(0deg);
+    filter: brightness(1) saturate(1);
+  }
+}
+
+/* Neon glow pulse animation */
+@keyframes neonGlowPulse {
+  0%, 100% {
+    text-shadow: 
+      0 0 5px rgba(0, 255, 136, 0.3),
+      0 0 10px rgba(0, 255, 136, 0.2);
+    box-shadow: 
+      0 8px 24px rgba(0, 255, 136, 0.2),
+      inset 0 0 10px rgba(0, 255, 136, 0.1),
+      0 0 20px rgba(0, 255, 136, 0.1);
+  }
+  50% {
+    text-shadow: 
+      0 0 10px rgba(0, 255, 136, 0.8),
+      0 0 20px rgba(0, 255, 136, 0.6),
+      0 0 30px rgba(0, 255, 136, 0.4);
+    box-shadow: 
+      0 8px 24px rgba(0, 255, 136, 0.5),
+      inset 0 0 20px rgba(0, 255, 136, 0.2),
+      0 0 40px rgba(0, 255, 136, 0.3);
+  }
+}
+
+/* Gradient flow animation */
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+    filter: brightness(1);
+  }
+  50% {
+    background-position: 100% 50%;
+    filter: brightness(1.15);
+  }
+  100% {
+    background-position: 0% 50%;
+    filter: brightness(1);
+  }
+}
+
+/* Bounce with glow animation */
+@keyframes bounceGlow {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+  }
+  25% {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(59, 130, 246, 0.5);
+  }
+  50% {
+    transform: translateY(-15px) scale(1.04);
+    box-shadow: 0 20px 50px rgba(59, 130, 246, 0.6);
+  }
+  75% {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(59, 130, 246, 0.5);
+  }
+}
+
+/* Spin with scale animation */
+@keyframes spinScale {
+  0% {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: rotate(180deg) scale(1.08);
+    opacity: 0.95;
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Pulse expand animation */
+@keyframes pulseExpand {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    transform: scale(1.06);
+    box-shadow: 
+      0 8px 24px rgba(59, 130, 246, 0.5),
+      0 0 30px rgba(59, 130, 246, 0.3),
+      inset 0 0 20px rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Shimmer streak animation */
+@keyframes shimmerStreak {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Floating particles animation */
+@keyframes floatingParticles {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-8px) translateX(4px);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(0) translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Blur flare animation */
+@keyframes blurFlare {
+  0%, 100% {
+    filter: brightness(1) blur(0px);
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    filter: brightness(1.2) blur(0px);
+    box-shadow: 
+      0 8px 24px rgba(59, 130, 246, 0.6),
+      0 0 40px rgba(59, 130, 236, 0.4);
+  }
+}
+
+/* Wiggle animation */
+@keyframes wiggle {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px) rotate(-1deg);
+  }
+  50% {
+    transform: translateX(3px) rotate(1deg);
+  }
+  75% {
+    transform: translateX(-3px) rotate(-1deg);
+  }
+}
+
+/* Jelly bounce animation */
+@keyframes jellyBounce {
+  0%, 100% {
+    transform: scale(1, 1);
+  }
+  25% {
+    transform: scale(1.1, 0.9);
+  }
+  50% {
+    transform: scale(0.9, 1.1);
+  }
+  75% {
+    transform: scale(1.05, 0.95);
+  }
+}
+
+/* Mystical glow animation */
+@keyframes mysticalGlow {
+  0%, 100% {
+    box-shadow: 
+      0 0 10px rgba(138, 43, 226, 0.3),
+      0 0 20px rgba(75, 0, 130, 0.2),
+      0 8px 24px rgba(75, 0, 130, 0.25);
+  }
+  50% {
+    box-shadow: 
+      0 0 20px rgba(138, 43, 226, 0.8),
+      0 0 40px rgba(75, 0, 130, 0.6),
+      0 0 60px rgba(138, 43, 226, 0.4),
+      0 8px 24px rgba(75, 0, 130, 0.4);
+  }
+}
+
+/* Chrome shine animation */
+@keyframes chromeShine {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Cyber pulse animation */
+@keyframes cyberPulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1) hue-rotate(0deg);
+  }
+  50% {
+    transform: scale(1.05);
+    filter: brightness(1.2) hue-rotate(20deg);
+  }
+}
+
+/* Aurora wave animation */
+@keyframes auroraWave {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Pulse ring animation */
+@keyframes pulseRing {
+  0%, 100% {
+    box-shadow: 
+      0 0 0 0 rgba(59, 130, 246, 0.7),
+      0 8px 24px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 
+      0 0 0 15px rgba(59, 130, 246, 0),
+      0 8px 24px rgba(59, 130, 246, 0.6);
+  }
+}
+
+/* ============================================
+   PREMIUM GENERATE BUTTON STYLES
+   ============================================ */
+
+/* Main premium button class */
+.btn-pulse {
+  position: relative;
+  overflow: hidden;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Animation variant: Rainbow Wave */
+.btn-pulse.rainbow-wave {
+  animation: rainbowWave 4s ease-in-out infinite;
+  background-size: 400% 400%;
+}
+
+/* Animation variant: Electric Spark */
+.btn-pulse.electric-spark {
+  animation: electricSpark 2s ease-in-out infinite;
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+}
+
+/* Animation variant: Liquid Swirl */
+.btn-pulse.liquid-swirl {
+  animation: liquidSwirl 3s ease-in-out infinite;
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+}
+
+/* Animation variant: Neon Glow */
+.btn-pulse.neon-glow {
+  animation: neonGlowPulse 2.5s ease-in-out infinite;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  color: #00ff88;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+/* Animation variant: Gradient Flow */
+.btn-pulse.gradient-flow {
+  animation: gradientFlow 3.5s ease-in-out infinite;
+  background: linear-gradient(135deg, #ec4899, #8b5cf6, #3b82f6, #06b6d4);
+  background-size: 400% 400%;
+}
+
+/* Animation variant: Bounce Glow */
+.btn-pulse.bounce-glow {
+  animation: bounceGlow 2s ease-in-out infinite;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+}
+
+/* Animation variant: Spin Scale */
+.btn-pulse.spin-scale {
+  animation: spinScale 3s ease-in-out infinite;
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+/* Animation variant: Pulse Expand */
+.btn-pulse.pulse-expand {
+  animation: pulseExpand 2.5s ease-in-out infinite;
+  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+}
+
+/* Animation variant: Shimmer Streak */
+.btn-pulse.shimmer-streak {
+  background: linear-gradient(
+    90deg,
+    #3b82f6 0%,
+    #60a5fa 50%,
+    #3b82f6 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmerStreak 2s linear infinite;
+}
+
+/* Animation variant: Floating Particles */
+.btn-pulse.floating-particles {
+  animation: floatingParticles 2.5s ease-in-out infinite;
+  background: linear-gradient(135deg, #ec4899, #f43f5e);
+}
+
+/* Animation variant: Blur Flare */
+.btn-pulse.blur-flare {
+  animation: blurFlare 2s ease-in-out infinite;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+}
+
+/* Animation variant: Wiggle */
+.btn-pulse.wiggle {
+  animation: wiggle 1.5s ease-in-out infinite;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+/* Animation variant: Jelly Bounce */
+.btn-pulse.jelly-bounce {
+  animation: jellyBounce 1.8s ease-in-out infinite;
+  background: linear-gradient(135deg, #84cc16, #65a30d);
+}
+
+/* Animation variant: Mystical Glow */
+.btn-pulse.mystical-glow {
+  animation: mysticalGlow 3s ease-in-out infinite;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+}
+
+/* Animation variant: Chrome Shine */
+.btn-pulse.chrome-shine {
+  background: linear-gradient(
+    90deg,
+    #e5e7eb 0%,
+    #f3f4f6 50%,
+    #e5e7eb 100%
+  );
+  background-size: 1000px 100%;
+  animation: chromeShine 2.5s linear infinite;
+  color: #1f2937;
+}
+
+/* Animation variant: Cyber Pulse */
+.btn-pulse.cyber-pulse {
+  animation: cyberPulse 2s ease-in-out infinite;
+  background: linear-gradient(135deg, #00ff88, #00cc88);
+  color: #000;
+  font-weight: 700;
+}
+
+/* Animation variant: Aurora Wave */
+.btn-pulse.aurora-wave {
+  background: linear-gradient(
+    90deg,
+    #00ff88 0%,
+    #00ffff 25%,
+    #0088ff 50%,
+    #8800ff 75%,
+    #ff0088 100%
+  );
+  background-size: 400% 400%;
+  animation: auroraWave 4s ease infinite;
+}
+
+/* Animation variant: Pulse Ring */
+.btn-pulse.pulse-ring {
+  animation: pulseRing 2s ease-in-out infinite;
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+}
+
+/* Enhanced hover state for all button animations */
+.btn-pulse:hover {
+  transform: translateY(-4px) scale(1.08);
+  filter: brightness(1.2);
+}
+
+.btn-pulse:active {
+  transform: translateY(-1px) scale(1.03);
+}
+
+/* Disabled state - reduce animation intensity */
+.btn-pulse:disabled {
+  animation: none !important;
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: grayscale(50%);
+}
+
+/* ============================================
+   PREMIUM GENERATE BUTTON UI/UX REDESIGN
+   ============================================ */
+
+.generate-button-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.generate-button {
+  position: relative;
+  width: 100%;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+  border: none;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: white;
+  text-transform: uppercase;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -webkit-backface-visibility: hidden;
+  z-index: 1;
+  
+  /* Base shadow */
+  box-shadow: 
+    0 10px 32px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.generate-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.15),
+    transparent
+  );
+  transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.generate-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease-out, height 0.6s ease-out;
+  z-index: 0;
+}
+
+.generate-button:hover::before {
+  left: 100%;
+}
+
+.generate-button:active::after {
+  width: 400px;
+  height: 400px;
+}
+
+.generate-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+}
+
+.generate-button-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  position: relative;
+  z-index: 2;
+}
+
+.generate-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  animation: iconFloat 1s ease-in-out infinite;
+}
+
+.generate-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
+@keyframes iconFloat {
+  0%, 100% {
+    transform: translateY(0) scaleX(1);
+  }
+  50% {
+    transform: translateY(-2px) scaleX(1.1);
+  }
+}
+
+.generate-text {
+  position: relative;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.8px;
+  white-space: nowrap;
+  animation: textPulseGenerate 1.2s ease-in-out infinite;
+}
+
+@keyframes textPulseGenerate {
+  0%, 100% {
+    opacity: 1;
+    letter-spacing: 0.8px;
+  }
+  50% {
+    opacity: 0.95;
+    letter-spacing: 1.2px;
+  }
+}
+
+.generate-arrow {
+  display: inline-block;
+  font-weight: 700;
+  font-size: 18px;
+  animation: arrowSlide 1s ease-in-out infinite;
+  margin-left: 4px;
+}
+
+@keyframes arrowSlide {
+  0%, 100% {
+    transform: translateX(0);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateX(4px);
+    opacity: 1;
+  }
+}
+
+.generate-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.25),
+    transparent
+  );
+  animation: shimmerMove 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes shimmerMove {
+  0% {
+    left: -100%;
+  }
+  50% {
+    left: 100%;
+  }
+  100% {
+    left: -100%;
+  }
+}
+
+.generate-pulse-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  animation: pulseRingGenerate 1.5s ease-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes pulseRingGenerate {
+  0% {
+    width: 0;
+    height: 0;
+    border-color: rgba(255, 255, 255, 0.8);
+    opacity: 1;
+  }
+  100% {
+    width: 100px;
+    height: 100px;
+    border-color: rgba(255, 255, 255, 0);
+    opacity: 0;
+  }
+}
+
+.generate-tooltip {
+  font-size: 12px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  opacity: 0;
+  animation: tooltipFadeIn 0.4s ease-out 0.2s forwards;
+  text-transform: uppercase;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   ENHANCED BUTTON STATES
+   ============================================ */
+
+.generate-button:hover {
+  transform: translateY(-4px) scale(1.06);
+  box-shadow: 
+    0 20px 48px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.15) inset,
+    0 0 40px rgba(59, 130, 246, 0.4);
+  filter: brightness(1.15);
+}
+
+.generate-button:active {
+  transform: translateY(-1px) scale(1.02);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+.generate-button:focus {
+  outline: none;
+  box-shadow: 
+    0 10px 32px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+.generate-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  transform: none;
+  animation: none !important;
+  filter: grayscale(40%) brightness(0.9);
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+}
+
+.generate-button:disabled .generate-shimmer {
+  animation: none;
+}
+
+.generate-button:disabled .generate-pulse-ring {
+  animation: none;
+}
+
+.generate-button:disabled .generate-arrow {
+  animation: none;
+  opacity: 0.5;
+}
+
+.generate-button:disabled .generate-text {
+  animation: none;
+  opacity: 0.8;
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+
+@media (max-width: 768px) {
+  .generate-button {
+    height: 52px;
+    font-size: 15px;
+    padding: 0 20px;
+  }
+  
+  .generate-icon {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .generate-text {
+    font-size: 15px;
+  }
+  
+  .generate-arrow {
+    font-size: 16px;
+  }
+  
+  .generate-tooltip {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .generate-button {
+    height: 48px;
+    font-size: 14px;
+    padding: 0 16px;
+    border-radius: 12px;
+  }
+  
+  .generate-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .generate-text {
+    font-size: 14px;
+    letter-spacing: 0.5px;
+  }
+  
+  .generate-button-content {
+    gap: 8px;
+  }
+  
+  .generate-arrow {
+    display: none;
+  }
+}
+
+/* ============================================
+   ANIMATION VARIANTS WITH ENHANCED UI
+   ============================================ */
+
+/* Rainbow Wave with gradient text */
+.generate-button.rainbow-wave .generate-text {
+  background: linear-gradient(135deg, #ff6b6b, #ffa500, #4ecdc4, #45b7d1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: rainbowTextWave 4s ease-in-out infinite;
+}
+
+@keyframes rainbowTextWave {
+  0%, 100% {
+    filter: brightness(1) saturate(1);
+  }
+  50% {
+    filter: brightness(1.2) saturate(1.3);
+  }
+}
+
+/* Electric Spark - Icon pulse */
+.generate-button.electric-spark .generate-icon {
+  animation: electricIconPulse 2s ease-in-out infinite;
+}
+
+@keyframes electricIconPulse {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 2px rgba(59, 130, 246, 0.3));
+  }
+  50% {
+    filter: brightness(1.4) drop-shadow(0 0 12px rgba(59, 130, 246, 0.8));
+  }
+}
+
+/* Neon Glow text effect */
+.generate-button.neon-glow .generate-text {
+  text-shadow: 
+    0 0 8px rgba(0, 255, 136, 0.6),
+    0 0 16px rgba(0, 255, 136, 0.4);
+  animation: neonTextFlicker 1.5s ease-in-out infinite;
+}
+
+@keyframes neonTextFlicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    text-shadow: 
+      0 0 8px rgba(0, 255, 136, 0.6),
+      0 0 16px rgba(0, 255, 136, 0.4);
+  }
+  20%, 24%, 55% {
+    text-shadow: 
+      0 0 4px rgba(0, 255, 136, 0.3),
+      0 0 8px rgba(0, 255, 136, 0.2);
+  }
+}
+
+/* Mystical Glow - rotating gradient icon */
+.generate-button.mystical-glow .generate-icon {
+  animation: mysticalIconRotate 3s linear infinite;
+  filter: drop-shadow(0 0 8px rgba(138, 43, 226, 0.6));
+}
+
+@keyframes mysticalIconRotate {
+  0% {
+    transform: rotate(0deg) translateY(0);
+  }
+  50% {
+    transform: rotate(180deg) translateY(-3px);
+  }
+  100% {
+    transform: rotate(360deg) translateY(0);
+  }
+}
+
+/* Cyber Pulse - color shift */
+.generate-button.cyber-pulse .generate-text {
+  animation: cyberTextShift 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px rgba(0, 255, 136, 0.5));
+}
+
+@keyframes cyberTextShift {
+  0%, 100% {
+    color: #00ff88;
+    filter: drop-shadow(0 0 4px rgba(0, 255, 136, 0.5));
+  }
+  50% {
+    color: #00ffff;
+    filter: drop-shadow(0 0 8px rgba(0, 255, 255, 0.8));
+  }
+}
+
+/* Aurora Wave - multi-color glow */
+.generate-button.aurora-wave .generate-text {
+  animation: auroraTextGlow 4s ease-in-out infinite;
+}
+
+@keyframes auroraTextGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(0, 255, 136, 0.4));
+  }
+  25% {
+    filter: drop-shadow(0 0 8px rgba(0, 255, 255, 0.6));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(136, 0, 255, 0.6));
+  }
+  75% {
+    filter: drop-shadow(0 0 8px rgba(255, 0, 136, 0.6));
+  }
+}
+
+/* Chrome Shine - text gloss effect */
+.generate-button.chrome-shine .generate-text {
+  background: linear-gradient(135deg, #1f2937, #374151, #1f2937);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Bounce Glow - icon bounce sync */
+.generate-button.bounce-glow .generate-icon {
+  animation: iconBounceSync 2s ease-in-out infinite;
+}
+
+@keyframes iconBounceSync {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  25% {
+    transform: translateY(-4px) scale(1.1);
+  }
+  50% {
+    transform: translateY(-8px) scale(1.15);
+  }
+  75% {
+    transform: translateY(-4px) scale(1.1);
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY & FOCUS STATES
+   ============================================ */
+
+.generate-button:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.8);
+  outline-offset: 4px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .generate-button,
+  .generate-button::before,
+  .generate-button::after,
+  .generate-icon,
+  .generate-text,
+  .generate-arrow,
+  .generate-shimmer,
+  .generate-pulse-ring,
+  .generate-tooltip {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .generate-button:hover {
+    transform: none;
+  }
+}
+
+/* ============================================
+   DARK MODE OPTIMIZATION
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+  .generate-button {
+    box-shadow: 
+      0 10px 32px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+      0 0 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  .generate-button:hover {
+    box-shadow: 
+      0 20px 48px rgba(0, 0, 0, 0.6),
+      0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+      0 0 40px rgba(59, 130, 246, 0.3);
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .generate-button {
+    box-shadow: 
+      0 10px 32px rgba(0, 0, 0, 0.08),
+      0 0 0 1px rgba(0, 0, 0, 0.05) inset;
+  }
+  
+  .generate-button:hover {
+    box-shadow: 
+      0 20px 48px rgba(0, 0, 0, 0.12),
+      0 0 0 1px rgba(0, 0, 0, 0.08) inset,
+      0 0 40px rgba(59, 130, 246, 0.25);
+  }
+}
