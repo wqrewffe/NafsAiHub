@@ -28,39 +28,75 @@ const buildContents = (prompt: string, image?: ImagePart) => {
     };
 };
 
+// Retry logic for handling temporary API failures
+const withRetry = async <T>(
+    fn: () => Promise<T>,
+    maxRetries: number = 3,
+    delayMs: number = 1000
+): Promise<T> => {
+    let lastError: any;
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            return await fn();
+        } catch (error: any) {
+            lastError = error;
+            // Retry on 503 (Service Unavailable) or network errors
+            const isRetryable = 
+                error?.status === 503 || 
+                error?.message?.includes('overloaded') ||
+                error?.code === 'UNAVAILABLE' ||
+                error?.message?.includes('Network');
+            
+            if (!isRetryable || i === maxRetries - 1) {
+                throw error;
+            }
+            
+            // Exponential backoff: 1s, 2s, 4s
+            const waitTime = delayMs * Math.pow(2, i);
+            console.log(`Retry attempt ${i + 1}/${maxRetries} after ${waitTime}ms...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
+    }
+    throw lastError;
+};
+
 
 export const generateText = async (prompt: string, image?: ImagePart): Promise<string> => {
   if (!apiKey) throw new Error("API key not configured");
   try {
-    const contents = buildContents(prompt, image);
-    const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents,
+    return await withRetry(async () => {
+      const contents = buildContents(prompt, image);
+      const response: GenerateContentResponse = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents,
+      });
+      return response.text;
     });
-    return response.text;
   } catch (error) {
     console.error('Error generating text:', error);
-    throw new Error('Failed to generate text from Gemini API.');
+    throw new Error('Failed to generate text from Gemini API. The service is temporarily unavailable.');
   }
 };
 
 export const generateJson = async (prompt: string, schema: any, image?: ImagePart): Promise<any> => {
     if (!apiKey) throw new Error("API key not configured");
     try {
-        const contents = buildContents(prompt, image);
-        const response: GenerateContentResponse = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents,
-            config: {
-                responseMimeType: 'application/json',
-                responseSchema: schema,
-            },
+        return await withRetry(async () => {
+            const contents = buildContents(prompt, image);
+            const response: GenerateContentResponse = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents,
+                config: {
+                    responseMimeType: 'application/json',
+                    responseSchema: schema,
+                },
+            });
+            const jsonText = response.text.trim();
+            return JSON.parse(jsonText);
         });
-        const jsonText = response.text.trim();
-        return JSON.parse(jsonText);
     } catch (error) {
         console.error('Error generating JSON:', error);
-        throw new Error('Network Problem. Please try again.');
+        throw new Error('Service temporarily unavailable. Please try again in a few moments.');
     }
 };
 
