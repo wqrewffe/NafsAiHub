@@ -30,23 +30,57 @@ export default defineConfig(({ mode }) => {
         terserOptions: {
           compress: {
             drop_console: isProduction,
-            drop_debugger: isProduction
+            drop_debugger: isProduction,
+            pure_funcs: isProduction ? ['console.log', 'console.info', 'console.debug', 'console.warn'] : []
           },
           mangle: true,
           output: {
             comments: false
           }
         },
-        // Code splitting strategy
+        // Code splitting strategy - more aggressive
         rollupOptions: {
           output: {
-            manualChunks: {
-              // Split vendor dependencies into separate chunks
-              'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-              'firebase': ['firebase/app', 'firebase/auth', 'firebase/database', 'firebase/storage'],
-              'ai-libs': ['@google/generative-ai', '@google/genai'],
-              'ui-libs': ['framer-motion', 'lottie-react', 'react-hot-toast', 'recharts'],
-              'icons': ['lucide-react', 'react-icons', '@heroicons/react']
+            manualChunks: (id) => {
+              // Core vendor chunk
+              if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+                return 'react';
+              }
+              if (id.includes('node_modules/react-router')) {
+                return 'react-router';
+              }
+              // Firebase chunk
+              if (id.includes('node_modules/firebase/')) {
+                return 'firebase';
+              }
+              // AI libraries
+              if (id.includes('node_modules/@google/')) {
+                return 'ai-libs';
+              }
+              // Animation libraries
+              if (id.includes('node_modules/framer-motion/') || id.includes('node_modules/react-spring/')) {
+                return 'animations';
+              }
+              // Lottie
+              if (id.includes('node_modules/lottie-react/')) {
+                return 'lottie';
+              }
+              // Charts
+              if (id.includes('node_modules/recharts/')) {
+                return 'recharts';
+              }
+              // Icons
+              if (id.includes('node_modules/@heroicons/') || id.includes('node_modules/react-icons/')) {
+                return 'icons';
+              }
+              // Heavy utilities
+              if (id.includes('node_modules/html2canvas/') || id.includes('node_modules/jspdf/')) {
+                return 'heavy-utils';
+              }
+              // Everything else in node_modules but not caught
+              if (id.includes('node_modules/')) {
+                return 'vendor';
+              }
             },
             // Optimize chunk names
             chunkFileNames: 'assets/[name]-[hash:8].js',
@@ -55,8 +89,8 @@ export default defineConfig(({ mode }) => {
           }
         },
         // Set chunk size warnings at higher threshold
-        chunkSizeWarningLimit: 500,
-        // Disable source maps in production to avoid sourcemap errors
+        chunkSizeWarningLimit: 800,
+        // Disable source maps to avoid encoding issues
         sourcemap: false,
         // Reduce output verbosity
         reportCompressedSize: false
