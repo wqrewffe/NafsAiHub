@@ -493,7 +493,7 @@ const HomePage: React.FC = memo(() => {
             </span>
           </h1>
           <p className="mt-4 sm:mt-6 md:mt-8 text-base sm:text-lg md:text-xl max-w-3xl mx-auto md:mx-0 leading-relaxed text-slate-300 transition-colors duration-300 px-2 sm:px-0">
-            The most comprehensive AI-powered platform featuring <span className="font-semibold text-accent">81+ AI-powered tools</span> and <span className="font-semibold text-primary">110+ developer utilities</span> designed to revolutionize how students, professionals, developers, and creators work, learn, and innovate. From essay writing and medical diagnosis to code explanation and creative storytelling - plus a complete Developer Toolbox with professional utilities for text, image, color, and security tasks - Naf's AI Hub has everything you need to supercharge your productivity and unlock your full potential. Experience the future of intelligent assistance today.
+            The most comprehensive AI-powered platform featuring <span className="font-semibold text-accent">81+ AI-powered tools</span> and <span className="font-semibold text-accent">110+ developer utilities</span> designed to revolutionize how students, professionals, developers, and creators work, learn, and innovate. From essay writing and medical diagnosis to code explanation and creative storytelling - plus a complete Developer Toolbox with professional utilities for text, image, color, and security tasks - Naf's AI Hub has everything you need to supercharge your productivity and unlock your full potential. Experience the future of intelligent assistance today.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-6 sm:mt-8 justify-center md:justify-start px-2 sm:px-0">
             {!currentUser && (
@@ -674,10 +674,10 @@ const HomePage: React.FC = memo(() => {
             <div className="text-xs text-slate-400 mt-1">Powered by Gemini</div>
           </div>
         </div>
-        <div className="bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30 rounded-lg p-4 sm:p-6 text-center hover:border-primary/50 transition-all duration-300 hover:bg-primary/25 hover:scale-105 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div className="bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/30 rounded-lg p-4 sm:p-6 text-center hover:border-accent/50 transition-all duration-300 hover:bg-accent/25 hover:scale-105 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10">
-            <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary mb-2">
+            <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-accent mb-2">
               110+
             </div>
             <div className="text-xs sm:text-sm text-slate-300 font-medium">Non-AI Tools</div>
@@ -712,7 +712,7 @@ const HomePage: React.FC = memo(() => {
             <SparklesIcon className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
           </div>
           <p className="text-sm sm:text-base text-slate-300 mb-4">
-            Combining <span className="font-semibold text-accent">81+ AI-powered tools</span> with <span className="font-semibold text-primary">110+ developer utilities</span> for the ultimate productivity platform
+            Combining <span className="font-semibold text-accent">81+ AI-powered tools</span> with <span className="font-semibold text-accent">110+ developer utilities</span> for the ultimate productivity platform
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             <button
@@ -726,7 +726,7 @@ const HomePage: React.FC = memo(() => {
               onClick={() => {
                 window.location.hash = '#/toolbox';
               }}
-              className="px-6 py-2 bg-primary/20 hover:bg-primary/30 border border-primary/40 text-primary font-semibold rounded-lg transition-all duration-300 text-sm sm:text-base"
+              className="px-6 py-2 bg-primary/20 hover:bg-primary/30 border border-primary/40 text-white font-semibold rounded-lg transition-all duration-300 text-sm sm:text-base shadow-lg hover:shadow-xl"
             >
               Explore Developer Tools
             </button>
