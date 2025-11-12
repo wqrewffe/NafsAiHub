@@ -26,12 +26,40 @@ interface ToolContainerProps {
   renderOutput: (output: any, onUpdateOutput?: (output: any) => void, options?: Record<string, any>, prompt?: string) => React.ReactNode;
 }
 
+// Array of premium button animation classes
+const BUTTON_ANIMATIONS = [
+  'rainbow-wave',
+  'electric-spark',
+  'liquid-swirl',
+  'neon-glow',
+  'gradient-flow',
+  'bounce-glow',
+  'spin-scale',
+  'pulse-expand',
+  'shimmer-streak',
+  'floating-particles',
+  'blur-flare',
+  'wiggle',
+  'jelly-bounce',
+  'mystical-glow',
+  'chrome-shine',
+  'cyber-pulse',
+  'aurora-wave',
+  'pulse-ring',
+];
+
+// Get random animation for button
+const getRandomButtonAnimation = (): string => {
+  return BUTTON_ANIMATIONS[Math.floor(Math.random() * BUTTON_ANIMATIONS.length)];
+};
+
 const ToolContainer: React.FC<ToolContainerProps> = ({ toolId, toolName, toolCategory, promptSuggestion, optionsConfig = [], onGenerate, renderOutput }) => {
   const [prompt, setPrompt] = useState(promptSuggestion || '');
   const [output, setOutput] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [image, setImage] = useState<ImageFile | null>(null);
+  const [buttonAnimation] = useState(() => getRandomButtonAnimation());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { currentUser } = useAuth();
   const { canUseAnonymously, recordAnonymousUse } = useToolAccess();
@@ -225,13 +253,39 @@ const ToolContainer: React.FC<ToolContainerProps> = ({ toolId, toolName, toolCat
           </div>
       )}
 
-      <button
-        onClick={handleGenerate}
-        disabled={loading}
-        className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-md font-medium text-white bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:bg-slate-500 disabled:cursor-not-allowed btn-animated btn-pulse"
-      >
-        {loading ? <GenerateSpinner /> : 'Generate'}
-      </button>
+      <div className="generate-button-wrapper">
+        <button
+          onClick={handleGenerate}
+          disabled={loading}
+          className={`generate-button btn-animated btn-pulse ${buttonAnimation}`}
+          aria-label="Generate content"
+          title={loading ? 'Generating...' : 'Click to generate'}
+        >
+          <span className="generate-button-content">
+            <span className="generate-icon">
+              {loading ? (
+                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : (
+                <svg className="generate-spark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+              )}
+            </span>
+            <span className="generate-text">
+              {loading ? 'Generating Magic...' : 'Generate'}
+            </span>
+            {!loading && <span className="generate-arrow">→</span>}
+          </span>
+          {!loading && <span className="generate-shimmer"></span>}
+          <span className="generate-pulse-ring"></span>
+        </button>
+        <div className="generate-tooltip">
+          {loading ? 'Processing your request...' : 'Ready to create amazing content'}
+        </div>
+      </div>
 
       {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-md">{error}</div>}
 
