@@ -8,8 +8,7 @@
     "build": "tsc && npm run generate-sitemap && vite build",
     "preview": "vite preview",
     "start": "vite preview --host --port $PORT",
-    "generate-sitemap": "node ./scripts/generate-full-sitemap.js",
-    "optimize-imports": "node ./scripts/optimize-imports.js"
+    "generate-sitemap": "node ./scripts/generate-full-sitemap.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -30,6 +29,7 @@
     "jspdf": "^2.5.1",
     "leaflet": "^1.9.4",
     "lottie-react": "^2.4.1",
+    "lucide-react": "^0.542.0",
     "qr-code-styling": "^1.9.2",
     "react": "^19.1.1",
     "react-calendar": "^6.0.0",
@@ -50,7 +50,6 @@
     "fast-xml-parser": "^5.2.5",
     "sitemap": "^8.0.0",
     "sitemap-generator-cli": "^7.5.0",
-    "terser": "^5.44.1",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }
