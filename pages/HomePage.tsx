@@ -7,18 +7,13 @@ import SocialFeed from '../components/SocialFeed';
 import { tools } from '../tools';
 import { Tool, ToolCategory } from '../types';
 import { 
-    AcademicCapIcon, SparklesIcon, UserCircleIcon, RocketLaunchIcon,
-    StethoscopeIcon, CodeBracketIcon, LightBulbIcon, CpuChipIcon, ArrowLeftIcon, ClipboardDocumentCheckIcon
+  AcademicCapIcon, SparklesIcon, UserCircleIcon, RocketLaunchIcon,
+  CodeBracketIcon, LightBulbIcon, CpuChipIcon, ArrowLeftIcon, ClipboardDocumentCheckIcon,
+  BoltIcon, GlobeAltIcon, MapAnimationIcon, StethoscopeIcon, KeyIcon
 } from '../tools/Icons';
-import { BoltIcon } from '../tools/Icons';
-import { KeyIcon } from '../tools/Icons';
-
-import { GlobeAltIcon, MapAnimationIcon } from '../tools/Icons';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useEngagement } from '../hooks/useEngagement';
-import { getTopUsedToolsGlobal, getTopUsedToolsForUser } from '../services/firebaseService';
-import { getDashboardStats, getActivityCounts } from '../services/firebaseService';
 import { getTrainerMeta } from '../TRAINER/modes';
 import { toolAccessService } from '../services/toolAccessService';
 import ToolRow from '../components/ToolRow';
@@ -137,6 +132,9 @@ const HomePage: React.FC = memo(() => {
       const fetchUserData = async () => {
         setLoadingUser(true);
         try {
+          // LAZY LOAD Firebase module - only when user exists
+          const { getTopUsedToolsForUser, getTopUsedToolsGlobal } = await import('../services/firebaseService');
+          
           // Fetch user's top tools
           const userTopToolsData = await getTopUsedToolsForUser(currentUser.uid, 7);
           const userTools = userTopToolsData
@@ -455,6 +453,9 @@ const HomePage: React.FC = memo(() => {
     let mounted = true;
     const fetchStats = async () => {
       try {
+        // LAZY LOAD Firebase dashboard functions
+        const { getDashboardStats, getActivityCounts } = await import('../services/firebaseService');
+        
         const ds = await getDashboardStats();
         if (!mounted) return;
         setDashboardStats({ totalUsers: ds.totalUsers, totalUsage: ds.totalUsage, newUsers7Days: ds.newUsers7Days, newUsers30Days: ds.newUsers30Days });
@@ -1243,33 +1244,6 @@ const HomePage: React.FC = memo(() => {
         </div>
       </div>
 
-      {/* Community Highlights */}
-      {/* <div className="space-y-6 sm:space-y-8 scroll-reveal">
-        <div className="text-center px-2 sm:px-0">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-light transition-colors duration-300 hover:text-accent inline-block">Join the Community</h2>
-          <p className="mt-3 sm:mt-4 text-sm sm:text-base text-slate-400">See what others are achieving with Naf's AI Hub</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-          {[
-            { stat: '10K+', label: 'Daily Active Users', icon: UserCircleIcon },
-            { stat: '500K+', label: 'Tools Used This Month', icon: SparklesIcon },
-            { stat: '95%', label: 'User Satisfaction', icon: RocketLaunchIcon },
-          ].map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <div 
-                key={item.label}
-                className="bg-secondary/50 border border-accent/20 rounded-lg p-6 text-center hover:border-accent/40 transition-all duration-300"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <Icon className="h-8 w-8 text-accent mx-auto mb-3" />
-                <div className="text-3xl sm:text-4xl font-bold text-accent mb-2">{item.stat}</div>
-                <div className="text-sm text-slate-400">{item.label}</div>
-              </div>
-            );
-          })}
-        </div>
-      </div> */}
 
       {/* Call to Action Section */}
       <div className="bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 border border-accent/30 rounded-2xl p-8 sm:p-12 text-center scroll-reveal">
