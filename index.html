@@ -1,13 +1,24 @@
 <!DOCTYPE html>
 <html lang="en" data-transparent="true" style="background-color:#061018;color:#e6edf3">
   <head>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7F8R9GYM93"></script>
+    <!-- Preconnect to critical domains for faster loading -->
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+    <link rel="preconnect" href="https://nafs--hub.firebaseapp.com" crossorigin>
+    <link rel="preconnect" href="https://apis.google.com" crossorigin>
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+    
+    <!-- Defer Google Analytics - load after page interactive -->
+    <script defer async src="https://www.googletagmanager.com/gtag/js?id=G-7F8R9GYM93"></script>
     <script>
+      // Initialize dataLayer before gtag script loads
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-7F8R9GYM93');
     </script>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <!-- Prevent browser from caching this HTML -->
