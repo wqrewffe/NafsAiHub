@@ -30,9 +30,7 @@ export default defineConfig(({ mode }) => {
         terserOptions: {
           compress: {
             drop_console: isProduction,
-            drop_debugger: isProduction,
-            passes: 3,
-            pure_funcs: ['console.log', 'console.info', 'console.debug']
+            drop_debugger: isProduction
           },
           mangle: true,
           output: {
@@ -48,10 +46,7 @@ export default defineConfig(({ mode }) => {
               'firebase': ['firebase/app', 'firebase/auth', 'firebase/database', 'firebase/storage'],
               'ai-libs': ['@google/generative-ai', '@google/genai'],
               'ui-libs': ['framer-motion', 'lottie-react', 'react-hot-toast', 'recharts'],
-              'icons': ['lucide-react', 'react-icons', '@heroicons/react'],
-              'animations': ['@react-spring/web', 'react-confetti'],
-              'utils': ['date-fns', 'clsx', 'roughjs', 'leaflet'],
-              'three': ['three']
+              'icons': ['lucide-react', 'react-icons', '@heroicons/react']
             },
             // Optimize chunk names
             chunkFileNames: 'assets/[name]-[hash:8].js',
@@ -61,8 +56,8 @@ export default defineConfig(({ mode }) => {
         },
         // Set chunk size warnings at higher threshold
         chunkSizeWarningLimit: 500,
-        // Enable source maps for production debugging
-        sourcemap: isProduction ? 'hidden' : true,
+        // Disable source maps in production to avoid sourcemap errors
+        sourcemap: false,
         // Reduce output verbosity
         reportCompressedSize: false
       },
@@ -78,8 +73,7 @@ export default defineConfig(({ mode }) => {
           '@google/generative-ai',
           'framer-motion',
           'lucide-react'
-        ],
-        exclude: ['three']
+        ]
       }
     };
 });
