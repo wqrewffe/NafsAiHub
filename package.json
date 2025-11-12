@@ -51,6 +51,7 @@
     "fast-xml-parser": "^5.2.5",
     "sitemap": "^8.0.0",
     "sitemap-generator-cli": "^7.5.0",
+    "terser": "^5.31.1",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }
