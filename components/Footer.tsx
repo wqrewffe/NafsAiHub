@@ -27,19 +27,24 @@ const Footer: React.FC = memo(() => {
   ], []);
 
   return (
-    <footer className="bg-secondary/50 text-light mt-auto border-t border-secondary/50 relative overflow-hidden" style={{ position: 'static' as const, zIndex: 'auto' as const }}>
-      {/* Decorative gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-primary/20 via-transparent to-transparent pointer-events-none"></div>
-
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+    <footer className="bg-secondary text-light mt-auto border-t border-secondary/50 relative overflow-hidden">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 relative z-10">
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           {/* Company Info */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-4 group">
-              <img src="/fav.png" alt="Naf's AI Hub logo" className="brand-logo transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110" width={28} height={28} />
-              <h3 className="text-lg font-semibold transition-colors duration-300 group-hover:text-accent">Naf's AI Hub</h3>
+              <img
+                src="/fav.png"
+                alt="Naf's AI Hub logo"
+                className="transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110"
+                width={32}
+                height={32}
+              />
+              <h3 className="text-xl font-bold transition-colors duration-300 group-hover:text-accent">
+                Naf's AI Hub
+              </h3>
             </div>
-            <p className="text-light/80 mb-4 leading-relaxed">
+            <p className="text-light/80 leading-relaxed mb-4">
               Empowering users with cutting-edge AI tools for creativity,
               productivity, and learning. Join our community and discover the
               future of AI-powered assistance.
@@ -52,69 +57,58 @@ const Footer: React.FC = memo(() => {
           </div>
 
           {/* Quick Links */}
-          <FooterLinks
-            title="Quick Links"
-            links={quickLinks}
-          />
+          <FooterLinks title="Quick Links" links={quickLinks} />
 
           {/* Support */}
-          <FooterLinks
-            title="Support"
-            links={supportLinks}
-          />
+          <FooterLinks title="Support" links={supportLinks} />
         </div>
 
-        {/* Bottom Footer */}
-        <div className="border-t border-secondary/50 pt-6 flex flex-col md:flex-row md:justify-between items-center gap-4">
-          {/* Badges */}
-          <div className="flex flex-wrap items-center gap-4 justify-center md:justify-start">
-            <a
-              href="https://twelve.tools"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="transition-transform duration-300 hover:scale-110"
-            >
-              <img
+        {/* Bottom Footer: Copyright + Badges + Policy Links */}
+        <div className="border-t border-secondary/50 pt-6 flex flex-col md:flex-row md:justify-between md:items-start gap-6">
+          {/* Left: Copyright */}
+          <p className="text-sm text-light/70 md:flex-1">
+            &copy; {currentYear} Naf's AI Hub. All rights reserved.
+          </p>
+
+          {/* Right: Badges and Policy Links */}
+          <div className="flex flex-col md:items-end gap-4">
+            {/* Badges */}
+            <div className="flex flex-wrap gap-4 justify-end">
+              <Badge
+                href="https://twelve.tools"
                 src="https://twelve.tools/badge0-white.svg"
                 alt="Featured on Twelve Tools"
                 width={200}
                 height={54}
-                className="shadow-lg rounded-md"
               />
-            </a>
-            <a
-              href="https://startupfa.me/s/nafsaihub.vercel.app?utm_source=nafsaihub.vercel.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="transition-transform duration-300 hover:scale-110"
-            >
-              <img
+              <Badge
+                href="https://startupfa.me/s/nafsaihub.vercel.app?utm_source=nafsaihub.vercel.app"
                 src="https://startupfa.me/badges/featured-badge-small.webp"
-                alt="nafsaihub.vercel.app - Featured on Startup Fame"
+                alt="Featured on Startup Fame"
                 width={224}
                 height={36}
-                className="shadow-lg rounded-md"
               />
-            </a>
-          </div>
+              <Badge
+                href="https://peerpush.net/p/nafsaihub-learn-compete-and-collabor"
+                src="https://peerpush.net/p/nafsaihub-learn-compete-and-collabor/badge.png"
+                alt="NafsAiHub — Learn, Compete, and Collabor badge"
+                height={60}
+              />
+            </div>
 
-          {/* Copyright */}
-          <p className="text-sm text-light/70 transition-colors duration-300 hover:text-accent">
-            &copy; {currentYear} Naf's AI Hub. All rights reserved.
-          </p>
-
-          {/* Policy Links */}
-          <div className="flex flex-wrap gap-6 text-sm justify-center md:justify-end">
-            {policyLinks.map((item) => (
-              <Link
-                key={item}
-                to="/policies"
-                className="text-light/70 hover:text-accent transition-all duration-300 relative group"
-              >
-                <span className="relative z-10">{item}</span>
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent group-hover:w-full transition-all duration-300"></span>
-              </Link>
-            ))}
+            {/* Policy Links */}
+            <div className="flex flex-wrap gap-6 text-sm justify-end">
+              {policyLinks.map((item) => (
+                <Link
+                  key={item}
+                  to="/policies"
+                  className="text-light/70 hover:text-accent transition-all duration-300 relative group"
+                >
+                  <span className="relative z-10">{item}</span>
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent group-hover:w-full transition-all duration-300"></span>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -123,14 +117,18 @@ const Footer: React.FC = memo(() => {
 });
 
 const SocialIcon = memo(({ href, label }: { href: string; label: string }) => (
-  <a 
-    href={href} 
-    target="_blank" 
-    rel="noopener noreferrer" 
-    className="text-light/70 hover:text-accent transition-all duration-300 p-2 rounded-full hover:bg-accent/10 hover:scale-110 group" 
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-light/70 hover:text-accent transition-all duration-300 p-2 rounded-full hover:bg-accent/10 hover:scale-110 group"
     aria-label={label}
   >
-    <svg className="h-6 w-6 transition-transform duration-300 group-hover:rotate-12" fill="currentColor" viewBox="0 0 24 24">
+    <svg
+      className="h-6 w-6 transition-transform duration-300 group-hover:rotate-12"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+    >
       <circle cx="12" cy="12" r="10" opacity="0.2" className="group-hover:opacity-0.4 transition-opacity" />
       <path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Z" />
     </svg>
@@ -144,14 +142,20 @@ const FooterLinks = memo(({ title, links }: { title: string; links: { to?: strin
       {links.map(({ to, href, label }) =>
         to ? (
           <li key={label}>
-            <Link to={to} className="text-light/80 hover:text-accent transition-all duration-300 relative group inline-block">
+            <Link
+              to={to}
+              className="text-light/80 hover:text-accent transition-all duration-300 relative group inline-block"
+            >
               <span className="relative z-10">{label}</span>
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent group-hover:w-full transition-all duration-300"></span>
             </Link>
           </li>
         ) : (
           <li key={label}>
-            <a href={href} className="text-light/80 hover:text-accent transition-all duration-300 relative group inline-block">
+            <a
+              href={href}
+              className="text-light/80 hover:text-accent transition-all duration-300 relative group inline-block"
+            >
               <span className="relative z-10">{label}</span>
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent group-hover:w-full transition-all duration-300"></span>
             </a>
@@ -161,6 +165,27 @@ const FooterLinks = memo(({ title, links }: { title: string; links: { to?: strin
     </ul>
   </div>
 ));
+
+const Badge = memo(
+  ({ href, src, alt, width, height }: { href: string; src: string; alt: string; width?: number; height?: number }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="transition-transform duration-300 hover:scale-105"
+      style={{ height: height ? `${height}px` : 'auto' }}
+    >
+      <img
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        className="rounded-md shadow-lg"
+        style={{ height: height ? `${height}px` : 'auto' }}
+      />
+    </a>
+  )
+);
 
 Footer.displayName = 'Footer';
 export default Footer;
