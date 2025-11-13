@@ -124,18 +124,18 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
           if (result.data.link) {
             window.open(result.data.link, '_blank');
           } else {
-            navigate(`/#/tools/${result.data.firestoreId}`);
+            navigate(`/#/tool/${result.data.firestoreId}`);
           }
         } else if (result.data.path) {
           // Toolbox tool with path
           navigate(result.data.path);
         } else {
           // Built-in AI tool
-          navigate(`/tools/${result.data.id}`);
+          navigate(`/tool/${result.data.id}`);
         }
         break;
       case 'history':
-        navigate(`/tools/${result.data.originalToolId || result.id.split('-')[0]}`);
+        navigate(`/tool/${result.data.originalToolId || result.id.split('-')[0]}`);
         break;
       case 'user':
         navigate(`/profile/${result.data.displayName}-${result.id}`);
