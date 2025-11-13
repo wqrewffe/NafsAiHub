@@ -1,0 +1,145 @@
+/* Global Search Modal Styles */
+
+.global-search-backdrop {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.global-search-modal {
+  animation: slideUp 0.3s ease-out;
+  backdrop-filter: blur(4px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scrollbar styling */
+.global-search-results::-webkit-scrollbar {
+  width: 6px;
+}
+
+.global-search-results::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.global-search-results::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.5);
+  border-radius: 3px;
+}
+
+.global-search-results::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.8);
+}
+
+/* Result item hover effect */
+.global-search-result-item {
+  transition: all 0.15s ease;
+}
+
+.global-search-result-item:hover {
+  transform: translateX(2px);
+}
+
+.global-search-result-item.selected {
+  box-shadow: inset 0 0 0 2px currentColor;
+}
+
+/* Search input focus effect */
+.global-search-input:focus {
+  outline: none;
+  border-color: var(--primary-color, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Section dividers */
+.global-search-section-header {
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+/* Icon animations */
+.global-search-searching {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Empty state styling */
+.global-search-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+}
+
+/* Results grid for better organization */
+.global-search-results-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.global-search-section {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.global-search-section:last-child {
+  border-bottom: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .global-search-modal {
+    max-width: calc(100% - 2rem);
+    margin: 0 1rem;
+  }
+
+  .global-search-input {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* Loading skeleton animation */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.global-search-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.1) 0%,
+    rgba(148, 163, 184, 0.2) 50%,
+    rgba(148, 163, 184, 0.1) 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
