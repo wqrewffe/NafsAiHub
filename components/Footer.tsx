@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 const Footer: React.FC = memo(() => {
   const currentYear = useMemo(() => new Date().getFullYear(), []);
-  
+
   const quickLinks = useMemo(() => [
     { to: '/', label: 'Home' },
     { to: '/referral', label: 'Refer & Earn' },
@@ -30,7 +30,7 @@ const Footer: React.FC = memo(() => {
     <footer className="bg-secondary/50 text-light mt-auto border-t border-secondary/50 relative overflow-hidden" style={{ position: 'static' as const, zIndex: 'auto' as const }}>
       {/* Decorative gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-primary/20 via-transparent to-transparent pointer-events-none"></div>
-      
+
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           {/* Company Info */}
@@ -65,17 +65,40 @@ const Footer: React.FC = memo(() => {
         </div>
 
         {/* Bottom Footer */}
-        <div className="border-t border-secondary/50 pt-6">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm text-light/70 mb-4 md:mb-0 transition-colors duration-300 hover:text-accent">&copy; {currentYear} Naf's AI Hub. All rights reserved.</p>
-            <div className="flex flex-wrap gap-6 text-sm">
-              {policyLinks.map((item) => (
-                <Link key={item} to="/policies" className="text-light/70 hover:text-accent transition-all duration-300 relative group">
-                  <span className="relative z-10">{item}</span>
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent group-hover:w-full transition-all duration-300"></span>
-                </Link>
-              ))}
-            </div>
+        <div className="border-t border-secondary/50 pt-6 flex flex-col md:flex-row md:justify-between items-center gap-4">
+          {/* Twelve Tools Badge */}
+          <a
+            href="https://twelve.tools"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-transform duration-300 hover:scale-110"
+          >
+            <img
+              src="https://twelve.tools/badge0-white.svg"
+              alt="Featured on Twelve Tools"
+              width={200}
+              height={54}
+              className="shadow-lg rounded-md"
+            />
+          </a>
+
+          {/* Copyright */}
+          <p className="text-sm text-light/70 transition-colors duration-300 hover:text-accent">
+            &copy; {currentYear} Naf's AI Hub. All rights reserved.
+          </p>
+
+          {/* Policy Links */}
+          <div className="flex flex-wrap gap-6 text-sm">
+            {policyLinks.map((item) => (
+              <Link
+                key={item}
+                to="/policies"
+                className="text-light/70 hover:text-accent transition-all duration-300 relative group"
+              >
+                <span className="relative z-10">{item}</span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent group-hover:w-full transition-all duration-300"></span>
+              </Link>
+            ))}
           </div>
         </div>
       </div>
