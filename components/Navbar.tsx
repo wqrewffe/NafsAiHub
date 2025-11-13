@@ -8,6 +8,9 @@ import { auth } from '../firebase/config';
 import { Cog6ToothIcon, ClipboardDocumentCheckIcon, PencilIcon, UserGroupIcon, SparklesIcon } from '../tools/Icons';
 import { ExtendedUser } from '../types/auth';
 import { db } from '../firebase/config';
+import { tools } from '../tools/index';
+import GlobalSearch from './GlobalSearch';
+import { useToolHistory } from '../hooks/useToolHistory';
 import './Navbar.css';
 
 const ADMIN_EMAIL = 'nafisabdullah424@gmail.com';
@@ -36,9 +39,11 @@ const Navbar: React.FC = memo(() => {
   const { profile } = useProfile(currentUser?.uid || '');
   const { authSettings } = useSettings();
   const { points, isInfinite } = usePoints();
+  const { toolHistory } = useToolHistory();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -95,6 +100,19 @@ const Navbar: React.FC = memo(() => {
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [desktopMenuOpen]);
+
+  // Handle keyboard shortcut for global search (Cmd+K or Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        event.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Admin banner (prototype) removed — it previously used Firestore/localStorage
   // and caused stale content flashes for some users. If you need a top banner in
@@ -281,6 +299,16 @@ const Navbar: React.FC = memo(() => {
   // Desktop icons only
   const desktopIconLinks = (
     <>
+      <button
+        onClick={() => setIsSearchOpen(true)}
+        title="Global Search"
+        aria-label="Open Global Search"
+        className="text-slate-300 hover:bg-slate-700 hover:text-white p-2 rounded-full transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.5 5.5a7.5 7.5 0 0010.5 10.5z" />
+        </svg>
+      </button>
       <Link
         to="/todo"
         aria-label="Open To-do List"
@@ -590,6 +618,16 @@ const Navbar: React.FC = memo(() => {
                   </div>
                 </Link>
                 <button
+                  onClick={() => setIsSearchOpen(true)}
+                  className="p-2 rounded-md text-slate-300 hover:text-white hover:bg-slate-700 md:hidden"
+                  aria-label="Search"
+                  title="Global Search"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.5 5.5a7.5 7.5 0 0010.5 10.5z" />
+                  </svg>
+                </button>
+                <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   className="p-2 rounded-md text-slate-300 hover:text-white hover:bg-slate-700"
                 >
@@ -635,6 +673,14 @@ const Navbar: React.FC = memo(() => {
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">{mobileMenuLinks}</div>
         </div>
       )}
+
+      {/* Global Search Modal */}
+      <GlobalSearch
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        allTools={tools}
+        toolHistory={toolHistory}
+      />
     </nav>
   );
 });
