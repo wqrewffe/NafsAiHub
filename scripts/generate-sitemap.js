@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const hostname = 'https://nafsaihub.vercel.app';
 const links = [
-  { url: '/', changefreq: 'daily', priority: 1.0 },
+  { url: '/#/', changefreq: 'daily', priority: 1.0 },
   // TODO: add more routes here or generate from your router if you have a routes list
 ];
 
