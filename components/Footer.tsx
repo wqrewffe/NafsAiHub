@@ -66,21 +66,37 @@ const Footer: React.FC = memo(() => {
 
         {/* Bottom Footer */}
         <div className="border-t border-secondary/50 pt-6 flex flex-col md:flex-row md:justify-between items-center gap-4">
-          {/* Twelve Tools Badge */}
-          <a
-            href="https://twelve.tools"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="transition-transform duration-300 hover:scale-110"
-          >
-            <img
-              src="https://twelve.tools/badge0-white.svg"
-              alt="Featured on Twelve Tools"
-              width={200}
-              height={54}
-              className="shadow-lg rounded-md"
-            />
-          </a>
+          {/* Badges */}
+          <div className="flex flex-wrap items-center gap-4 justify-center md:justify-start">
+            <a
+              href="https://twelve.tools"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition-transform duration-300 hover:scale-110"
+            >
+              <img
+                src="https://twelve.tools/badge0-white.svg"
+                alt="Featured on Twelve Tools"
+                width={200}
+                height={54}
+                className="shadow-lg rounded-md"
+              />
+            </a>
+            <a
+              href="https://startupfa.me/s/nafsaihub.vercel.app?utm_source=nafsaihub.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition-transform duration-300 hover:scale-110"
+            >
+              <img
+                src="https://startupfa.me/badges/featured-badge-small.webp"
+                alt="nafsaihub.vercel.app - Featured on Startup Fame"
+                width={224}
+                height={36}
+                className="shadow-lg rounded-md"
+              />
+            </a>
+          </div>
 
           {/* Copyright */}
           <p className="text-sm text-light/70 transition-colors duration-300 hover:text-accent">
@@ -88,7 +104,7 @@ const Footer: React.FC = memo(() => {
           </p>
 
           {/* Policy Links */}
-          <div className="flex flex-wrap gap-6 text-sm">
+          <div className="flex flex-wrap gap-6 text-sm justify-center md:justify-end">
             {policyLinks.map((item) => (
               <Link
                 key={item}
