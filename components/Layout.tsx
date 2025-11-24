@@ -29,6 +29,22 @@ const Layout: React.FC<LayoutProps> = memo(({ children }) => {
     // Reset immediately when route changes
     resetScrollReveals();
 
+    // Check if mobile device (simple check)
+    const isMobile = window.innerWidth <= 768;
+
+    if (isMobile) {
+      // On mobile, show everything immediately to avoid scroll jank
+      const allRevealElements = document.querySelectorAll('.scroll-reveal, .scroll-reveal-stagger, .stagger-item');
+      allRevealElements.forEach(el => {
+        el.classList.add('visible');
+        (el as HTMLElement).style.opacity = '1';
+        (el as HTMLElement).style.transform = 'none';
+        (el as HTMLElement).style.animation = 'none';
+        (el as HTMLElement).style.transition = 'none';
+      });
+      return; // Exit early, no observer needed
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach(entry => {
@@ -50,7 +66,7 @@ const Layout: React.FC<LayoutProps> = memo(({ children }) => {
                 }, index * 50);
               });
             }
-            
+
             // Also handle stagger items that are direct children of visible scroll-reveal containers
             if (entry.target.classList.contains('scroll-reveal')) {
               const staggerContainers = entry.target.querySelectorAll('.scroll-reveal-stagger');
@@ -82,18 +98,18 @@ const Layout: React.FC<LayoutProps> = memo(({ children }) => {
       const rect = element.getBoundingClientRect();
       const windowHeight = window.innerHeight || document.documentElement.clientHeight;
       const windowWidth = window.innerWidth || document.documentElement.clientWidth;
-      
+
       // Check if element is in viewport (with generous margins)
-      const isVisible = 
-        rect.top < windowHeight + 100 && 
+      const isVisible =
+        rect.top < windowHeight + 100 &&
         rect.bottom > -100 &&
         rect.left < windowWidth + 100 &&
         rect.right > -100;
-      
+
       if (isVisible) {
         element.classList.add('visible');
         (element as HTMLElement).style.opacity = '';
-        
+
         // For stagger containers, also trigger child animations
         if (element.classList.contains('scroll-reveal-stagger')) {
           const children = element.children;
@@ -108,7 +124,7 @@ const Layout: React.FC<LayoutProps> = memo(({ children }) => {
             }, index * 50);
           });
         }
-        
+
         // Also handle scroll-reveal containers that have nested stagger containers
         if (element.classList.contains('scroll-reveal')) {
           const staggerContainers = element.querySelectorAll('.scroll-reveal-stagger');
@@ -127,7 +143,7 @@ const Layout: React.FC<LayoutProps> = memo(({ children }) => {
             }
           });
         }
-        
+
         return true;
       }
       return false;
@@ -137,7 +153,7 @@ const Layout: React.FC<LayoutProps> = memo(({ children }) => {
     const observeElements = () => {
       // First, reset all elements to ensure clean state
       resetScrollReveals();
-      
+
       // Use requestAnimationFrame to ensure DOM is ready
       requestAnimationFrame(() => {
         // Observe container elements
@@ -150,7 +166,7 @@ const Layout: React.FC<LayoutProps> = memo(({ children }) => {
             observer.observe(el);
           }
         });
-        
+
         // Also observe individual stagger items that might be standalone
         // But also observe nested stagger items inside scroll-reveal-stagger containers
         const staggerItems = document.querySelectorAll('.stagger-item');
@@ -183,7 +199,7 @@ const Layout: React.FC<LayoutProps> = memo(({ children }) => {
     requestAnimationFrame(() => {
       observeElements();
     });
-    
+
     const timeoutId = setTimeout(observeElements, 100);
     const timeoutId2 = setTimeout(observeElements, 300);
     const timeoutId3 = setTimeout(observeElements, 600);
