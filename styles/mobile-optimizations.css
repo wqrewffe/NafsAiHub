@@ -1,0 +1,77 @@
+/* ============================================
+   MOBILE PERFORMANCE OPTIMIZATIONS
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* Disable heavy backdrop filters */
+  .tool-card,
+  .artistic-card,
+  .artistic-badge,
+  .artistic-input,
+  .glass-panel,
+  .modal-content,
+  .dropdown-menu,
+  nav,
+  .navbar-glass {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(var(--color-surface-rgb, var(--theme-surface-rgb)), 0.95) !important;
+  }
+
+  /* Simplify shadows */
+  .tool-card:hover,
+  .artistic-card:hover,
+  .btn-animated:hover,
+  .btn-artistic:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    transform: none !important;
+  }
+
+  /* Disable expensive animations */
+  .floating-animation,
+  .floating-artistic,
+  .floating-subtle,
+  .glow-effect,
+  .glow-artistic,
+  .glow-gradient,
+  .shimmer,
+  .shimmerStreak {
+    animation: none !important;
+  }
+
+  /* Simplify gradients */
+  body::before {
+    background: var(--theme-background) !important;
+    animation: none !important;
+    background-attachment: scroll !important;
+  }
+
+  body::after {
+    display: none !important; /* Hide the grid overlay */
+  }
+
+  /* Disable complex hover effects */
+  .tool-card::before,
+  .tool-card::after,
+  .artistic-card::before,
+  .btn-animated::before,
+  .btn-animated::after,
+  .btn-artistic::before {
+    display: none !important;
+  }
+
+  /* Ensure smooth scrolling */
+  html, body {
+    scroll-behavior: auto !important; /* Native smooth scrolling is fine, but sometimes JS interferes */
+  }
+
+  /* Reduce layout thrashing from fixed elements */
+  .fixed-background {
+    position: absolute !important;
+  }
+  
+  /* Optimize text rendering */
+  * {
+    text-rendering: optimizeSpeed !important;
+  }
+}
