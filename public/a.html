@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Hyper-Realistic Particle System</title>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #000; 
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 10;
+        }
+
+        #hud-top {
+            position: absolute; top: 20px; left: 0; width: 100%;
+            display: flex; justify-content: space-between; padding: 0 40px;
+            box-sizing: border-box;
+        }
+
+        .hud-text {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+            text-shadow: 0 0 5px rgba(255,255,255,0.5);
+        }
+
+        #controls {
+            position: absolute; bottom: 40px; width: 100%;
+            display: flex; justify-content: center; gap: 10px;
+            pointer-events: auto; flex-wrap: wrap;
+            padding: 0 20px; box-sizing: border-box;
+        }
+
+        button {
+            background: rgba(10, 10, 10, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #aaa;
+            padding: 10px 18px;
+            font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+            cursor: pointer; transition: 0.4s;
+            border-radius: 4px;
+            backdrop-filter: blur(10px);
+        }
+
+        button:hover, button.active {
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.3);
+        }
+
+        #video-container { position: absolute; opacity: 0; pointer-events: none; z-index: -1; }
+        
+        #loader {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: white; font-family: monospace;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        .vignette {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 50%, black 140%);
+            pointer-events: none; z-index: 5;
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+    <div class="vignette"></div>
+    <div id="loader">INITIALIZING ADVANCED PARTICLE ENGINE...</div>
+
+    <div id="ui-layer">
+        <div id="hud-top">
+            <div class="hud-text">GESTURE: ENABLED | KEYS: 0-9 | SPACE: AUTO-ROTATE</div>
+            <div class="hud-text" id="status-text">NO HAND DETECTED</div>
+            <div class="hud-text">RENDER: HDR BLOOM + SSR | PARTICLES: 30K</div>
+        </div>
+        <div id="controls">
+            <button class="active" onclick="setShape(0)">PLANET</button>
+            <button onclick="setShape(1)">GALAXY</button>
+            <button onclick="setShape(2)">DNA HELIX</button>
+            <button onclick="setShape(3)">TORUS</button>
+            <button onclick="setShape(4)">CUBE LATTICE</button>
+            <button onclick="setShape(5)">WAVE FIELD</button>
+            <button onclick="setShape(6)">MÖBIUS STRIP</button>
+            <button onclick="setShape(7)">FRACTAL TREE</button>
+            <button onclick="setShape(8)">KLEIN BOTTLE</button>
+            <button onclick="setShape(9)">SUPERNOVA</button>
+        </div>
+    </div>
+
+    <div id="video-container"><video id="input_video"></video></div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import { Reflector } from 'three/addons/objects/Reflector.js';
+
+        // --- CONFIG ---
+        const CONFIG = {
+            count: 30000,
+            zoomMin: 30,
+            zoomMax: 200,
+            bloomStrength: 1.5,
+            bloomRadius: 0.6,
+            bloomThreshold: 0.08,
+            morphSpeed: 0.04
+        };
+
+        let currentShape = 0;
+        let targetCameraZ = 120;
+        let autoRotate = true;
+        let autoRotateSpeed = 0.0005;
+
+        // --- 1. SETUP ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x020202);
+        scene.fog = new THREE.Fog(0x020202, 50, 300);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 20, 120);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+        document.body.appendChild(renderer.domElement);
+
+        // --- 2. REFLECTIVE FLOOR ---
+        const mirrorGeo = new THREE.CircleGeometry(300, 64);
+        const groundMirror = new Reflector(mirrorGeo, {
+            clipBias: 0.003,
+            textureWidth: window.innerWidth * window.devicePixelRatio,
+            textureHeight: window.innerHeight * window.devicePixelRatio,
+            color: 0x333333
+        });
+        groundMirror.rotation.x = -Math.PI / 2;
+        groundMirror.position.y = -50;
+        scene.add(groundMirror);
+
+        // Subtle ambient light for depth
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+        scene.add(ambientLight);
+
+        // --- 3. POST PROCESSING ---
+        const renderScene = new RenderPass(scene, camera);
+        const bloomPass = new UnrealBloomPass(
+            new THREE.Vector2(window.innerWidth, window.innerHeight),
+            CONFIG.bloomStrength, CONFIG.bloomRadius, CONFIG.bloomThreshold
+        );
+
+        const composer = new EffectComposer(renderer);
+        composer.addPass(renderScene);
+        composer.addPass(bloomPass);
+
+        // --- 4. PARTICLES ---
+        const particleTexture = (() => {
+            const c = document.createElement('canvas'); c.width=32; c.height=32;
+            const ctx = c.getContext('2d');
+            const g = ctx.createRadialGradient(16,16,0,16,16,16);
+            g.addColorStop(0, 'rgba(255,255,255,1)');
+            g.addColorStop(0.5, 'rgba(255,255,255,0.2)');
+            g.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = g; ctx.fillRect(0,0,32,32);
+            return new THREE.Texture(c);
+        })();
+        particleTexture.needsUpdate = true;
+
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(CONFIG.count * 3);
+        const colors = new Float32Array(CONFIG.count * 3);
+        
+        const targets = {
+            planet: new Float32Array(CONFIG.count * 3),
+            galaxy: new Float32Array(CONFIG.count * 3),
+            dna: new Float32Array(CONFIG.count * 3),
+            torus: new Float32Array(CONFIG.count * 3),
+            cube: new Float32Array(CONFIG.count * 3),
+            wave: new Float32Array(CONFIG.count * 3),
+            mobius: new Float32Array(CONFIG.count * 3),
+            tree: new Float32Array(CONFIG.count * 3),
+            klein: new Float32Array(CONFIG.count * 3),
+            supernova: new Float32Array(CONFIG.count * 3)
+        };
+
+        // --- ADVANCED MATHEMATICAL GEOMETRY GENERATION ---
+        for(let i=0; i<CONFIG.count; i++) {
+            const i3 = i*3;
+            const t = i / CONFIG.count;
+            const TAU = Math.PI * 2;
+
+            // A. PLANET (Fibonacci Sphere with surface noise)
+            const phi = Math.acos(-1 + (2*i)/CONFIG.count);
+            const theta = Math.sqrt(CONFIG.count * Math.PI) * phi;
+            const r = 45 + Math.sin(theta * 10) * 2;
+            targets.planet[i3] = r * Math.cos(theta) * Math.sin(phi);
+            targets.planet[i3+1] = r * Math.sin(theta) * Math.sin(phi);
+            targets.planet[i3+2] = r * Math.cos(phi);
+
+            // B. GALAXY (Logarithmic Spiral with multiple arms)
+            const armAngle = Math.floor(Math.random() * 4) * (TAU / 4);
+            const angle = i * 0.08 + armAngle;
+            const dist = Math.pow(t, 0.7) * 90;
+            const armWidth = Math.random() * 5;
+            targets.galaxy[i3] = Math.cos(angle) * dist + Math.cos(angle) * armWidth;
+            targets.galaxy[i3+1] = (Math.random()-0.5) * (8 + dist*0.3);
+            targets.galaxy[i3+2] = Math.sin(angle) * dist + Math.sin(angle) * armWidth;
+
+            // C. DNA (Double Helix with connecting bridges)
+            const h_angle = i * 0.12;
+            const h_y = (i * 0.06) - 90;
+            const h_r = 25;
+            const strand = Math.floor(i % 4 / 2) === 0 ? 1 : -1;
+            const bridge = (i % 4 < 2) ? 0 : strand * 0.5;
+            targets.dna[i3] = Math.cos(h_angle) * h_r * (strand + bridge);
+            targets.dna[i3+1] = h_y % 120 - 60;
+            targets.dna[i3+2] = Math.sin(h_angle) * h_r * (strand + bridge);
+
+            // D. TORUS (Donut shape)
+            const u = t * TAU;
+            const v = (i * 7) % TAU;
+            const R = 50;
+            const r_minor = 20;
+            targets.torus[i3] = (R + r_minor * Math.cos(v)) * Math.cos(u);
+            targets.torus[i3+1] = r_minor * Math.sin(v);
+            targets.torus[i3+2] = (R + r_minor * Math.cos(v)) * Math.sin(u);
+
+            // E. CUBE LATTICE (Structured grid)
+            const gridRes = Math.ceil(Math.cbrt(CONFIG.count));
+            const ix = i % gridRes;
+            const iy = Math.floor(i / gridRes) % gridRes;
+            const iz = Math.floor(i / (gridRes * gridRes));
+            const spacing = 5;
+            targets.cube[i3] = (ix - gridRes/2) * spacing;
+            targets.cube[i3+1] = (iy - gridRes/2) * spacing;
+            targets.cube[i3+2] = (iz - gridRes/2) * spacing;
+
+            // F. WAVE FIELD (Sine wave surface)
+            const wx = (t * 200) - 100;
+            const wz = ((i * 13) % 200) - 100;
+            const wy = Math.sin(wx * 0.1) * Math.cos(wz * 0.1) * 30;
+            targets.wave[i3] = wx;
+            targets.wave[i3+1] = wy;
+            targets.wave[i3+2] = wz;
+
+            // G. MÖBIUS STRIP (Twisted surface)
+            const s = t * TAU;
+            const w = ((i * 23) % 100 - 50) / 50;
+            const m_r = 60;
+            targets.mobius[i3] = (m_r + w * 15 * Math.cos(s/2)) * Math.cos(s);
+            targets.mobius[i3+1] = w * 15 * Math.sin(s/2);
+            targets.mobius[i3+2] = (m_r + w * 15 * Math.cos(s/2)) * Math.sin(s);
+
+            // H. FRACTAL TREE (Branching structure)
+            const depth = Math.floor(t * 8);
+            const branchAngle = (i * 137.5) * Math.PI / 180;
+            const branchDist = Math.pow(0.7, depth) * 80;
+            targets.tree[i3] = Math.sin(branchAngle) * branchDist;
+            targets.tree[i3+1] = depth * 12 - 40;
+            targets.tree[i3+2] = Math.cos(branchAngle) * branchDist;
+
+            // I. KLEIN BOTTLE (4D projection to 3D)
+            const ku = t * TAU;
+            const kv = ((i * 17) % CONFIG.count) / CONFIG.count * TAU;
+            const a = 2;
+            const klein_r = 4 - Math.cos(ku) / 2;
+            targets.klein[i3] = (a * (1 - Math.cos(ku) / 2) * Math.sin(ku) * Math.cos(kv)) * 8;
+            targets.klein[i3+1] = (klein_r * Math.sin(ku) * Math.sin(kv)) * 8;
+            targets.klein[i3+2] = (klein_r * Math.cos(ku)) * 8;
+
+            // J. SUPERNOVA (Explosive expanding sphere)
+            const exp_angle = t * TAU * 3;
+            const exp_spiral = i * 0.05;
+            const exp_radius = 30 + Math.pow(t, 1.5) * 70;
+            const noise_factor = Math.sin(i * 0.5) * 10;
+            targets.supernova[i3] = Math.sin(exp_angle) * Math.cos(exp_spiral) * (exp_radius + noise_factor);
+            targets.supernova[i3+1] = Math.sin(exp_spiral) * (exp_radius + noise_factor);
+            targets.supernova[i3+2] = Math.cos(exp_angle) * Math.cos(exp_spiral) * (exp_radius + noise_factor);
+
+            // Initialize positions
+            positions[i3] = targets.planet[i3];
+            positions[i3+1] = targets.planet[i3+1];
+            positions[i3+2] = targets.planet[i3+2];
+            colors[i3] = 1; colors[i3+1] = 1; colors[i3+2] = 1;
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        const material = new THREE.PointsMaterial({
+            size: 0.5,
+            map: particleTexture,
+            transparent: true,
+            opacity: 0.9,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+            vertexColors: true,
+            sizeAttenuation: true
+        });
+
+        const particles = new THREE.Points(geometry, material);
+        scene.add(particles);
+
+        // --- 5. LOGIC & EVENTS ---
+        window.setShape = (idx) => {
+            currentShape = idx;
+            document.querySelectorAll('#controls button').forEach((b,i) => 
+                b.className = (i===idx ? 'active' : ''));
+        };
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            const key = parseInt(e.key);
+            if (key >= 0 && key <= 9) {
+                setShape(key);
+            }
+            if (e.key === ' ') {
+                autoRotate = !autoRotate;
+            }
+        });
+
+        // Mouse backup
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', e => {
+            if(!isHandActive) {
+                mouseX = (e.clientX - window.innerWidth/2) * 0.0015;
+                mouseY = (e.clientY - window.innerHeight/2) * 0.0015;
+            }
+        });
+
+        // --- 6. HAND TRACKING ---
+        let isHandActive = false;
+        const statusText = document.getElementById('status-text');
+
+        function onResults(results) {
+            document.getElementById('loader').style.display = 'none';
+
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                isHandActive = true;
+                autoRotate = false;
+                statusText.innerHTML = "<span style='color:#0f0'>TRACKING LOCKED</span>";
+                statusText.style.textShadow = "0 0 10px #0f0";
+                
+                const lm = results.multiHandLandmarks[0];
+
+                const x = (1 - lm[8].x) * 2 - 1; 
+                const y = -(lm[8].y * 2 - 1);
+                
+                mouseX += (x - mouseX) * 0.1;
+                mouseY += (y - mouseY) * 0.1;
+
+                const dx = lm[4].x - lm[8].x;
+                const dy = lm[4].y - lm[8].y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+
+                const safeDist = Math.max(0.02, Math.min(0.2, dist));
+                const zoomFactor = (safeDist - 0.02) / (0.2 - 0.02);
+                const newTargetZ = CONFIG.zoomMin + (zoomFactor * (CONFIG.zoomMax - CONFIG.zoomMin));
+                
+                targetCameraZ += (newTargetZ - targetCameraZ) * 0.1;
+
+            } else {
+                isHandActive = false;
+                statusText.innerHTML = "SEARCHING SIGNAL...";
+                statusText.style.textShadow = "none";
+            }
+        }
+
+        const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
+        hands.setOptions({maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5});
+        hands.onResults(onResults);
+        
+        const cam = new Camera(document.getElementById('input_video'), {
+            onFrame: async () => { await hands.send({image: document.getElementById('input_video')}); },
+            width: 320, height: 240
+        });
+        cam.start();
+
+        // --- 7. ANIMATION LOOP ---
+        const clock = new THREE.Clock();
+        const tempColor = new THREE.Color();
+
+        function animate() {
+            const time = clock.getElapsedTime();
+
+            // Camera Zoom Logic
+            camera.position.z += (targetCameraZ - camera.position.z) * 0.05;
+
+            // Rotation Logic with auto-rotate
+            if (autoRotate && !isHandActive) {
+                particles.rotation.y += autoRotateSpeed;
+                particles.rotation.x = Math.sin(time * 0.2) * 0.1;
+            } else {
+                particles.rotation.y += (mouseX - particles.rotation.y) * 0.05;
+                particles.rotation.x += (-mouseY - particles.rotation.x) * 0.05;
+            }
+            
+            // Subtle floating above the mirror
+            particles.position.y = Math.sin(time * 0.8) * 3;
+
+            // Morphing & Color Logic
+            const pos = geometry.attributes.position.array;
+            const col = geometry.attributes.color.array;
+            
+            const shapeMap = [
+                { target: targets.planet, hue: 0.55, name: 'planet' },
+                { target: targets.galaxy, hue: 0.08, name: 'galaxy' },
+                { target: targets.dna, hue: 0.3, name: 'dna' },
+                { target: targets.torus, hue: 0.75, name: 'torus' },
+                { target: targets.cube, hue: 0.0, name: 'cube' },
+                { target: targets.wave, hue: 0.5, name: 'wave' },
+                { target: targets.mobius, hue: 0.85, name: 'mobius' },
+                { target: targets.tree, hue: 0.25, name: 'tree' },
+                { target: targets.klein, hue: 0.65, name: 'klein' },
+                { target: targets.supernova, hue: 0.95, name: 'supernova' }
+            ];
+
+            const currentMap = shapeMap[currentShape];
+            const targetPos = currentMap.target;
+            const baseHue = currentMap.hue;
+
+            for(let i=0; i<CONFIG.count; i++) {
+                const i3 = i*3;
+
+                // Smooth morphing
+                pos[i3] += (targetPos[i3] - pos[i3]) * CONFIG.morphSpeed;
+                pos[i3+1] += (targetPos[i3+1] - pos[i3+1]) * CONFIG.morphSpeed;
+                pos[i3+2] += (targetPos[i3+2] - pos[i3+2]) * CONFIG.morphSpeed;
+
+                // Advanced organic movement
+                const noiseX = Math.sin(time * 1.5 + pos[i3] * 0.08 + i * 0.01) * 0.5;
+                const noiseY = Math.cos(time * 1.2 + pos[i3+2] * 0.08 + i * 0.02) * 0.5;
+                const noiseZ = Math.sin(time * 1.8 + pos[i3+1] * 0.08 + i * 0.015) * 0.5;
+                
+                pos[i3] += noiseX * 0.3;
+                pos[i3+1] += noiseY * 0.3;
+                pos[i3+2] += noiseZ * 0.3;
+
+                // Dynamic coloring with depth and radial gradients
+                const distFromCenter = Math.sqrt(
+                    pos[i3] * pos[i3] + 
+                    pos[i3+1] * pos[i3+1] + 
+                    pos[i3+2] * pos[i3+2]
+                );
+                
+                const brightness = Math.max(0.2, 1 - distFromCenter / 100);
+                const saturation = 0.8 + Math.sin(time + i * 0.1) * 0.2;
+                const hueShift = Math.sin(time * 0.5 + distFromCenter * 0.02) * 0.1;
+                
+                tempColor.setHSL(
+                    (baseHue + hueShift + Math.sin(time * 0.3 + i * 0.05) * 0.05) % 1,
+                    saturation,
+                    0.3 + brightness * 0.5
+                );
+                
+                col[i3] = tempColor.r;
+                col[i3+1] = tempColor.g;
+                col[i3+2] = tempColor.b;
+            }
+
+            geometry.attributes.position.needsUpdate = true;
+            geometry.attributes.color.needsUpdate = true;
+            
+            composer.render();
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+            groundMirror.getRenderTarget().setSize(
+                window.innerWidth * window.devicePixelRatio,
+                window.innerHeight * window.devicePixelRatio
+            );
+        });
+
+        animate();
+    </script>
+</body>
+</html> 
