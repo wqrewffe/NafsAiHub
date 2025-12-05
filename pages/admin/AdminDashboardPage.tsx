@@ -20,6 +20,7 @@ import {
     toggleUserBlock
     , getUserIp, blockIp, unblockIp, isIpBlocked
 } from '../../services/firebaseService';
+import { getUserPageNavigation, getUserNavigationJourney, getPageAnalytics, getPageStayTimeAnalytics, getUserFlowAnalytics } from '../../services/pageTrackingService';
 import {
     blockToolForAllUsers,
     unlockToolForAllUsers,
@@ -103,6 +104,14 @@ const AdminDashboardPage: React.FC = () => {
     const [toolManagementMessage, setToolManagementMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
     const [unlockStatus, setUnlockStatus] = useState<{ isAdminUnlockActive: boolean; affectedUsers: number; totalUsers: number } | null>(null);
     const [loadingUnlockStatus, setLoadingUnlockStatus] = useState(false);
+    const [userPageNavigation, setUserPageNavigation] = useState<Map<string, any>>(new Map());
+    const [loadingPageNav, setLoadingPageNav] = useState<Record<string, boolean>>({});
+    const [selectedUserPageNavModal, setSelectedUserPageNavModal] = useState<string | null>(null);
+    const [selectedUserPageNavHistory, setSelectedUserPageNavHistory] = useState<any[]>([]);
+    const [pageAnalytics, setPageAnalytics] = useState<any>(null);
+    const [pageStayTimeAnalytics, setPageStayTimeAnalytics] = useState<any[]>([]);
+    const [userFlowAnalytics, setUserFlowAnalytics] = useState<any>(null);
+    const [loadingPageAnalytics, setLoadingPageAnalytics] = useState(false);
 
     // helper to create a manual alert from admin
     const handleCreateAlert = async (type: string, severity: 'info' | 'warning' | 'critical', message: string) => {
@@ -144,6 +153,45 @@ const AdminDashboardPage: React.FC = () => {
             console.error('Failed to revoke sessions', err);
         }
     };
+
+    const loadUserPageNavigation = async (userId: string) => {
+        try {
+            setLoadingPageNav(prev => ({ ...prev, [userId]: true }));
+            const navigation = await getUserNavigationJourney(userId, 50);
+            setUserPageNavigation(prev => new Map(prev).set(userId, navigation));
+            setSelectedUserPageNavHistory(navigation);
+            setSelectedUserPageNavModal(userId);
+        } catch (err) {
+            console.error('Failed to load page navigation', err);
+        } finally {
+            setLoadingPageNav(prev => ({ ...prev, [userId]: false }));
+        }
+    };
+
+    const loadPageAnalytics = async () => {
+        try {
+            setLoadingPageAnalytics(true);
+            const [analytics, stayTime, flowAnalytics] = await Promise.all([
+                getPageAnalytics(1000),
+                getPageStayTimeAnalytics(1000),
+                getUserFlowAnalytics(1000)
+            ]);
+            setPageAnalytics(analytics);
+            setPageStayTimeAnalytics(stayTime);
+            setUserFlowAnalytics(flowAnalytics);
+        } catch (err) {
+            console.error('Failed to load page analytics', err);
+        } finally {
+            setLoadingPageAnalytics(false);
+        }
+    };
+
+    // Load analytics on component mount
+    useEffect(() => {
+        loadPageAnalytics();
+        const interval = setInterval(loadPageAnalytics, 30000); // Refresh every 30 seconds
+        return () => clearInterval(interval);
+    }, []);
 
     const { authSettings, loading: settingsLoading } = useSettings();
     const { showCongratulations } = useCongratulations();
@@ -978,6 +1026,7 @@ const AdminDashboardPage: React.FC = () => {
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Usage</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Role</th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Page Navigation</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Actions</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Password</th>
                             </tr>
@@ -1020,6 +1069,15 @@ const AdminDashboardPage: React.FC = () => {
                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.email === 'nafisabdullah424@gmail.com' ? 'bg-yellow-200 text-yellow-800' : 'bg-sky-200 text-sky-800'}`}>
                                             {user.email === 'nafisabdullah424@gmail.com' ? 'Admin' : 'User'}
                                         </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                        <button 
+                                            onClick={() => loadUserPageNavigation(user.id)}
+                                            disabled={loadingPageNav[user.id]}
+                                            className="text-xs px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                                        >
+                                            {loadingPageNav[user.id] ? 'Loading...' : 'View Journey'}
+                                        </button>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                         <div className="flex flex-col gap-2">
@@ -1322,6 +1380,245 @@ const AdminDashboardPage: React.FC = () => {
                         </ul>
                      </div>
                 </DashboardSection>
+
+                {/* Page Navigation Analytics Section */}
+                <DashboardSection title="Page Navigation Analytics">
+                    <div className="space-y-6">
+                        {loadingPageAnalytics ? (
+                            <div className="flex justify-center py-8"><Spinner /></div>
+                        ) : (
+                            <>
+                                {/* Most Visited Pages */}
+                                <div>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h4 className="text-sm font-semibold text-light">Most Visited Pages</h4>
+                                        <button onClick={loadPageAnalytics} className="text-xs px-2 py-1 rounded bg-primary hover:bg-primary/80">Refresh</button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {pageAnalytics?.mostVisitedPages && pageAnalytics.mostVisitedPages.length > 0 ? (
+                                            pageAnalytics.mostVisitedPages.slice(0, 10).map((page: any, idx: number) => (
+                                                <div key={idx} className="bg-primary p-3 rounded border border-slate-700">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className="text-sm font-medium text-accent">{page.page}</span>
+                                                        <span className="text-xs bg-accent/20 px-2 py-1 rounded">{page.visits} visits</span>
+                                                    </div>
+                                                    <div className="flex gap-4 text-xs text-slate-400">
+                                                        <span>👥 {page.uniqueUsers} users</span>
+                                                        <span>⏱️ Avg {(page.avgTimeSpent / 1000).toFixed(1)}s</span>
+                                                    </div>
+                                                    <div className="w-full bg-slate-700 rounded h-2 mt-2">
+                                                        <div 
+                                                            className="bg-accent h-2 rounded"
+                                                            style={{
+                                                                width: `${Math.min(100, (page.visits / (pageAnalytics.mostVisitedPages[0]?.visits || 1)) * 100)}%`
+                                                            }}
+                                                        ></div>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-slate-400 text-sm text-center py-4">No data available</div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Most Common Exit Pages */}
+                                <div>
+                                    <h4 className="text-sm font-semibold text-light mb-3">🚪 Most Common Exit Pages</h4>
+                                    <div className="space-y-2">
+                                        {pageAnalytics?.mostExitPages && pageAnalytics.mostExitPages.length > 0 ? (
+                                            pageAnalytics.mostExitPages.slice(0, 8).map((page: any, idx: number) => (
+                                                <div key={idx} className="bg-primary p-3 rounded border border-red-700/30">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className="text-sm text-red-300">{page.page}</span>
+                                                        <span className="text-xs bg-red-900/30 px-2 py-1 rounded">{page.exits} exits</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex-1 bg-slate-700 rounded h-2">
+                                                            <div 
+                                                                className="bg-red-500 h-2 rounded"
+                                                                style={{
+                                                                    width: `${page.percentage}%`
+                                                                }}
+                                                            ></div>
+                                                        </div>
+                                                        <span className="text-xs text-slate-400">{page.percentage.toFixed(1)}%</span>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-slate-400 text-sm text-center py-4">No data available</div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Page Stay Time Analytics */}
+                                <div>
+                                    <h4 className="text-sm font-semibold text-light mb-3">⏱️ Average Time Spent by Page</h4>
+                                    <div className="max-h-64 overflow-y-auto space-y-2">
+                                        {pageStayTimeAnalytics && pageStayTimeAnalytics.length > 0 ? (
+                                            pageStayTimeAnalytics.slice(0, 10).map((page: any, idx: number) => (
+                                                <div key={idx} className="bg-primary p-2 rounded border border-slate-700 text-sm">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className="text-accent truncate">{page.page}</span>
+                                                        <span className="text-xs text-slate-400">{(page.avgTimeSpent / 1000).toFixed(1)}s avg</span>
+                                                    </div>
+                                                    <div className="text-xs text-slate-500 space-x-2">
+                                                        <span>Min: {(page.minTimeSpent / 1000).toFixed(1)}s</span>
+                                                        <span>Max: {(page.maxTimeSpent / 1000).toFixed(1)}s</span>
+                                                        <span>Visits: {page.visits}</span>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-slate-400 text-sm text-center py-4">No data available</div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* User Entry Pages */}
+                                <div>
+                                    <h4 className="text-sm font-semibold text-light mb-3">🚪 User Entry Pages</h4>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {userFlowAnalytics?.entryPages && userFlowAnalytics.entryPages.length > 0 ? (
+                                            userFlowAnalytics.entryPages.slice(0, 6).map((page: any, idx: number) => (
+                                                <div key={idx} className="bg-primary p-3 rounded border border-green-700/30">
+                                                    <div className="text-sm font-medium text-green-300 truncate">{page.page}</div>
+                                                    <div className="text-xs text-slate-400 mt-1">{page.count} users</div>
+                                                    <div className="text-xs text-slate-500">{page.percentage.toFixed(1)}%</div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-slate-400 text-sm col-span-2 text-center py-4">No data available</div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Top Page Transitions */}
+                                <div>
+                                    <h4 className="text-sm font-semibold text-light mb-3">→ Top Page Transitions</h4>
+                                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                                        {pageAnalytics?.pageTransitions && pageAnalytics.pageTransitions.length > 0 ? (
+                                            pageAnalytics.pageTransitions.slice(0, 12).map((trans: any, idx: number) => (
+                                                <div key={idx} className="bg-primary p-2 rounded border border-slate-700 text-sm flex items-center gap-2">
+                                                    <span className="text-xs bg-slate-700 px-2 py-1 rounded">{trans.count}</span>
+                                                    <span className="text-slate-300 truncate">{trans.from}</span>
+                                                    <span className="text-accent">→</span>
+                                                    <span className="text-slate-300 truncate">{trans.to}</span>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-slate-400 text-sm text-center py-4">No data available</div>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </DashboardSection>
+
+                {/* Page Navigation Modal */}
+                {selectedUserPageNavModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                        <div className="bg-secondary rounded-lg shadow-xl max-w-2xl w-full max-h-96 m-4 flex flex-col">
+                            <div className="flex items-center justify-between p-4 border-b border-slate-700">
+                                <h3 className="text-lg font-semibold text-light">
+                                    Page Navigation Journey
+                                </h3>
+                                <button 
+                                    onClick={() => {
+                                        setSelectedUserPageNavModal(null);
+                                        setSelectedUserPageNavHistory([]);
+                                    }}
+                                    className="text-slate-400 hover:text-light"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-auto p-4">
+                                {selectedUserPageNavHistory.length === 0 ? (
+                                    <div className="text-center text-slate-400">No page navigation history found</div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {selectedUserPageNavHistory.map((nav, idx) => (
+                                            <div key={idx} className="bg-primary p-3 rounded border border-slate-700">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="text-xs bg-accent/20 text-accent px-2 py-1 rounded">
+                                                        {idx + 1}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        {nav.previousPage && (
+                                                            <>
+                                                                <div className="text-xs text-slate-400">From: <span className="text-slate-200">{nav.previousPage}</span></div>
+                                                            </>
+                                                        )}
+                                                        <div className="text-sm font-semibold text-light">
+                                                            Current: <span className="text-accent">{nav.currentPage}</span>
+                                                        </div>
+                                                        {nav.exitPage && (
+                                                            <div className="text-xs text-red-400 mt-1">Exit: {nav.exitPage}</div>
+                                                        )}
+                                                        <div className="text-xs text-slate-500 mt-1">
+                                                            {nav.timestamp instanceof Date 
+                                                                ? nav.timestamp.toLocaleString() 
+                                                                : (nav.timestamp?.toDate?.() || new Date()).toLocaleString()}
+                                                        </div>
+                                                        {nav.timeSpentOnPage && (
+                                                            <div className="text-xs text-slate-400 mt-1">
+                                                                Time on page: {(nav.timeSpentOnPage / 1000).toFixed(1)}s
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex gap-2 p-4 border-t border-slate-700">
+                                <button 
+                                    onClick={() => {
+                                        // Export as CSV
+                                        if (selectedUserPageNavHistory.length === 0) return alert('No data to export');
+                                        const headers = ['Sequence', 'From Page', 'To Page', 'Exit Page', 'Time Spent (s)', 'Timestamp'];
+                                        const rows = selectedUserPageNavHistory.map((nav, idx) => [
+                                            idx + 1,
+                                            nav.previousPage || '',
+                                            nav.currentPage || '',
+                                            nav.exitPage || '',
+                                            nav.timeSpentOnPage ? (nav.timeSpentOnPage / 1000).toFixed(1) : '',
+                                            nav.timestamp instanceof Date 
+                                                ? nav.timestamp.toLocaleString() 
+                                                : (nav.timestamp?.toDate?.()?.toLocaleString?.() || '')
+                                        ]);
+                                        const csv = [headers.join(','), ...rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(','))].join('\n');
+                                        const blob = new Blob([csv], { type: 'text/csv' });
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.href = url;
+                                        a.download = `page_navigation_${selectedUserPageNavModal}.csv`;
+                                        a.click();
+                                        URL.revokeObjectURL(url);
+                                    }}
+                                    className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
+                                >
+                                    Export CSV
+                                </button>
+                                <button 
+                                    onClick={() => {
+                                        setSelectedUserPageNavModal(null);
+                                        setSelectedUserPageNavHistory([]);
+                                    }}
+                                    className="flex-1 px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded text-sm"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
