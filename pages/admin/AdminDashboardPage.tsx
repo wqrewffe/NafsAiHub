@@ -5,6 +5,7 @@ import React, {
     useCallback
 } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import {
     getAllUsers,
     getDashboardStats,
@@ -20,7 +21,8 @@ import {
     toggleUserBlock
     , getUserIp, blockIp, unblockIp, isIpBlocked
 } from '../../services/firebaseService';
-import { getUserPageNavigation, getUserNavigationJourney, getPageAnalytics, getPageStayTimeAnalytics, getUserFlowAnalytics } from '../../services/pageTrackingService';
+import { getUserPageNavigation, getUserNavigationJourney, getPageAnalytics, getPageStayTimeAnalytics, getUserFlowAnalytics, getActivityHeatmap } from '../../services/pageTrackingService';
+import { logAdminAction, getAuditLogs, getAuditStatistics, AuditLog } from '../../services/auditLoggingService';
 import {
     blockToolForAllUsers,
     unlockToolForAllUsers,
@@ -67,8 +69,8 @@ import {
 } from 'recharts';
 
 const USERS_PER_PAGE = 10;
-
 const AdminDashboardPage: React.FC = () => {
+    const { currentUser } = useAuth();
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [allUsers, setAllUsers] = useState<FirestoreUser[]>([]);
     const [blockedIps, setBlockedIps] = useState<Record<string, boolean>>({});
@@ -112,6 +114,10 @@ const AdminDashboardPage: React.FC = () => {
     const [pageStayTimeAnalytics, setPageStayTimeAnalytics] = useState<any[]>([]);
     const [userFlowAnalytics, setUserFlowAnalytics] = useState<any>(null);
     const [loadingPageAnalytics, setLoadingPageAnalytics] = useState(false);
+    const [activityHeatmap, setActivityHeatmap] = useState<any>(null);
+    const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+    const [auditStatistics, setAuditStatistics] = useState<any>(null);
+    const [loadingAuditData, setLoadingAuditData] = useState(false);
 
     // helper to create a manual alert from admin
     const handleCreateAlert = async (type: string, severity: 'info' | 'warning' | 'critical', message: string) => {
@@ -171,14 +177,18 @@ const AdminDashboardPage: React.FC = () => {
     const loadPageAnalytics = async () => {
         try {
             setLoadingPageAnalytics(true);
-            const [analytics, stayTime, flowAnalytics] = await Promise.all([
+            const [analytics, stayTime, flowAnalytics, heatmap, auditStats] = await Promise.all([
                 getPageAnalytics(1000),
                 getPageStayTimeAnalytics(1000),
-                getUserFlowAnalytics(1000)
+                getUserFlowAnalytics(1000),
+                getActivityHeatmap(2000),
+                getAuditStatistics(30)
             ]);
             setPageAnalytics(analytics);
             setPageStayTimeAnalytics(stayTime);
             setUserFlowAnalytics(flowAnalytics);
+            setActivityHeatmap(heatmap);
+            setAuditStatistics(auditStats);
         } catch (err) {
             console.error('Failed to load page analytics', err);
         } finally {
@@ -186,10 +196,26 @@ const AdminDashboardPage: React.FC = () => {
         }
     };
 
+    const loadAuditLogs = async () => {
+        try {
+            setLoadingAuditData(true);
+            const logs = await getAuditLogs({ limit: 100 });
+            setAuditLogs(logs);
+        } catch (err) {
+            console.error('Failed to load audit logs', err);
+        } finally {
+            setLoadingAuditData(false);
+        }
+    };
+
     // Load analytics on component mount
     useEffect(() => {
         loadPageAnalytics();
-        const interval = setInterval(loadPageAnalytics, 30000); // Refresh every 30 seconds
+        loadAuditLogs();
+        const interval = setInterval(() => {
+            loadPageAnalytics();
+            loadAuditLogs();
+        }, 30000); // Refresh every 30 seconds
         return () => clearInterval(interval);
     }, []);
 
@@ -456,6 +482,22 @@ const AdminDashboardPage: React.FC = () => {
                 }
                 await deleteUser(selectedUser.id);
                 setAllUsers(allUsers.filter(u => u.id !== selectedUser.id));
+                
+                // Log audit
+                if (currentUser) {
+                    await logAdminAction(
+                        currentUser.uid,
+                        currentUser.email || 'Unknown',
+                        'user_deleted',
+                        'user',
+                        { reason: 'Admin deletion' },
+                        selectedUser.id,
+                        selectedUser.displayName,
+                        selectedUser.email,
+                        'high'
+                    );
+                }
+                
                 showCongratulations('points', {
                     message: 'User deleted successfully',
                     points: 0
@@ -469,6 +511,22 @@ const AdminDashboardPage: React.FC = () => {
                     } :
                     u
                 ));
+                
+                // Log audit
+                if (currentUser) {
+                    await logAdminAction(
+                        currentUser.uid,
+                        currentUser.email || 'Unknown',
+                        actionType === 'block' ? 'user_blocked' : 'user_unblocked',
+                        'user',
+                        { reason: 'Admin action' },
+                        selectedUser.id,
+                        selectedUser.displayName,
+                        selectedUser.email,
+                        'medium'
+                    );
+                }
+                
                 showCongratulations('points', {
                     message: `User ${actionType === 'block' ? 'blocked' : 'unblocked'} successfully`,
                     points: 0
@@ -492,6 +550,22 @@ const AdminDashboardPage: React.FC = () => {
             await blockIp(ip);
             setBlockedIps(prev => ({ ...prev, [ip]: true }));
             if (user) setAllUsers(prev => prev.map(u => u.id === user.id ? { ...u } : u));
+            
+            // Log audit
+            if (currentUser) {
+                await logAdminAction(
+                    currentUser.uid,
+                    currentUser.email || 'Unknown',
+                    'ip_blocked',
+                    'ip',
+                    { blockedIpAddress: ip },
+                    ip,
+                    'IP Address',
+                    undefined,
+                    'medium'
+                );
+            }
+            
             alert(`IP ${ip} blocked`);
         } catch (err) {
             console.error(err);
@@ -505,6 +579,22 @@ const AdminDashboardPage: React.FC = () => {
         try {
             await unblockIp(ip);
             setBlockedIps(prev => ({ ...prev, [ip]: false }));
+            
+            // Log audit
+            if (currentUser) {
+                await logAdminAction(
+                    currentUser.uid,
+                    currentUser.email || 'Unknown',
+                    'ip_unblocked',
+                    'ip',
+                    { unblockedIpAddress: ip },
+                    ip,
+                    'IP Address',
+                    undefined,
+                    'low'
+                );
+            }
+            
             alert(`IP ${ip} unblocked`);
         } catch (err) {
             console.error(err);
@@ -1379,6 +1469,178 @@ const AdminDashboardPage: React.FC = () => {
                             ))}
                         </ul>
                      </div>
+                </DashboardSection>
+
+                {/* Activity Heatmap Section */}
+                <DashboardSection title="📊 Activity Heatmap - Traffic by Time">
+                    <div className="space-y-4">
+                        {loadingPageAnalytics ? (
+                            <div className="flex justify-center py-8"><Spinner /></div>
+                        ) : (
+                            <>
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                    {/* Peak Hours */}
+                                    <div>
+                                        <h4 className="text-sm font-semibold text-light mb-3">🔥 Peak Hours</h4>
+                                        <div className="space-y-2">
+                                            {activityHeatmap?.peakHours && activityHeatmap.peakHours.length > 0 ? (
+                                                activityHeatmap.peakHours.map((hour: any, idx: number) => (
+                                                    <div key={idx} className="bg-primary p-2 rounded border border-slate-700">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-sm">{String(hour.hour).padStart(2, '0')}:00</span>
+                                                            <div className="flex-1 mx-3 bg-slate-700 rounded h-2">
+                                                                <div 
+                                                                    className="bg-accent h-2 rounded"
+                                                                    style={{
+                                                                        width: `${Math.min(100, (hour.traffic / (activityHeatmap.peakHours[0]?.traffic || 1)) * 100)}%`
+                                                                    }}
+                                                                ></div>
+                                                            </div>
+                                                            <span className="text-xs text-slate-400">{hour.traffic}</span>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="text-slate-400 text-sm text-center py-4">No data</div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Peak Days */}
+                                    <div>
+                                        <h4 className="text-sm font-semibold text-light mb-3">📅 Traffic by Day</h4>
+                                        <div className="space-y-2">
+                                            {activityHeatmap?.peakDays && activityHeatmap.peakDays.length > 0 ? (
+                                                activityHeatmap.peakDays.map((day: any, idx: number) => (
+                                                    <div key={idx} className="bg-primary p-2 rounded border border-slate-700">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-sm">{day.dayOfWeek}</span>
+                                                            <div className="flex-1 mx-3 bg-slate-700 rounded h-2">
+                                                                <div 
+                                                                    className="bg-green-500 h-2 rounded"
+                                                                    style={{
+                                                                        width: `${Math.min(100, (day.traffic / (activityHeatmap.peakDays[0]?.traffic || 1)) * 100)}%`
+                                                                    }}
+                                                                ></div>
+                                                            </div>
+                                                            <span className="text-xs text-slate-400">{day.traffic}</span>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="text-slate-400 text-sm text-center py-4">No data</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </DashboardSection>
+
+                {/* Admin Audit Logs Section */}
+                <DashboardSection title="🔐 Admin Audit Logs - Compliance & Security">
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-semibold text-light">Recent Admin Actions</h4>
+                            <button 
+                                onClick={loadAuditLogs}
+                                disabled={loadingAuditData}
+                                className="text-xs px-2 py-1 rounded bg-primary hover:bg-primary/80 disabled:opacity-50"
+                            >
+                                {loadingAuditData ? 'Loading...' : 'Refresh'}
+                            </button>
+                        </div>
+
+                        {loadingAuditData ? (
+                            <div className="flex justify-center py-8"><Spinner /></div>
+                        ) : (
+                            <>
+                                {/* Audit Statistics */}
+                                {auditStatistics && (
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+                                        <div className="bg-primary p-3 rounded border border-slate-700">
+                                            <div className="text-xs text-slate-400">Total Actions (30d)</div>
+                                            <div className="text-2xl font-bold text-accent">{auditStatistics.totalActions}</div>
+                                        </div>
+                                        <div className="bg-primary p-3 rounded border border-slate-700">
+                                            <div className="text-xs text-slate-400">Critical Actions</div>
+                                            <div className="text-2xl font-bold text-red-400">{auditStatistics.actionsBySeverity?.critical || 0}</div>
+                                        </div>
+                                        <div className="bg-primary p-3 rounded border border-slate-700">
+                                            <div className="text-xs text-slate-400">High Priority</div>
+                                            <div className="text-2xl font-bold text-orange-400">{auditStatistics.actionsBySeverity?.high || 0}</div>
+                                        </div>
+                                        <div className="bg-primary p-3 rounded border border-slate-700">
+                                            <div className="text-xs text-slate-400">Top Admin</div>
+                                            <div className="text-sm font-semibold text-light truncate">{auditStatistics.topAdmins?.[0]?.email?.split('@')[0] || '-'}</div>
+                                            <div className="text-xs text-slate-400">{auditStatistics.topAdmins?.[0]?.actionCount || 0} actions</div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Recent Audit Logs Table */}
+                                <div className="overflow-x-auto border border-slate-700 rounded">
+                                    <table className="min-w-full text-sm">
+                                        <thead className="bg-primary/50 text-xs text-slate-300">
+                                            <tr>
+                                                <th className="px-3 py-2 text-left">Time</th>
+                                                <th className="px-3 py-2 text-left">Admin</th>
+                                                <th className="px-3 py-2 text-left">Action</th>
+                                                <th className="px-3 py-2 text-left">Target</th>
+                                                <th className="px-3 py-2 text-left">Severity</th>
+                                                <th className="px-3 py-2 text-left">Details</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {auditLogs && auditLogs.length > 0 ? (
+                                                auditLogs.slice(0, 20).map((log, idx) => (
+                                                    <tr key={log.id || idx} className="border-t border-slate-700 hover:bg-primary/50">
+                                                        <td className="px-3 py-2 text-xs text-slate-400">
+                                                            {log.timestamp instanceof Date 
+                                                                ? log.timestamp.toLocaleString() 
+                                                                : (log.timestamp?.toDate?.() || new Date(log.timestamp as any)).toLocaleString()}
+                                                        </td>
+                                                        <td className="px-3 py-2 text-xs text-accent truncate">{log.adminEmail?.split('@')[0]}</td>
+                                                        <td className="px-3 py-2 text-xs">
+                                                            <span className={`px-2 py-1 rounded ${
+                                                                log.action.includes('delete') ? 'bg-red-900/30 text-red-300' :
+                                                                log.action.includes('block') ? 'bg-orange-900/30 text-orange-300' :
+                                                                log.action.includes('unblock') ? 'bg-green-900/30 text-green-300' :
+                                                                'bg-slate-700/30 text-slate-300'
+                                                            }`}>
+                                                                {log.action.replace(/_/g, ' ')}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-3 py-2 text-xs text-slate-300 truncate">
+                                                            {log.targetName || log.targetEmail || log.targetId || '-'}
+                                                        </td>
+                                                        <td className="px-3 py-2 text-xs">
+                                                            <span className={`px-2 py-1 rounded text-xs ${
+                                                                log.severity === 'critical' ? 'bg-red-900/40 text-red-300' :
+                                                                log.severity === 'high' ? 'bg-orange-900/40 text-orange-300' :
+                                                                log.severity === 'medium' ? 'bg-yellow-900/40 text-yellow-300' :
+                                                                'bg-green-900/40 text-green-300'
+                                                            }`}>
+                                                                {log.severity}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-3 py-2 text-xs text-slate-400 truncate" title={JSON.stringify(log.details)}>
+                                                            {Object.keys(log.details || {}).join(', ') || '-'}
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan={6} className="px-3 py-4 text-center text-slate-400">No audit logs found</td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </DashboardSection>
 
                 {/* Page Navigation Analytics Section */}
