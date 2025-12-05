@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { UltraFastLoader } from './UltraFastLoader';
 import { useRoutePrefetch } from '../hooks/useRoutePrefetch';
 import { ScrollToTop } from './ScrollToTop';
+import { useAuth } from '../hooks/useAuth';
+import { logPageView, logPageExit } from '../services/pageTrackingService';
 import './Layout.css';
 
 interface LayoutProps {
@@ -13,6 +15,57 @@ const Layout: React.FC<LayoutProps> = memo(({ children }) => {
   // Prefetch routes early for smoother transitions
   useRoutePrefetch();
   const location = useLocation();
+  const { currentUser } = useAuth();
+  const previousPageRef = useRef<string | null>(null);
+  const sessionIdRef = useRef<string>(Math.random().toString(36).substr(2, 9));
+  const pageStartTimeRef = useRef<number>(Date.now());
+
+  // Track page navigation
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+
+    const currentPage = location.pathname;
+    const userEmail = currentUser.email || '';
+
+    // Log exit from previous page
+    if (previousPageRef.current && previousPageRef.current !== currentPage) {
+      const timeSpent = Date.now() - pageStartTimeRef.current;
+      logPageExit(currentUser.uid, previousPageRef.current, sessionIdRef.current, timeSpent, userEmail).catch(err => 
+        console.warn('Failed to log page exit', err)
+      );
+    }
+
+    // Log entry to current page
+    logPageView(currentUser.uid, currentPage, previousPageRef.current, sessionIdRef.current, userEmail).catch(err => 
+      console.warn('Failed to log page view', err)
+    );
+
+    previousPageRef.current = currentPage;
+    pageStartTimeRef.current = Date.now();
+  }, [location.pathname, currentUser?.uid, currentUser?.email]);
+
+  // Track when user leaves the site
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+
+    const handleBeforeUnload = () => {
+      const timeSpent = Date.now() - pageStartTimeRef.current;
+      if (previousPageRef.current) {
+        // Use sendBeacon for reliability when page is unloading
+        const data = new FormData();
+        data.append('userId', currentUser.uid);
+        data.append('exitPage', previousPageRef.current);
+        data.append('sessionId', sessionIdRef.current);
+        data.append('timeSpentOnPage', timeSpent.toString());
+        
+        // This is a fire-and-forget call
+        navigator.sendBeacon('/api/log-page-exit', data);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [currentUser?.uid]);
 
   // Handle scroll reveal animations - reset and re-initialize on route change
   useEffect(() => {
